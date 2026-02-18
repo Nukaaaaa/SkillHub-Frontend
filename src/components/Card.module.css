@@ -1,0 +1,26 @@
+.card {
+    background-color: var(--surface-color);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.header {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.title {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.body {
+    padding: var(--spacing-lg);
+}
+
+.footer {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background-color: var(--background-color);
+    border-top: 1px solid var(--border-color);
+}

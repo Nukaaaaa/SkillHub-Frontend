@@ -1,0 +1,309 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "search": "Search",
+        "logout": "Logout",
+        "welcome": "Welcome",
+        "error": "An error occurred",
+        "noData": "No data",
+        "offline": "Offline Mode: Using demo data"
+    },
+    "nav": {
+        "directions": "Directions",
+        "profile": "Profile",
+        "community": "Community",
+        "settings": "Settings",
+        "overview": "Overview"
+    },
+    "dashboard": {
+        "title": "All Directions",
+        "addDirection": "Add Direction",
+        "searchPlaceholder": "Search directions...",
+        "rooms": "Rooms",
+        "directionName": "Direction Name",
+        "directionDescription": "Direction Description"
+    },
+    "profile": {
+        "title": "My Profile",
+        "info": "User Information",
+        "name": "Name",
+        "role": "Role",
+        "bio": "Bio",
+        "skills": "Skills Radar",
+        "achievements": "Badges & Achievements",
+        "stats": "Activity Stats",
+        "roomsJoined": "Rooms Joined",
+        "sessions": "Sessions",
+        "points": "Points",
+        "status": "Status",
+        "mentor": "Mentor",
+        "student": "Student",
+        "activeMember": "Active Member",
+        "noBio": "No bio yet. Tell the community about yourself!",
+        "technology": "Technology",
+        "medicine": "Medicine",
+        "engineering": "Engineering",
+        "architecture": "Architecture",
+        "law": "Law",
+        "economics": "Economics",
+        "arts": "Arts"
+    },
+    "community": {
+        "title": "Community",
+        "searchPlaceholder": "Search users by name or skill...",
+        "filterBySkills": "Filter by Skills",
+        "clearAll": "Clear All",
+        "invite": "Invite",
+        "message": "Message",
+        "inviteSent": "Invitation sent to {{name}}!",
+        "messageOpened": "Message box for {{name}} opened (Demo)"
+    },
+    "settings": {
+        "title": "Settings",
+        "account": "Account Settings",
+        "displayName": "Display Name",
+        "email": "Email Address",
+        "bio": "Bio / About Me",
+        "bioPlaceholder": "Tell us about yourself...",
+        "saveChanges": "Save Changes",
+        "notifications": "Notifications & Privacy",
+        "emailNotifications": "Email Notifications",
+        "publicProfile": "Public Profile",
+        "security": "Security & Management",
+        "changePassword": "Change Password",
+        "dangerZone": "Danger Zone",
+        "dangerZoneDesc": "This will reset all your directions, rooms, and profile data to the original defaults.",
+        "resetData": "Reset Application Data",
+        "resetConfirm": "Are you sure you want to reset all application data to defaults? This will delete all your custom directions, rooms, and profile changes.",
+        "profileUpdated": "Profile updated successfully!",
+        "passwordMatchError": "New passwords do not match",
+        "passwordUpdated": "Password changed successfully!",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password"
+    },
+    "rooms": {
+        "title": "Rooms",
+        "searchPlaceholder": "Search rooms...",
+        "createRoom": "Create Room",
+        "editRoom": "Edit Room",
+        "roomName": "Room Name",
+        "description": "Description",
+        "noDescription": "No description",
+        "access": "Access",
+        "private": "Private",
+        "public": "Public",
+        "isPrivate": "Private Room",
+        "members": "Members",
+        "join": "Join",
+        "joined": "Joined",
+        "member": "Member",
+        "leave": "Leave",
+        "leaveConfirm": "Are you sure you want to leave this room?",
+        "leaveSuccess": "You have successfully left the room",
+        "roomCreated": "Room created!",
+        "roomUpdated": "Room updated!",
+        "roomDeleted": "Room deleted",
+        "deleteConfirm": "Are you sure you want to delete this room?",
+        "level": "Level",
+        "allLevels": "All Levels",
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "noRooms": "No rooms found in this direction."
+    },
+    "members": {
+        "title": "Room Members",
+        "leaveRoom": "Leave Room",
+        "me": "Me",
+        "userPrefix": "User",
+        "role": "Role",
+        "OWNER": "OWNER",
+        "ADMIN": "ADMIN",
+        "MEMBER": "MEMBER",
+        "kick": "Kick",
+        "kickConfirm": "Are you sure you want to kick this user?",
+        "userKicked": "User kicked",
+        "guest": "Guest"
+    },
+    "login": {
+        "title": "SkillHub Login",
+        "email": "Email",
+        "password": "Password",
+        "submit": "Login",
+        "defaultUser": "User"
+    },
+    "data": {
+        "directions": {
+            "1": {
+                "name": "Digital Technologies",
+                "description": "Software development, Artificial Intelligence, and Cybersecurity."
+            },
+            "2": {
+                "name": "Medicine & Health",
+                "description": "Clinical practice, genetics, and modern medical technologies."
+            },
+            "3": {
+                "name": "Jurisprudence",
+                "description": "Civil law, international legal systems, and corporate law theory."
+            },
+            "4": {
+                "name": "Business & Economics",
+                "description": "Global markets, startup management, and financial analysis."
+            },
+            "5": {
+                "name": "Architecture & Design",
+                "description": "Designing eco-friendly urban environments and modern architectural concepts."
+            },
+            "6": {
+                "name": "Engineering & Robotics",
+                "description": "Mechanical design, automation systems, and high-tech electrical engineering."
+            },
+            "7": {
+                "name": "Psychology & Society",
+                "description": "Understanding human behavior, social dynamics, and cognitive sciences."
+            },
+            "8": {
+                "name": "Applied Linguistics",
+                "description": "Language study, translation theory, and intercultural communication."
+            }
+        },
+        "rooms": {
+            "101": {
+                "name": "Advanced React",
+                "description": "Design patterns and performance optimization in React."
+            },
+            "102": {
+                "name": "AI & Neural Networks",
+                "description": "Deep learning and transformer architecture basics."
+            },
+            "103": {
+                "name": "Cybersecurity Lab",
+                "description": "Ethical hacking and network security strategies."
+            },
+            "201": {
+                "name": "Genetics Seminar",
+                "description": "CRISPR-Cas9 and the future of human genome editing."
+            },
+            "202": {
+                "name": "Cardiology 101",
+                "description": "Modern approaches to cardiovascular diagnosis and treatment."
+            },
+            "203": {
+                "name": "Neuroscience Hub",
+                "description": "Brain mapping and neurodegenerative disease research."
+            },
+            "301": {
+                "name": "IP Law in Digital Age",
+                "description": "Copyright and patent protection for software and media."
+            },
+            "302": {
+                "name": "Courtroom Strategy",
+                "description": "Moot court exercises and public speaking for lawyers."
+            },
+            "303": {
+                "name": "International Ethics",
+                "description": "Global human rights and environmental regulations."
+            },
+            "401": {
+                "name": "Venture Capital",
+                "description": "Pitching and raising investment for startups."
+            },
+            "402": {
+                "name": "Crypto Markets",
+                "description": "DeFi, blockchain, and global financial shifts."
+            },
+            "403": {
+                "name": "Lean Startup",
+                "description": "Agile management and MVP development for new business."
+            },
+            "501": {
+                "name": "Eco-Architecture",
+                "description": "Zero-carbon building with sustainable materials."
+            },
+            "502": {
+                "name": "BIM Mastery",
+                "description": "Building Information Modeling for large-scale projects."
+            },
+            "503": {
+                "name": "Urban Planning",
+                "description": "Smart city design and sustainable transport systems."
+            },
+            "601": {
+                "name": "Tesla Coil Engineering",
+                "description": "High voltage electronics and power transmission."
+            },
+            "602": {
+                "name": "Space Robotics",
+                "description": "Designing rovers and satellite service systems."
+            },
+            "603": {
+                "name": "Automated Systems",
+                "description": "PLC programming and industrial robot coordination."
+            },
+            "701": {
+                "name": "Cognitive Science",
+                "description": "Modeling human perception and decision making."
+            },
+            "702": {
+                "name": "Social Dynamics",
+                "description": "The power of digital influence and crowd psychology."
+            },
+            "801": {
+                "name": "NLP Principles",
+                "description": "Teaching machines to understand human language."
+            },
+            "802": {
+                "name": "Translation Tech",
+                "description": "Simultaneous translation tools and global linguistics."
+            }
+        },
+        "users": {
+            "1": {
+                "name": "User",
+                "bio": "Aspiring interdisciplinary student interested in the intersection of tech and medicine.",
+                "role": "Senior Student"
+            },
+            "2": {
+                "name": "Dr. Alice",
+                "bio": "Biomedical researcher specializing in CRISPR and genetic editing.",
+                "role": "Lead Researcher"
+            },
+            "3": {
+                "name": "Elena Lawyer",
+                "bio": "Expert in international law and digital rights management.",
+                "role": "Senior Partner"
+            },
+            "4": {
+                "name": "Charlie Dev",
+                "bio": "Fullstack developer by day, eco-architecture enthusiast by night.",
+                "role": "Junior Architect"
+            },
+            "5": {
+                "name": "Mark Business",
+                "bio": "Venture capitalist interested in disruptive startups and DeFi.",
+                "role": "Investment Director"
+            },
+            "6": {
+                "name": "Sarah Architect",
+                "bio": "Urban designer focused on smart city integration and sustainable materials.",
+                "role": "Chief Architect"
+            },
+            "7": {
+                "name": "Eng. Tom",
+                "bio": "Robotics engineer passionate about space exploration and automated systems.",
+                "role": "Lead Engineer"
+            },
+            "8": {
+                "name": "Dr. Freud",
+                "bio": "Clinical psychologist exploring AI personality modeling boundaries.",
+                "role": "Research Fellow"
+            }
+        }
+    }
+}
