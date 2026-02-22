@@ -1,16 +1,30 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Define base URLs for different services
+const SERVICES = {
+  USER: import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8081/api',
+  ROOM: import.meta.env.VITE_ROOM_SERVICE_URL || 'http://localhost:8082/api',
+  CONTENT: import.meta.env.VITE_CONTENT_SERVICE_URL || 'http://localhost:8083/api',
+};
+
+// Default URL for fallback/general use
+const API_URL = SERVICES.ROOM;
 
 let serverOffline = false;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 500, // Short timeout for faster fallback
+  timeout: 2000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Helper to get client for specific service
+export const getServiceClient = (service: keyof typeof SERVICES) => {
+  apiClient.defaults.baseURL = SERVICES[service];
+  return apiClient;
+};
 
 apiClient.interceptors.request.use(
   (config) => {

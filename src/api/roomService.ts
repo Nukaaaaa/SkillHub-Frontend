@@ -1,6 +1,8 @@
-import { apiClient } from './client';
+import { getServiceClient } from './client';
 import type { Room, RoomDto, UserRoom, RoomRole } from '../types';
 import { MOCK_ROOMS, MOCK_MEMBERS, updateMockRooms, updateMockMembers } from '../mockData';
+
+const apiClient = getServiceClient('ROOM');
 
 export const roomService = {
     getRoom: async (id: number): Promise<Room> => {

@@ -1,6 +1,8 @@
-import { apiClient } from './client';
+import { getServiceClient } from './client';
 import type { Direction, DirectionDto } from '../types';
 import { MOCK_DIRECTIONS, updateMockDirections } from '../mockData';
+
+const apiClient = getServiceClient('ROOM');
 
 export const directionService = {
     getDirections: async (): Promise<Direction[]> => {

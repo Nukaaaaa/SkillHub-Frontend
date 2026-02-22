@@ -1,26 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Star, UserPlus, MessageSquare, X, Edit2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Search, Star, UserPlus, MessageSquare, X } from 'lucide-react';
 import { useToast } from '../components/Toast';
-import Modal from '../components/Modal';
-import Input from '../components/Input';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { MOCK_USERS, updateMockUsers } from '../mockData';
+import { MOCK_USERS } from '../mockData';
 import styles from './CommunityPage.module.css';
 
 const CommunityPage: React.FC = () => {
     const { t } = useTranslation();
-    const { user: currentUser } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
     const { showToast } = useToast();
-
-    // Mentor editing states
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<any>(null);
-    const [formData, setFormData] = useState({ name: '', role: '', bio: '' });
 
     // Get unique skills from all users
     const allSkills = Array.from(new Set(MOCK_USERS.flatMap(u => u.skills))).sort();
@@ -51,37 +42,6 @@ const CommunityPage: React.FC = () => {
 
     const handleMessage = (name: string) => {
         showToast(t('community.messageOpened', { name }));
-    };
-
-    const handleEditClick = (u: any) => {
-        setEditingUser(u);
-        setFormData({
-            name: t(u.name ?? ''),
-            role: t(u.role ?? ''),
-            bio: t(u.bio ?? '')
-        });
-        setIsEditModalOpen(true);
-    };
-
-    const handleSaveEdit = () => {
-        if (!editingUser) return;
-
-        const updatedUsers = MOCK_USERS.map(u => {
-            if (u.id === editingUser.id) {
-                const updates: any = { ...formData };
-                // Key preservation logic
-                if (formData.name === t(editingUser.name)) updates.name = editingUser.name;
-                if (formData.role === t(editingUser.role)) updates.role = editingUser.role;
-                if (formData.bio === t(editingUser.bio)) updates.bio = editingUser.bio;
-
-                return { ...u, ...updates };
-            }
-            return u;
-        });
-
-        updateMockUsers(updatedUsers);
-        showToast(t('common.save'));
-        setIsEditModalOpen(false);
     };
 
     return (
@@ -177,7 +137,7 @@ const CommunityPage: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: currentUser?.isMentor ? '1fr 1fr 1fr' : '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>
                                 <Button
                                     variant="secondary"
                                     icon={<UserPlus size={16} />}
@@ -192,13 +152,6 @@ const CommunityPage: React.FC = () => {
                                 >
                                     {t('community.message')}
                                 </Button>
-                                {currentUser?.isMentor && !u.isMentor && (
-                                    <Button
-                                        variant="secondary"
-                                        icon={<Edit2 size={16} />}
-                                        onClick={() => handleEditClick(u)}
-                                    />
-                                )}
                             </div>
                         </div>
                     </Card>
@@ -210,36 +163,6 @@ const CommunityPage: React.FC = () => {
                     <p>{t('common.noData')}</p>
                 </div>
             )}
-
-            <Modal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                title={t('common.edit')}
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => setIsEditModalOpen(false)}>{t('common.cancel')}</Button>
-                        <Button onClick={handleSaveEdit}>{t('common.save')}</Button>
-                    </>
-                }
-            >
-                <div style={{ display: 'grid', gap: '1.25rem', padding: '0.5rem 0' }}>
-                    <Input
-                        label={t('profile.name')}
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    />
-                    <Input
-                        label={t('profile.role')}
-                        value={formData.role}
-                        onChange={e => setFormData({ ...formData, role: e.target.value })}
-                    />
-                    <Input
-                        label={t('profile.bio')}
-                        value={formData.bio}
-                        onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                    />
-                </div>
-            </Modal>
         </div>
     );
 };

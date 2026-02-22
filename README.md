@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# SkillHub — Образовательная Платформа Обмена Навыками
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SkillHub — это современное веб-приложение для организации обучения, поиска менторов и совместной работы. Проект выполнен на стеке React + TypeScript и полностью локализован.
 
-Currently, two official plugins are available:
+## 🌟 Основные функциональные возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. Многоязычность (i18n)
+Система поддерживает 3 языка: **Русский, Английский и Казахский**.
+- Переведено всё: навигация, кнопки, сообщения и даже данные в карточках (названия комнат, биографии).
+- Реализована логика сохранения языковых ключей при редактировании профиля.
 
-## React Compiler
+### 2. Управление профилем и компетенциями
+- **Личный кабинет**: Редактирование имени, email, описания и смена пароля.
+- **Радар компетенций**: Интерактивная диаграмма, визуализирующая уровень навыков пользователя в 7 ключевых областях.
+- **Авторизация**: Система умеет сохранять сессию пользователя даже после перезагрузки страницы (используется LocalStorage).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 3. Образовательная экосистема
+- **Направления**: Группировка курсов по категориям (Технологии, Медицина, Право и др.).
+- **Учебные комнаты**: Возможность вступать в группы, просматривать участников.
+- **Создание и Удаление**: Менторы могут управлять контентом (добавлять уровни обучения и комнаты).
 
-## Expanding the ESLint configuration
+### 4. Сообщество и Поиск
+- **Поиск**: Мощная система фильтрации в разделе "Сообщество" по конкретным навыкам (Skill-based search).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 Технический стек
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Core**: React 18, Vite.
+- **Styling**: CSS Modules (чистый ванильный CSS с изоляцией).
+- **Icons**: Lucide React (для консистентного дизайна).
+- **i18n**: i18next + Language Detector.
+- **Data Persistence**: Offline-First (LocalStorage синхронизация).
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📊 Что было сделано сегодня
+- Полная интеграция системы мультиязычности.
+- Редизайн страниц Входа и Настроек для достижения визуальной целостности.
+- Исправлены критические баги отображения данных (ключи переводов в инпутах).
+- Реализована глобальная синхронизация данных пользователей (изменения видны на всех страницах).
+- Добавлен функционал поиска в Сообществе.
+- Подготовлена полная документация и проект загружен на GitHub.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🚀 Запуск проекта
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1. Установите зависимости: `npm install`
+2. Загрузите сервер разработки: `npm run dev`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Проект готов к интеграции с бэкендом.*
