@@ -20,6 +20,7 @@ interface AuthContextType {
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
     resetToDefaults: () => void;
+    selectDirection: (id: number) => void;
     isAuthenticated: boolean;
     loading: boolean;
 }
@@ -35,8 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('token');
         if (storedToken) {
             setToken(storedToken);
-            // In a real app, we'd fetch the user profile here
-            setUser(getStoredUser());
+            const storedUser = getStoredUser();
+            // Load selected direction from localStorage
+            const savedDirId = localStorage.getItem(`selected_direction_${storedUser?.id}`);
+            if (savedDirId) {
+                storedUser.selectedDirectionId = Number(savedDirId);
+            }
+            setUser(storedUser);
         }
         setLoading(false);
     }, []);
@@ -115,8 +121,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.reload();
     };
 
+    const selectDirection = (id: number) => {
+        if (!user) return;
+        const updatedUser = { ...user, selectedDirectionId: id };
+        setUser(updatedUser);
+        saveUserToStorage(updatedUser);
+        localStorage.setItem(`selected_direction_${user.id}`, id.toString());
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, updateUser, resetToDefaults, isAuthenticated: !!token, loading }}>
+        <AuthContext.Provider value={{
+            user, token, login, register, logout,
+            updateUser, resetToDefaults, selectDirection,
+            isAuthenticated: !!token, loading
+        }}>
             {children}
         </AuthContext.Provider>
     );

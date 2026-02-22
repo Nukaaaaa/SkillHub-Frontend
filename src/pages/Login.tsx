@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import styles from './Login.module.css';
 import { Zap, Mail, Lock } from 'lucide-react';
 import Input from '../components/Input';
@@ -16,11 +17,13 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const loadingToast = toast.loading(t('common.loading') || 'Logging in...');
         try {
             await login(email, password);
+            toast.success(t('login.success') || 'Welcome back!', { id: loadingToast });
             navigate('/');
         } catch (error) {
-            alert('Invalid credentials');
+            toast.error(t('login.error') || 'Invalid credentials. Please try again.', { id: loadingToast });
         }
     };
 

@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import Loader from '../components/Loader';
 import { ArrowLeft, User, Shield, UserMinus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 const RoomMembersPage: React.FC = () => {
@@ -40,10 +41,10 @@ const RoomMembersPage: React.FC = () => {
         if (window.confirm(t('rooms.leaveConfirm'))) {
             try {
                 await roomService.leaveRoom(Number(roomId), user.id);
-                alert(t('rooms.leaveSuccess'));
+                toast.success(t('rooms.leaveSuccess'));
                 navigate(-1);
             } catch (error) {
-                alert(t('common.error'));
+                toast.error(t('common.error'));
             }
         }
     };

@@ -10,6 +10,7 @@ export interface Room {
     name: string;
     description: string;
     isPrivate: boolean;
+    createdAt?: string;
 }
 
 export type RoomRole = 'OWNER' | 'ADMIN' | 'MEMBER';
@@ -34,6 +35,7 @@ export interface DirectionDto {
     name: string;
     description: string;
 }
+
 export interface SkillLevel {
     subject: string;
     value: number;
@@ -42,14 +44,19 @@ export interface SkillLevel {
 export interface User {
     id: number;
     name: string;
+    firstname?: string;
+    lastname?: string;
     email: string;
     password?: string;
+    universite?: string;
     bio?: string;
     role?: string;
+    status?: 'STUDENT' | 'MENTOR';
     skills: string[];
     skillLevels: SkillLevel[];
     avatar: string;
     isMentor: boolean;
+    selectedDirectionId?: number;
     stats?: {
         roomsJoined: number;
         sessionsAttended: number;
@@ -57,15 +64,21 @@ export interface User {
     };
 }
 
+export type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+export type AIStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface Article {
     id: number;
     roomId: number;
+    userId: number; // Matches Java backend (called authorId in some places, but backend uses userId)
     title: string;
     content: string;
-    authorId: number;
+    difficultyLevel?: DifficultyLevel;
+    authorId?: number; // Keep for legacy/compat if needed
     createdAt: string;
+    updatedAt?: string;
     aiScore?: number;
-    aiReviewStatus?: string;
+    aiReviewStatus?: AIStatus;
 }
 
 export interface Post {
@@ -81,10 +94,12 @@ export interface Post {
 export interface Comment {
     id: number;
     postId: number;
-    authorId: number;
-    authorName: string;
+    userId: number;
+    authorName?: string; // Optional if joined from frontend
     content: string;
+    isAccepted: boolean;
     createdAt: string;
+    updatedAt?: string;
 }
 
 export interface WikiEntry {

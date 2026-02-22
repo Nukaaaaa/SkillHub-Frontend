@@ -1,48 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, Star, UserPlus, MessageSquare, X } from 'lucide-react';
-import { useToast } from '../components/Toast';
+import { toast } from 'react-hot-toast';
 import Button from '../components/Button';
 import Card from '../components/Card';
-import { MOCK_USERS } from '../mockData';
+import Loader from '../components/Loader';
+import { userService } from '../api/userService';
+import type { User } from '../types';
 import styles from './CommunityPage.module.css';
 
 const CommunityPage: React.FC = () => {
     const { t } = useTranslation();
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-    const { showToast } = useToast();
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                setLoading(true);
+                const data = await userService.getAllUsers();
+                setUsers(data);
+            } catch (error) {
+                toast.error(t('common.offline'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     // Get unique skills from all users
-    const allSkills = Array.from(new Set(MOCK_USERS.flatMap(u => u.skills))).sort();
+    const allSkills = Array.from(new Set(users.flatMap(u => u.skills || []))).sort();
 
-    const filteredUsers = MOCK_USERS.filter(u => {
-        const nameMatch = t(u.name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
-        const skillMatch = u.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredUsers = users.filter(u => {
+        const nameMatch = (u.name ?? '').toLowerCase().includes(searchQuery.toLowerCase());
+        const skillMatch = (u.skills || []).some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
         const matchesSearch = nameMatch || skillMatch;
-
-        // Multi-skill AND logic: user must have ALL selected skills
         const matchesSkills = selectedSkills.length === 0 ||
-            selectedSkills.every(s => u.skills.includes(s));
-
+            selectedSkills.every(s => (u.skills || []).includes(s));
         return matchesSearch && matchesSkills;
     });
 
     const toggleSkill = (skill: string) => {
         setSelectedSkills(prev =>
-            prev.includes(skill)
-                ? prev.filter(s => s !== skill)
-                : [...prev, skill]
+            prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
         );
     };
 
     const handleInvite = (name: string) => {
-        showToast(t('community.inviteSent', { name }));
+        toast.success(t('community.inviteSent', { name }));
     };
 
     const handleMessage = (name: string) => {
-        showToast(t('community.messageOpened', { name }));
+        toast.success(t('community.messageOpened', { name }));
     };
+
+    if (loading) return <Loader />;
 
     return (
         <div className={styles.container}>
@@ -64,91 +79,98 @@ const CommunityPage: React.FC = () => {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '2rem' }}>
-                {allSkills.map(skill => {
-                    const isSelected = selectedSkills.includes(skill);
-                    return (
+            {allSkills.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '2rem' }}>
+                    {allSkills.map(skill => {
+                        const isSelected = selectedSkills.includes(skill);
+                        return (
+                            <div
+                                key={skill}
+                                onClick={() => toggleSkill(skill)}
+                                style={{
+                                    padding: '0.4rem 0.9rem',
+                                    borderRadius: '2rem',
+                                    backgroundColor: isSelected ? 'var(--primary-color)' : 'var(--background-color)',
+                                    border: `1px solid ${isSelected ? 'var(--primary-color)' : 'var(--border-color)'}`,
+                                    color: isSelected ? 'white' : 'var(--text-primary)',
+                                    cursor: 'pointer',
+                                    fontSize: '0.85rem',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.35rem',
+                                    fontWeight: isSelected ? '500' : '400',
+                                    boxShadow: isSelected ? '0 4px 6px -1px rgba(var(--primary-rgb), 0.2)' : 'none'
+                                }}
+                            >
+                                {skill}
+                                {isSelected && <X size={14} />}
+                            </div>
+                        );
+                    })}
+                    {selectedSkills.length > 0 && (
                         <div
-                            key={skill}
-                            onClick={() => toggleSkill(skill)}
+                            onClick={() => setSelectedSkills([])}
                             style={{
                                 padding: '0.4rem 0.9rem',
                                 borderRadius: '2rem',
-                                backgroundColor: isSelected ? 'var(--primary-color)' : 'var(--background-color)',
-                                border: `1px solid ${isSelected ? 'var(--primary-color)' : 'var(--border-color)'}`,
-                                color: isSelected ? 'white' : 'var(--text-primary)',
+                                backgroundColor: 'transparent',
+                                border: '1px solid #ff4444',
+                                color: '#ff4444',
                                 cursor: 'pointer',
                                 fontSize: '0.85rem',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.35rem',
-                                fontWeight: isSelected ? '500' : '400',
-                                boxShadow: isSelected ? '0 4px 6px -1px rgba(var(--primary-rgb), 0.2)' : 'none'
+                                fontWeight: '500'
                             }}
                         >
-                            {skill}
-                            {isSelected && <X size={14} />}
+                            {t('community.clearAll')}
                         </div>
-                    );
-                })}
-                {selectedSkills.length > 0 && (
-                    <div
-                        onClick={() => setSelectedSkills([])}
-                        style={{
-                            padding: '0.4rem 0.9rem',
-                            borderRadius: '2rem',
-                            backgroundColor: 'transparent',
-                            border: '1px solid #ff4444',
-                            color: '#ff4444',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: '500'
-                        }}
-                    >
-                        {t('community.clearAll')}
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
 
             <div className={styles.grid}>
                 {filteredUsers.map(u => (
                     <Card key={u.id} title={
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {t(u.name ?? '')}
+                            {u.name ?? `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim()}
                             {u.isMentor && <Star size={16} fill="#FFD700" color="#FFD700" />}
                         </div>
                     }>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div>
                                 <p style={{ color: 'var(--primary-color)', fontWeight: 600, margin: 0, fontSize: '0.9rem' }}>
-                                    {t(u.role ?? '')}
+                                    {u.status === 'MENTOR' ? t('profile.mentor') : t('profile.student')}
+                                    {u.role && ` · ${u.role}`}
                                 </p>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.5 }}>
-                                    {t(u.bio ?? '')}
-                                </p>
+                                {u.bio && (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                                        {u.bio}
+                                    </p>
+                                )}
                             </div>
 
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                {u.skills.map(skill => (
-                                    <span key={skill} className={styles.skillBadge}>
-                                        {skill}
-                                    </span>
-                                ))}
-                            </div>
+                            {(u.skills || []).length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    {u.skills.map(skill => (
+                                        <span key={skill} className={styles.skillBadge}>
+                                            {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>
                                 <Button
                                     variant="secondary"
                                     icon={<UserPlus size={16} />}
-                                    onClick={() => handleInvite(t(u.name ?? ''))}
+                                    onClick={() => handleInvite(u.name ?? '')}
                                 >
                                     {t('community.invite')}
                                 </Button>
                                 <Button
                                     variant="secondary"
                                     icon={<MessageSquare size={16} />}
-                                    onClick={() => handleMessage(t(u.name ?? ''))}
+                                    onClick={() => handleMessage(u.name ?? '')}
                                 >
                                     {t('community.message')}
                                 </Button>
@@ -158,7 +180,7 @@ const CommunityPage: React.FC = () => {
                 ))}
             </div>
 
-            {filteredUsers.length === 0 && (
+            {filteredUsers.length === 0 && !loading && (
                 <div className={styles.empty}>
                     <p>{t('common.noData')}</p>
                 </div>

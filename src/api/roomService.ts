@@ -23,6 +23,11 @@ export const roomService = {
         return response.data;
     },
 
+    updateRoom: async (id: number, room: RoomDto): Promise<Room> => {
+        const response = await apiClient.put<Room>(`/rooms/${id}`, room);
+        return response.data;
+    },
+
     deleteRoom: async (id: number): Promise<void> => {
         await apiClient.delete(`/rooms/${id}`);
     },

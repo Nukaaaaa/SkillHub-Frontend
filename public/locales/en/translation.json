@@ -11,7 +11,9 @@
         "welcome": "Welcome",
         "error": "An error occurred",
         "noData": "No data",
-        "offline": "Offline Mode: Using demo data"
+        "offline": "Offline Mode: Using demo data",
+        "deleteConfirm": "Are you sure? This action cannot be undone.",
+        "deleteSuccess": "Deleted successfully"
     },
     "nav": {
         "directions": "Directions",
@@ -143,7 +145,16 @@
         "registerHeader": "Sign Up",
         "registerTitle": "Create your account",
         "registerSubmit": "Register",
-        "haveAccount": "Already have an account?"
+        "haveAccount": "Already have an account?",
+        "view": "Enter",
+        "articles": "Articles",
+        "discussions": "Discussions",
+        "wiki": "Wiki",
+        "addArticle": "Add Article",
+        "newPost": "New Post",
+        "promoteToWiki": "Promote to Wiki",
+        "updated": "Updated",
+        "comments": "Comments"
     },
     "data": {
         "directions": {

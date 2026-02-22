@@ -10,14 +10,13 @@ import Input from '../components/Input';
 import Loader from '../components/Loader';
 import { Plus, Edit2, Trash2, ArrowLeft, LogIn, Users, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/Toast';
+import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 const RoomsPage: React.FC = () => {
     const { directionId } = useParams<{ directionId: string }>();
     const { user } = useAuth();
     const navigate = useNavigate();
-    const { showToast } = useToast();
     const { t } = useTranslation();
 
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -45,7 +44,7 @@ const RoomsPage: React.FC = () => {
             setUserRoomIds(userRoomsData.map(r => r.id));
         } catch (error) {
             console.error('Failed to fetch rooms:', error);
-            showToast(t('common.offline'), 'info');
+            toast.error(t('common.offline'));
         } finally {
             setLoading(false);
         }
@@ -79,12 +78,16 @@ const RoomsPage: React.FC = () => {
     const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
         if (e && 'preventDefault' in e) e.preventDefault();
         try {
-            await roomService.createRoom(formData, editingRoom?.id);
-            showToast(editingRoom ? t('rooms.roomUpdated') : t('rooms.roomCreated'));
+            if (editingRoom?.id) {
+                await roomService.updateRoom(editingRoom.id, formData);
+            } else {
+                await roomService.createRoom(formData);
+            }
+            toast.success(editingRoom ? t('rooms.roomUpdated') : t('rooms.roomCreated'));
             setIsModalOpen(false);
             fetchRooms();
         } catch (error) {
-            showToast(t('common.error'), 'error');
+            toast.error(t('common.error'));
         }
     };
 
@@ -92,25 +95,25 @@ const RoomsPage: React.FC = () => {
         if (window.confirm(t('rooms.deleteConfirm'))) {
             try {
                 await roomService.deleteRoom(id);
-                showToast(t('rooms.roomDeleted'), 'info');
+                toast.success(t('rooms.roomDeleted'));
                 fetchRooms();
             } catch (error) {
-                showToast(t('common.error'), 'error');
+                toast.error(t('common.error'));
             }
         }
     };
 
     const handleJoin = async (roomId: number) => {
         if (!user) {
-            showToast(t('common.error'), 'info');
+            toast.error(t('common.error'));
             return;
         }
         try {
             await roomService.joinRoom(roomId, user.id);
-            showToast(t('rooms.joined'));
+            toast.success(t('rooms.joined'));
             fetchRooms();
         } catch (error) {
-            showToast(t('common.error'), 'error');
+            toast.error(t('common.error'));
         }
     };
 
@@ -123,12 +126,9 @@ const RoomsPage: React.FC = () => {
                     <Button variant="secondary" onClick={() => navigate('/')} icon={<ArrowLeft size={20} />} />
                     <h2 className={styles.title}>{t('rooms.title')}</h2>
                 </div>
-                <Button icon={<Plus size={20} />} onClick={() => handleOpenModal()}>
-                    {t('rooms.createRoom')}
-                </Button>
             </div>
 
-            <div className={styles.searchContainer}>
+            <div className={styles.topActions}>
                 <div className={styles.searchWrapper}>
                     <Search className={styles.searchIcon} size={20} />
                     <input
@@ -138,56 +138,92 @@ const RoomsPage: React.FC = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <Button className={styles.searchButton}>{t('common.search')}</Button>
                 </div>
+                <Button icon={<Plus size={20} />} onClick={() => handleOpenModal()}>
+                    {t('rooms.createRoom')}
+                </Button>
             </div>
 
             <div className={styles.grid}>
                 {rooms
                     .filter(room => t(room.name).toLowerCase().includes(searchQuery.toLowerCase()))
                     .map(room => (
-                        <Card key={room.id} title={t(room.name)}>
-                            <div className={room.description ? styles.roomInfo : undefined}>
-                                <span className={styles.label}>{t('rooms.description')}</span>
-                                <p className={styles.value}>{t(room.description) || t('rooms.noDescription')}</p>
+                        <Card key={room.id} title={
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                <span>{t(room.name)}</span>
+                                <span style={{
+                                    fontSize: '0.7rem',
+                                    padding: '0.2rem 0.6rem',
+                                    borderRadius: '2rem',
+                                    backgroundColor: room.isPrivate ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)',
+                                    color: room.isPrivate ? '#ef4444' : '#22c55e',
+                                    fontWeight: 600,
+                                    border: `1px solid ${room.isPrivate ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}`,
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    {room.isPrivate ? t('rooms.private') : t('rooms.public')}
+                                </span>
                             </div>
-                            <div className={styles.roomInfo}>
-                                <span className={styles.label}>{t('rooms.access')}</span>
-                                <p className={styles.value}>{room.isPrivate ? t('rooms.private') : t('rooms.public')}</p>
-                            </div>
-                            <div className={styles.actions}>
-                                {userRoomIds.includes(room.id) ? (
+                        }>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                                    {t(room.description) || t('rooms.noDescription')}
+                                </p>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                    {userRoomIds.includes(room.id) ? (
+                                        <Button
+                                            variant="secondary"
+                                            icon={<Users size={16} />}
+                                            onClick={() => navigate(`/rooms/${room.id}/members`)}
+                                        >
+                                            {t('rooms.member')}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="secondary"
+                                            icon={<LogIn size={16} />}
+                                            onClick={() => handleJoin(room.id)}
+                                        >
+                                            {t('rooms.join')}
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="primary"
+                                        onClick={() => navigate(`/rooms/${room.id}`)}
+                                    >
+                                        {t('rooms.view')}
+                                    </Button>
                                     <Button
                                         variant="secondary"
-                                        icon={<Users size={16} />}
-                                        onClick={() => navigate(`/rooms/${room.id}/members`)}
+                                        icon={<Edit2 size={16} />}
+                                        onClick={() => handleOpenModal(room)}
                                     >
-                                        {t('rooms.member')}
+                                        {t('common.edit')}
                                     </Button>
-                                ) : (
                                     <Button
-                                        variant="secondary"
-                                        icon={<LogIn size={16} />}
-                                        onClick={() => handleJoin(room.id)}
+                                        variant="danger"
+                                        icon={<Trash2 size={16} />}
+                                        onClick={() => handleDelete(room.id)}
                                     >
-                                        {t('rooms.join')}
+                                        {t('common.delete')}
                                     </Button>
-                                )}
-                                <Button
-                                    variant="secondary"
-                                    icon={<Edit2 size={16} />}
-                                    onClick={() => handleOpenModal(room)}
-                                />
-                                <Button
-                                    variant="danger"
-                                    icon={<Trash2 size={16} />}
-                                    onClick={() => handleDelete(room.id)}
-                                />
+                                </div>
                             </div>
                         </Card>
                     ))}
                 {rooms.length === 0 && (
-                    <p className={styles.empty}>{t('rooms.noRooms')}</p>
+                    <div style={{
+                        gridColumn: '1 / -1',
+                        textAlign: 'center',
+                        padding: '4rem 2rem',
+                        color: 'var(--text-secondary)',
+                        backgroundColor: 'var(--surface-color)',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid var(--border-color)',
+                    }}>
+                        <p>{t('rooms.noRooms')}</p>
+                    </div>
                 )}
             </div>
 

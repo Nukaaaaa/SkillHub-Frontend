@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import styles from './Login.module.css';
 import { Zap, Mail, Lock, User, School, FileText } from 'lucide-react';
 import Input from '../components/Input';
@@ -23,6 +24,7 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        const loadingToast = toast.loading(t('common.loading') || 'Creating account...');
         try {
             await register({
                 firstname,
@@ -32,9 +34,10 @@ const Register: React.FC = () => {
                 universite,
                 bio
             });
+            toast.success(t('login.registerSuccess') || 'Registration successful!', { id: loadingToast });
             navigate('/');
         } catch (error) {
-            alert('Registration failed. Check if email is already in use or fill all fields.');
+            toast.error(t('login.registerError') || 'Registration failed. Please check if the email is already in use.', { id: loadingToast });
         } finally {
             setLoading(false);
         }

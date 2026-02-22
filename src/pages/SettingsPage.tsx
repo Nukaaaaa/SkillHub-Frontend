@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../components/Toast';
 import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import { toast } from 'react-hot-toast';
 import styles from './SettingsPage.module.css';
-import { Bell, Globe, Lock, AlertTriangle, RefreshCcw, User, Mail, FileText, Key } from 'lucide-react';
+import { Bell, Globe, Lock, AlertTriangle, RefreshCcw, User, Mail, FileText, Key, Compass } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SettingsPage: React.FC = () => {
     const { user, updateUser, resetToDefaults } = useAuth();
-    const { showToast } = useToast();
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     // Original values to compare and preserve keys
     const [initialUser, setInitialUser] = React.useState<any>(null);
@@ -54,7 +55,7 @@ const SettingsPage: React.FC = () => {
         }
 
         updateUser(updates);
-        showToast(t('settings.profileUpdated'));
+        toast.success(t('settings.profileUpdated'));
     };
 
     const handlePasswordChange = (e?: React.FormEvent | React.MouseEvent) => {
@@ -65,12 +66,12 @@ const SettingsPage: React.FC = () => {
         }
 
         if (passwordData.new !== passwordData.confirm) {
-            showToast(t('settings.passwordMatchError'), 'error');
+            toast.error(t('settings.passwordMatchError'));
             return;
         }
 
         updateUser({ password: passwordData.new });
-        showToast(t('settings.passwordUpdated'));
+        toast.success(t('settings.passwordUpdated'));
         setIsPasswordModalOpen(false);
         setPasswordData({ current: '', new: '', confirm: '' });
     };
@@ -141,6 +142,7 @@ const SettingsPage: React.FC = () => {
                 </Card>
 
                 <Card title={t('settings.security')}>
+                    {/* ... security content stays the same ... */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <div style={{ padding: '0.5rem', backgroundColor: 'rgba(var(--primary-rgb), 0.05)', borderRadius: '0.5rem' }}>
@@ -178,6 +180,23 @@ const SettingsPage: React.FC = () => {
                                 {t('settings.resetData')}
                             </Button>
                         </div>
+                    </div>
+                </Card>
+
+                <Card title={t('dashboard.direction')}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ padding: '0.5rem', backgroundColor: 'rgba(var(--primary-rgb), 0.05)', borderRadius: '0.5rem' }}>
+                            <Compass size={20} color="var(--primary-color)" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 500, fontSize: '0.95rem' }}>{t('settings.currentDirection')}</p>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                                {user?.selectedDirectionId ? `ID: ${user.selectedDirectionId}` : t('settings.noDirection')}
+                            </p>
+                        </div>
+                        <Button variant="secondary" onClick={() => navigate('/dashboard')}>
+                            {t('settings.changeDirection')}
+                        </Button>
                     </div>
                 </Card>
             </div>

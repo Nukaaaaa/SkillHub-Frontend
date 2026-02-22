@@ -1,5 +1,5 @@
 import { getServiceClient } from './client';
-import type { Article, Post, Comment, WikiEntry } from '../types';
+import type { Article, Post, Comment, WikiEntry, AIStatus } from '../types';
 
 const apiClient = getServiceClient('CONTENT');
 
@@ -17,6 +17,20 @@ export const contentService = {
         const response = await apiClient.post<Article>('/articles', article);
         return response.data;
     },
+    updateArticle: async (id: number, article: Partial<Article>): Promise<Article> => {
+        const response = await apiClient.put<Article>(`/articles/${id}`, article);
+        return response.data;
+    },
+    deleteArticle: async (id: number): Promise<void> => {
+        await apiClient.delete(`/articles/${id}`);
+    },
+    updateAIReview: async (id: number, status: AIStatus, score?: number): Promise<Article> => {
+        const params = new URLSearchParams();
+        params.append('status', status);
+        if (score !== undefined) params.append('score', score.toString());
+        const response = await apiClient.put<Article>(`/articles/${id}/ai-review?${params.toString()}`);
+        return response.data;
+    },
 
     // Posts & Discussions
     getPostsByRoom: async (roomId: number): Promise<Post[]> => {
@@ -26,6 +40,13 @@ export const contentService = {
     createPost: async (post: Partial<Post>): Promise<Post> => {
         const response = await apiClient.post<Post>('/posts', post);
         return response.data;
+    },
+    updatePost: async (id: number, post: Partial<Post>): Promise<Post> => {
+        const response = await apiClient.put<Post>(`/posts/${id}`, post);
+        return response.data;
+    },
+    deletePost: async (id: number): Promise<void> => {
+        await apiClient.delete(`/posts/${id}`);
     },
 
     // Comments
@@ -37,10 +58,21 @@ export const contentService = {
         const response = await apiClient.post<Comment>('/comments', comment);
         return response.data;
     },
+    acceptComment: async (id: number): Promise<Comment> => {
+        const response = await apiClient.put<Comment>(`/comments/${id}/accept`);
+        return response.data;
+    },
+    deleteComment: async (id: number): Promise<void> => {
+        await apiClient.delete(`/comments/${id}`);
+    },
 
     // Wiki
     getWikiByRoom: async (roomId: number): Promise<WikiEntry[]> => {
         const response = await apiClient.get<WikiEntry[]>(`/wiki/room/${roomId}`);
+        return response.data;
+    },
+    createWikiFromArticle: async (articleId: number): Promise<WikiEntry> => {
+        const response = await apiClient.post<WikiEntry>(`/wiki/from-article/${articleId}`);
         return response.data;
     }
 };

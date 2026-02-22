@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -8,6 +9,7 @@ import RoomMembersPage from './pages/RoomMembersPage';
 import ProfilePage from './pages/ProfilePage';
 import CommunityPage from './pages/CommunityPage';
 import SettingsPage from './pages/SettingsPage';
+import RoomDetailPage from './pages/RoomDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -25,10 +27,19 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
+const Home = () => {
+  const { user } = useAuth();
+  if (user?.selectedDirectionId) {
+    return <Navigate to={`/${user.selectedDirectionId}/rooms`} replace />;
+  }
+  return <Dashboard />;
+};
+
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -38,13 +49,14 @@ function App() {
               <Layout />
             </PrivateRoute>
           }>
-            <Route index element={<Dashboard />} />
+            <Route index element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/:directionId/rooms" element={<RoomsPage />} />
             <Route path="/rooms/:roomId/members" element={<RoomMembersPage />} />
+            <Route path="/rooms/:roomId" element={<RoomDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            {/* Add more routes here, e.g., <Route path="users" element={<Users />} /> */}
           </Route>
         </Routes>
       </AuthProvider>

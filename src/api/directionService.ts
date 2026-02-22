@@ -13,6 +13,11 @@ export const directionService = {
         return response.data;
     },
 
+    updateDirection: async (id: number, direction: DirectionDto): Promise<Direction> => {
+        const response = await apiClient.put<Direction>(`/directions/${id}`, direction);
+        return response.data;
+    },
+
     deleteDirection: async (id: number): Promise<void> => {
         await apiClient.delete(`/directions/${id}`);
     },

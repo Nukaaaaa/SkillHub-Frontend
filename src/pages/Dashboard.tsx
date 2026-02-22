@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Dashboard.module.css';
-import Card from '../components/Card';
 import { directionService } from '../api/directionService';
 import type { Direction } from '../types';
 import Loader from '../components/Loader';
-
-import { Plus, Edit2, Trash2, ArrowRight, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check } from 'lucide-react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Input from '../components/Input';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '../components/Toast';
+import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
+
+// Map direction icons by index
+const DIRECTION_ICONS = ['💻', '🏥', '📐', '⚙️', '📈', '🔬', '🎨', '📚', '🌍', '🎯'];
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
+    const { selectDirection } = useAuth();
     const [directions, setDirections] = useState<Direction[]>([]);
-    const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
-    const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingDir, setEditingDir] = useState<Direction | null>(null);
     const [formData, setFormData] = useState({ name: '', description: '' });
+    const [selectedId, setSelectedId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     const fetchDirections = async () => {
@@ -31,7 +33,7 @@ const Dashboard: React.FC = () => {
             setDirections(data);
         } catch (error) {
             console.error('Failed to fetch:', error);
-            showToast(t('common.offline'), 'info');
+            toast.error(t('common.offline'));
         } finally {
             setLoading(false);
         }
@@ -41,7 +43,8 @@ const Dashboard: React.FC = () => {
         fetchDirections();
     }, []);
 
-    const handleOpenModal = (dir?: Direction) => {
+    const handleOpenModal = (e: React.MouseEvent, dir?: Direction) => {
+        e.stopPropagation();
         if (dir) {
             setEditingDir(dir);
             setFormData({ name: t(dir.name), description: t(dir.description) });
@@ -55,90 +58,119 @@ const Dashboard: React.FC = () => {
     const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
         if (e && 'preventDefault' in e) e.preventDefault();
         try {
-            await directionService.createDirection(formData, editingDir?.id);
-            showToast(editingDir ? t('common.save') + '!' : t('common.create') + '!');
+            if (editingDir?.id) {
+                await directionService.updateDirection(editingDir.id, formData);
+            } else {
+                await directionService.createDirection(formData);
+            }
+            toast.success(editingDir ? t('common.save') + '!' : t('common.create') + '!');
             setIsModalOpen(false);
             fetchDirections();
         } catch (error) {
-            showToast(t('common.error'), 'error');
+            toast.error(t('common.error'));
         }
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
         if (window.confirm(t('common.delete') + '?')) {
             try {
                 await directionService.deleteDirection(id);
-                showToast(t('common.delete'), 'info');
+                toast.success(t('common.delete'));
                 fetchDirections();
             } catch (error) {
-                showToast(t('common.error'), 'error');
+                toast.error(t('common.error'));
             }
         }
+    };
+
+    const handleConfirm = () => {
+        if (!selectedId) {
+            toast.error(t('dashboard.pleaseSelect'));
+            return;
+        }
+        selectDirection(selectedId);
+        navigate(`/${selectedId}/rooms`);
     };
 
     if (loading) return <Loader />;
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <h2 className={styles.title}>{t('dashboard.title')}</h2>
+            <div className={styles.pageHeader}>
+                <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+                <p className={styles.pageSubtitle}>{t('dashboard.subtitle')}</p>
+            </div>
+
+            <div className={styles.topActions}>
                 <Button
-                    icon={<Plus size={20} />}
-                    onClick={() => handleOpenModal()}
+                    icon={<Plus size={18} />}
+                    onClick={(e) => handleOpenModal(e as React.MouseEvent)}
+                    variant="secondary"
                 >
                     {t('dashboard.addDirection')}
                 </Button>
             </div>
 
-            <div className={styles.searchContainer}>
-                <div className={styles.searchWrapper}>
-                    <Search className={styles.searchIcon} size={20} />
-                    <input
-                        type="text"
-                        placeholder={t('dashboard.searchPlaceholder')}
-                        className={styles.searchInput}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <Button className={styles.searchButton}>{t('common.search')}</Button>
-                </div>
-            </div>
-
             <div className={styles.grid}>
-                {directions
-                    .filter(dir => t(dir.name).toLowerCase().includes(searchQuery.toLowerCase()))
-                    .map(dir => (
-                        <Card key={dir.id} title={t(dir.name)}>
-                            <div className={styles.cardContent}>
-                                <p className={styles.cardDescription}>{t(dir.description)}</p>
-                                <div className={styles.actions}>
-                                    <Button
-                                        variant="secondary"
-                                        icon={<ArrowRight size={16} />}
-                                        onClick={() => navigate(`/${dir.id}/rooms`)}
-                                    >
-                                        {t('dashboard.rooms')}
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        icon={<Edit2 size={16} />}
-                                        onClick={() => handleOpenModal(dir)}
-                                    />
-                                    <Button
-                                        variant="danger"
-                                        icon={<Trash2 size={16} />}
-                                        onClick={() => handleDelete(dir.id)}
-                                    />
-                                </div>
+                {directions.map((dir, idx) => {
+                    const isSelected = selectedId === dir.id;
+                    return (
+                        <div
+                            key={dir.id}
+                            className={`${styles.card} ${isSelected ? styles.selected : ''}`}
+                            onClick={() => setSelectedId(dir.id)}
+                        >
+                            <div className={styles.cardIcon}>
+                                {DIRECTION_ICONS[idx % DIRECTION_ICONS.length]}
                             </div>
-                        </Card>
-                    ))}
+                            <div className={styles.cardContent}>
+                                <h3 className={styles.cardTitle}>{t(dir.name)}</h3>
+                                <p className={styles.cardDescription}>{t(dir.description)}</p>
+                            </div>
+                            {isSelected && (
+                                <div className={styles.selectedBadge}>
+                                    <Check size={14} />
+                                </div>
+                            )}
+                            <div className={styles.cardAdminActions}>
+                                <button
+                                    className={styles.adminBtn}
+                                    onClick={(e) => handleOpenModal(e, dir)}
+                                    title={t('common.edit')}
+                                >
+                                    <Edit2 size={14} />
+                                </button>
+                                <button
+                                    className={`${styles.adminBtn} ${styles.danger}`}
+                                    onClick={(e) => handleDelete(e, dir.id)}
+                                    title={t('common.delete')}
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
                 {directions.length === 0 && !loading && (
                     <div className={styles.empty}>
                         <p>{t('common.noData')}</p>
                     </div>
                 )}
             </div>
+
+            {directions.length > 0 && (
+                <div className={styles.confirmSection}>
+                    <Button
+                        onClick={handleConfirm}
+                        className={styles.confirmBtn}
+                    >
+                        {selectedId
+                            ? `${t('dashboard.rooms')} →`
+                            : t('dashboard.selectToConfirm')}
+                    </Button>
+                </div>
+            )}
 
             <Modal
                 isOpen={isModalOpen}

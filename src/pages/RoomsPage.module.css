@@ -44,10 +44,12 @@
     font-weight: 500;
 }
 
-.searchContainer {
-    margin-bottom: 2rem;
+.topActions {
+    margin-bottom: 2.5rem;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
 }
 
 .searchWrapper {
@@ -56,10 +58,10 @@
     background: var(--card-background);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 0.65rem;
-    width: 100%;
-    max-width: 600px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    padding: 0.65rem 1rem;
+    flex: 1;
+    max-width: 500px;
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
 }
 
