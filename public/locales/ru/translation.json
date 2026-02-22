@@ -34,6 +34,8 @@
         "name": "Имя",
         "role": "Роль",
         "bio": "О себе",
+        "lastname": "Фамилия",
+        "university": "Университет",
         "skills": "Радар компетенций",
         "achievements": "Значки и достижения",
         "stats": "Статистика активности",
@@ -136,7 +138,12 @@
         "email": "Email",
         "password": "Пароль",
         "submit": "Войти",
-        "defaultUser": "Пользователь"
+        "defaultUser": "Пользователь",
+        "noAccount": "Нет аккаунта?",
+        "registerHeader": "Зарегистрироваться",
+        "registerTitle": "Создайте свой аккаунт",
+        "registerSubmit": "Зарегистрироваться",
+        "haveAccount": "Уже есть аккаунт?"
     },
     "data": {
         "directions": {

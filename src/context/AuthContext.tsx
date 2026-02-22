@@ -1,11 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getStoredUser, setStoredUser as saveUserToStorage, MOCK_USERS, updateMockUsers } from '../mockData';
 import type { User } from '../types';
+import { getServiceClient } from '../api/client';
+
+const userClient = getServiceClient('USER');
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (token: string, user: any) => void;
+    login: (email: string, password: string) => Promise<boolean>;
+    register: (userData: {
+        firstname: string;
+        lastname: string;
+        email: string;
+        password: string;
+        universite: string;
+        bio: string;
+    }) => Promise<boolean>;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
     resetToDefaults: () => void;
@@ -24,17 +35,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('token');
         if (storedToken) {
             setToken(storedToken);
+            // In a real app, we'd fetch the user profile here
             setUser(getStoredUser());
         }
         setLoading(false);
     }, []);
 
-    const login = (newToken: string, newUser: any) => {
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
-        const userToSet = { ...getStoredUser(), ...newUser };
-        setUser(userToSet);
-        saveUserToStorage(userToSet);
+    const login = async (email: string, password: string) => {
+        try {
+            const response = await userClient.post('/auth/login', { email, password });
+            const { token: newToken } = response.data;
+
+            localStorage.setItem('token', newToken);
+            setToken(newToken);
+
+            // For now, we still use mock user data associated with the token
+            const userToSet = getStoredUser();
+            setUser(userToSet);
+            saveUserToStorage(userToSet);
+
+            return true;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
+        }
+    };
+
+    const register = async (userData: {
+        firstname: string;
+        lastname: string;
+        email: string;
+        password: string;
+        universite: string;
+        bio: string;
+    }) => {
+        try {
+            const response = await userClient.post('/auth/register', userData);
+            const { token: newToken } = response.data;
+
+            localStorage.setItem('token', newToken);
+            setToken(newToken);
+
+            // Map real data to mock structure for UI compatibility
+            const userToSet = {
+                ...getStoredUser(),
+                name: `${userData.firstname} ${userData.lastname}`,
+                email: userData.email,
+                avatar: `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
+            };
+            setUser(userToSet);
+            saveUserToStorage(userToSet);
+
+            return true;
+        } catch (error) {
+            console.error('Registration failed:', error);
+            throw error;
+        }
     };
 
     const logout = () => {
@@ -60,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, updateUser, resetToDefaults, isAuthenticated: !!token, loading }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, updateUser, resetToDefaults, isAuthenticated: !!token, loading }}>
             {children}
         </AuthContext.Provider>
     );

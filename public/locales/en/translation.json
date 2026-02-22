@@ -34,6 +34,8 @@
         "name": "Name",
         "role": "Role",
         "bio": "Bio",
+        "lastname": "Last Name",
+        "university": "University",
         "skills": "Skills Radar",
         "achievements": "Badges & Achievements",
         "stats": "Activity Stats",
@@ -136,7 +138,12 @@
         "email": "Email",
         "password": "Password",
         "submit": "Login",
-        "defaultUser": "User"
+        "defaultUser": "User",
+        "noAccount": "Don't have an account?",
+        "registerHeader": "Sign Up",
+        "registerTitle": "Create your account",
+        "registerSubmit": "Register",
+        "haveAccount": "Already have an account?"
     },
     "data": {
         "directions": {

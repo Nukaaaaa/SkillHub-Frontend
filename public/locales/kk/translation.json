@@ -34,6 +34,8 @@
         "name": "Аты-жөні",
         "role": "Рөлі",
         "bio": "Өзі туралы",
+        "lastname": "Тегі",
+        "university": "Университет",
         "skills": "Дағдыларды талдау",
         "achievements": "Белгілер мен жетістіктер",
         "stats": "Белсенділік статистикасы",
@@ -136,7 +138,12 @@
         "email": "Email",
         "password": "Құпия сөз",
         "submit": "Кіру",
-        "defaultUser": "Пайдаланушы"
+        "defaultUser": "Пайдаланушы",
+        "noAccount": "Аккаунт жоқ па?",
+        "registerHeader": "Тіркелу",
+        "registerTitle": "Аккаунт жасаңыз",
+        "registerSubmit": "Тіркелу",
+        "haveAccount": "Аккаунт бар ма?"
     },
     "data": {
         "directions": {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import styles from './Login.module.css';
@@ -14,11 +14,14 @@ const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simply login for now
-        login('mock-jwt-token', { name: t('login.defaultUser') });
-        navigate('/');
+        try {
+            await login(email, password);
+            navigate('/');
+        } catch (error) {
+            alert('Invalid credentials');
+        }
     };
 
     return (
@@ -56,6 +59,13 @@ const Login: React.FC = () => {
                     <Button type="submit" className={styles.submitButton}>
                         {t('login.submit')}
                     </Button>
+
+                    <div className={styles.footer}>
+                        <span>{t('login.noAccount') || "Don't have an account?"} </span>
+                        <Link to="/register" className={styles.link}>
+                            {t('login.registerHeader') || 'Sign Up'}
+                        </Link>
+                    </div>
                 </form>
             </div>
         </div>
