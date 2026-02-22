@@ -21,4 +21,8 @@ export const directionService = {
     deleteDirection: async (id: number): Promise<void> => {
         await apiClient.delete(`/directions/${id}`);
     },
+    getDirection: async (id: number): Promise<Direction> => {
+        const response = await apiClient.get<Direction>(`/directions/${id}`);
+        return response.data;
+    },
 };

@@ -13,7 +13,8 @@
         "noData": "Нет данных",
         "offline": "Режим оффлайн: используются демо-данные",
         "deleteConfirm": "Вы уверены? Это действие нельзя отменить.",
-        "deleteSuccess": "Успешно удалено"
+        "deleteSuccess": "Успешно удалено",
+        "back": "Назад"
     },
     "nav": {
         "directions": "Направления",
@@ -135,7 +136,17 @@
         "newPost": "Новый пост",
         "promoteToWiki": "Перенести в Вики",
         "updated": "Обновлено",
-        "comments": "Комментарии"
+        "comments": "Комментарии",
+        "welcome": "Добро пожаловать в {{direction}} направление, {{name}}!",
+        "availableRooms": "Доступные комнаты",
+        "online": "Онлайн",
+        "total": "Всего",
+        "articlesStats": "Статей",
+        "questions": "Вопросов",
+        "lastActivity": "Последняя активность",
+        "hoursAgo": "ч. назад",
+        "yourProgress": "Ваш прогресс",
+        "lessonsCompleted": "уроков завершено"
     },
     "members": {
         "title": "Участники комнаты",
