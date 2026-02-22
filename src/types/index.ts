@@ -56,3 +56,41 @@ export interface User {
         points: number;
     };
 }
+
+export interface Article {
+    id: number;
+    roomId: number;
+    title: string;
+    content: string;
+    authorId: number;
+    createdAt: string;
+    aiScore?: number;
+    aiReviewStatus?: string;
+}
+
+export interface Post {
+    id: number;
+    roomId: number;
+    authorId: number;
+    authorName: string;
+    content: string;
+    createdAt: string;
+    type: 'ANNOUNCEMENT' | 'QUESTION' | 'DISCUSSION';
+}
+
+export interface Comment {
+    id: number;
+    postId: number;
+    authorId: number;
+    authorName: string;
+    content: string;
+    createdAt: string;
+}
+
+export interface WikiEntry {
+    id: number;
+    roomId: number;
+    title: string;
+    content: string;
+    updatedAt: string;
+}

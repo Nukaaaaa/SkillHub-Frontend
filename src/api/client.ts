@@ -10,11 +10,9 @@ const SERVICES = {
 // Default URL for fallback/general use
 const API_URL = SERVICES.ROOM;
 
-let serverOffline = false;
-
 export const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 2000,
+  timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,10 +26,6 @@ export const getServiceClient = (service: keyof typeof SERVICES) => {
 
 apiClient.interceptors.request.use(
   (config) => {
-    if (serverOffline) {
-      // If server is known to be offline, cancel request immediately to use mock fallback
-      return Promise.reject({ message: 'Server currently offline', isOffline: true });
-    }
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -44,12 +38,6 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If request timed out or network error, mark server as offline
-    if (error.code === 'ECONNABORTED' || !error.response) {
-      serverOffline = true;
-      console.warn('Backend server is offline. Switching to absolute Standalone Mode.');
-    }
-
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
