@@ -1,0 +1,239 @@
+.bodyWrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8fafc;
+    padding: 1.5rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.registerContainer {
+    max-width: 900px;
+    width: 100%;
+    background-color: white;
+    border-radius: 40px;
+    box-shadow: 0 25px 50px -12px rgba(226, 232, 240, 0.6);
+    overflow: hidden;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .registerContainer {
+        flex-direction: row;
+    }
+}
+
+.sidebar {
+    background-color: #4f46e5;
+    padding: 3rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        width: 41.666667%;
+        /* 5/12 */
+    }
+}
+
+.sidebarContent {
+    position: relative;
+    z-index: 10;
+}
+
+.iconWrapper {
+    width: 3rem;
+    height: 3rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.sidebarTitle {
+    font-size: 1.875rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+
+.sidebarText {
+    color: #e0e7ff;
+    font-size: 0.875rem;
+    line-height: 1.625;
+}
+
+.sidebarFooter {
+    margin-top: auto;
+    position: relative;
+    z-index: 10;
+}
+
+.avatars {
+    display: flex;
+    margin-left: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    border: 2px solid #4f46e5;
+    margin-left: -0.75rem;
+}
+
+.statsText {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #c7d2fe;
+}
+
+.circleDecoration {
+    position: absolute;
+    top: -5rem;
+    right: -5rem;
+    width: 16rem;
+    height: 16rem;
+    background-color: #6366f1;
+    border-radius: 9999px;
+    opacity: 0.3;
+}
+
+.formSection {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 768px) {
+    .formSection {
+        width: 58.333333%;
+        /* 7/12 */
+    }
+}
+
+.formTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+}
+
+.formSubtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .formRow {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background-color: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    color: #0f172a;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.input::placeholder {
+    color: #94a3b8;
+}
+
+.input:focus {
+    background-color: white;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.submitButton {
+    width: 100%;
+    background-color: #0f172a;
+    color: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background-color: #1e293b;
+}
+
+.submitButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.loginPrompt {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.loginLink {
+    color: #4f46e5;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.loginLink:hover {
+    text-decoration: underline;
+}

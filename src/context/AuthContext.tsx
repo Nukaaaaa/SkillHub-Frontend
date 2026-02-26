@@ -57,6 +57,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             // For now, we still use mock user data associated with the token
             const userToSet = getStoredUser();
+
+            // Load selected direction from localStorage for this specific user
+            const savedDirId = localStorage.getItem(`selected_direction_${userToSet?.id}`);
+            if (savedDirId) {
+                userToSet.selectedDirectionId = Number(savedDirId);
+            }
+
             setUser(userToSet);
             saveUserToStorage(userToSet);
 
@@ -85,9 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Map real data to mock structure for UI compatibility
             const userToSet = {
                 ...getStoredUser(),
+                id: Math.floor(Math.random() * 1000000), // Random ID for new user
                 name: `${userData.firstname} ${userData.lastname}`,
+                firstname: userData.firstname,
+                lastname: userData.lastname,
                 email: userData.email,
-                avatar: `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`
+                avatar: `https://ui-avatars.com/api/?name=${userData.firstname}+${userData.lastname}&background=random`,
+                selectedDirectionId: undefined // ALWAYS reset direction for new users
             };
             setUser(userToSet);
             saveUserToStorage(userToSet);

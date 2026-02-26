@@ -84,11 +84,13 @@ export interface Article {
 export interface Post {
     id: number;
     roomId: number;
-    authorId: number;
-    authorName: string;
+    userId: number;
+    title?: string;
     content: string;
     createdAt: string;
-    type: 'ANNOUNCEMENT' | 'QUESTION' | 'DISCUSSION';
+    updatedAt?: string | null;
+    postType: 'QUESTION' | 'DISCUSSION' | 'ANNOUNCEMENT';
+    aiStatus?: AIStatus;
 }
 
 export interface Comment {

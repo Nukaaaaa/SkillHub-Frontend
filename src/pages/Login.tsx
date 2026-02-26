@@ -4,9 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import styles from './Login.module.css';
-import { Zap, Mail, Lock } from 'lucide-react';
-import Input from '../components/Input';
-import Button from '../components/Button';
 
 const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -28,48 +25,76 @@ const Login: React.FC = () => {
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.branding}>
-                    <div className={styles.logo}>
-                        <Zap size={32} color="white" fill="white" />
+        <div className={styles.bodyWrapper}>
+            <div className={styles.loginContainer}>
+                <div className={styles.header}>
+                    <div className={styles.logoWrapper}>
+                        <div className={styles.logoIcon}>
+                            <i className="fas fa-hubspot"></i>
+                        </div>
                     </div>
-                    <h1 className={styles.brandName}>SkillHub</h1>
-                    <p className={styles.subtitle}>{t('login.title')}</p>
+                    <h1 className={styles.title}>{t('login.title')}</h1>
+                    <p className={styles.subtitle}>{t('login.subtitle')}</p>
                 </div>
 
-                <form className={styles.form} onSubmit={handleSubmit}>
-                    <div className={styles.inputGroup}>
-                        <Input
-                            label={t('login.email')}
-                            type="email"
-                            icon={<Mail size={18} />}
-                            placeholder="user@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                        <Input
-                            label={t('login.password')}
-                            type="password"
-                            icon={<Lock size={18} />}
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                <div className={styles.card}>
+                    <div className={styles.socialGrid}>
+                        <button className={styles.socialButton} type="button">
+                            <i className="fab fa-google" style={{ color: '#ea4335' }}></i> Google
+                        </button>
+                        <button className={styles.socialButton} type="button">
+                            <i className="fab fa-linkedin" style={{ color: '#0077b5' }}></i> LinkedIn
+                        </button>
                     </div>
-                    <Button type="submit" className={styles.submitButton}>
-                        {t('login.submit')}
-                    </Button>
 
-                    <div className={styles.footer}>
-                        <span>{t('login.noAccount') || "Don't have an account?"} </span>
-                        <Link to="/register" className={styles.link}>
-                            {t('login.registerHeader') || 'Sign Up'}
-                        </Link>
+                    <div className={styles.divider}>
+                        <div className={styles.dividerLine}></div>
+                        <span className={styles.dividerText}>{t('login.orWithEmail')}</span>
+                        <div className={styles.dividerLine}></div>
                     </div>
-                </form>
+
+                    <form className={styles.form} onSubmit={handleSubmit}>
+                        <div className={styles.formGroup}>
+                            <div className={styles.labelWrapper}>
+                                <label className={styles.label}>{t('login.email')}</label>
+                            </div>
+                            <input
+                                type="email"
+                                placeholder="example@mail.com"
+                                className={styles.input}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <div className={styles.labelWrapper}>
+                                <label className={styles.label}>{t('login.password')}</label>
+                                <a href="#" className={styles.forgotLink}>{t('login.forgotPassword')}</a>
+                            </div>
+                            <input
+                                type="password"
+                                placeholder="••••••••"
+                                className={styles.input}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <button type="submit" className={styles.submitButton}>
+                            {t('login.signInAccount')}
+                        </button>
+                    </form>
+                </div>
+
+                <p className={styles.registerText}>
+                    {t('login.newHere')} {' '}
+                    <Link to="/register" className={styles.registerLink}>
+                        {t('login.createAccount')}
+                    </Link>
+                </p>
             </div>
         </div>
     );

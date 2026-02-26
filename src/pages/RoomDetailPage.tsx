@@ -1,79 +1,62 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
-    BookOpen,
     MessageSquare,
-    Lightbulb,
-    ArrowLeft,
-    Plus,
-    Trash2,
-    Edit2,
-    Star,
-    Award,
-    Users
+    Heart,
+    HelpCircle,
+    Image as ImageIcon,
+    Flame,
 } from 'lucide-react';
 
 import { contentService } from '../api/contentService';
 import { roomService } from '../api/roomService';
-import type { Room, Article, Post, WikiEntry, DifficultyLevel, Comment as ContentComment } from '../types';
+import type { Room, Article, Post } from '../types';
 import { useAuth } from '../context/AuthContext';
 
-import Button from '../components/Button';
-import Card from '../components/Card';
 import Loader from '../components/Loader';
+import CreateContentModal from '../components/CreateContentModal';
 import Modal from '../components/Modal';
-import Input from '../components/Input';
+import Button from '../components/Button';
 import styles from './RoomDetailPage.module.css';
-
-type Tab = 'articles' | 'discussions' | 'wiki';
 
 const RoomDetailPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const { user: currentUser } = useAuth();
 
-    const [room, setRoom] = useState<Room | null>(null);
-    const [activeTab, setActiveTab] = useState<Tab>('articles');
-    const [loading, setLoading] = useState(true);
+    const { room: roomFromContext } = useOutletContext<{ room: Room }>() || {};
+
+    const [room, setRoom] = useState<Room | null>(roomFromContext || null);
+    const [loading, setLoading] = useState(!roomFromContext);
 
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
-    const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>([]);
-    const [comments, setComments] = useState<Record<number, ContentComment[]>>({});
-    const [activePostId, setActivePostId] = useState<number | null>(null);
-    const [commentText, setCommentText] = useState('');
 
-    const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+    const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
+    const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [createType, setCreateType] = useState<'POST' | 'QUESTION'>('POST');
+
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-    const [editingArticleId, setEditingArticleId] = useState<number | null>(null);
-    const [editingPostId, setEditingPostId] = useState<number | null>(null);
-    const [articleData, setArticleData] = useState<{ title: string; content: string; difficultyLevel: DifficultyLevel }>({
-        title: '',
+    const [postData, setPostData] = useState<{ content: string; postType: Post['postType'] }>({
         content: '',
-        difficultyLevel: 'BEGINNER'
-    });
-    const [postData, setPostData] = useState<{ content: string; type: Post['type'] }>({
-        content: '',
-        type: 'DISCUSSION'
+        postType: 'DISCUSSION'
     });
 
     const fetchData = async () => {
         if (!roomId) return;
         setLoading(true);
         try {
-            const [roomData, articlesData, postsData, wikiData] = await Promise.all([
-                roomService.getRoom(Number(roomId)),
+            const [roomData, articlesData, postsData] = await Promise.all([
+                !room ? roomService.getRoom(Number(roomId)) : Promise.resolve(room),
                 contentService.getArticlesByRoom(Number(roomId)),
-                contentService.getPostsByRoom(Number(roomId)),
-                contentService.getWikiByRoom(Number(roomId))
+                contentService.getPostsByRoom(Number(roomId))
             ]);
-            setRoom(roomData);
+            if (!room) setRoom(roomData);
             setArticles(articlesData);
             setPosts(postsData);
-            setWikiEntries(wikiData);
         } catch (error) {
             toast.error(t('common.error'));
         } finally {
@@ -85,435 +68,207 @@ const RoomDetailPage: React.FC = () => {
         fetchData();
     }, [roomId]);
 
-    const handleCreateArticle = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (editingArticleId) {
-                await contentService.updateArticle(editingArticleId, articleData);
-                toast.success(t('article.updated'));
-            } else {
-                await contentService.createArticle({
-                    ...articleData,
-                    roomId: Number(roomId),
-                    userId: currentUser?.id
-                });
-                toast.success(t('article.created'));
-            }
-            setIsArticleModalOpen(false);
-            setEditingArticleId(null);
-            setArticleData({ title: '', content: '', difficultyLevel: 'BEGINNER' });
-            fetchData();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const handleEditArticle = (article: Article) => {
-        setEditingArticleId(article.id);
-        setArticleData({
-            title: article.title,
-            content: article.content,
-            difficultyLevel: article.difficultyLevel || 'BEGINNER'
-        });
-        setIsArticleModalOpen(true);
-    };
-
     const handleCreatePost = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            if (editingPostId) {
-                await contentService.updatePost(editingPostId, postData);
-                toast.success(t('post.updated'));
-            } else {
-                await contentService.createPost({
-                    ...postData,
-                    roomId: Number(roomId),
-                    authorId: currentUser?.id
-                });
-                toast.success(t('post.created'));
-            }
-            setIsPostModalOpen(false);
-            setEditingPostId(null);
-            setPostData({ content: '', type: 'DISCUSSION' });
-            fetchData();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const handleEditPost = (post: Post) => {
-        setEditingPostId(post.id);
-        setPostData({
-            content: post.content,
-            type: post.type
-        });
-        setIsPostModalOpen(true);
-    };
-
-    const handlePromoteToWiki = async (articleId: number) => {
-        try {
-            await contentService.createWikiFromArticle(articleId);
-            toast.success(t('wiki.promoted'));
-            fetchData();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const handleDeleteArticle = async (id: number) => {
-        if (!window.confirm(t('common.deleteConfirm'))) return;
-        try {
-            await contentService.deleteArticle(id);
-            toast.success(t('common.deleteSuccess'));
-            fetchData();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const fetchComments = async (postId: number) => {
-        try {
-            const data = await contentService.getCommentsByPost(postId);
-            setComments(prev => ({ ...prev, [postId]: data }));
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const handleCreateComment = async (postId: number) => {
-        if (!commentText.trim()) return;
-        try {
-            await contentService.createComment({
-                postId,
-                userId: currentUser?.id,
-                content: commentText
+            await contentService.createPost({
+                ...postData,
+                roomId: Number(roomId),
+                userId: currentUser?.id
             });
-            toast.success(t('comment.created'));
-            setCommentText('');
-            fetchComments(postId);
+            toast.success(t('post.created'));
+            setIsPostModalOpen(false);
+            setPostData({ content: '', postType: 'DISCUSSION' });
+            fetchData();
         } catch (error) {
             toast.error(t('common.error'));
         }
     };
 
-    const handleAcceptComment = async (postId: number, commentId: number) => {
-        try {
-            await contentService.acceptComment(commentId);
-            toast.success(t('comment.accepted'));
-            fetchComments(postId);
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    if (loading) return <Loader />;
+    if (loading && !room) return <Loader />;
     if (!room) return <div>Room not found</div>;
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div className={styles.headerLeft}>
-                    <Button
-                        variant="secondary"
-                        onClick={() => navigate(`/${room.directionId}/rooms`)}
-                        icon={<ArrowLeft size={20} />}
-                    />
-                    <h2 className={styles.title}>{room.name}</h2>
-                </div>
-            </div>
+    const feedItems = [
+        ...posts.map(p => ({ ...p, feedType: 'post' as const })),
+        ...articles.map(a => ({ ...a, feedType: 'article' as const }))
+    ].filter(item => {
+        if (activeCategory === 'all') return true;
+        if (item.feedType === 'article') return false;
+        if (activeCategory === 'posts') return item.postType === 'DISCUSSION' || item.postType === 'ANNOUNCEMENT';
+        if (activeCategory === 'questions') return item.postType === 'QUESTION';
+        return true;
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-            <div className={styles.layoutWrapper}>
-                <div className={styles.mainContent}>
-                    <div className={styles.tabsWrapper}>
-                        <div className={styles.tabs}>
+    return (
+        <div className={`${styles.contentContainer} ${styles.animate}`}>
+            <div className={styles.leftColumn}>
+                <div className={styles.creationBox}>
+                    <div className={styles.creationInputRow}>
+                        <img
+                            src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${currentUser?.name}&background=random`}
+                            className={styles.userAvatarMini}
+                            alt="avatar"
+                        />
+                        <button
+                            className={styles.fakeInput}
+                            onClick={() => {
+                                setCreateType('POST');
+                                setIsCreateModalOpen(true);
+                            }}
+                        >
+                            {t('rooms.writeSomething')}
+                        </button>
+                    </div>
+                    <div className={styles.creationActions}>
+                        <div className={styles.actionButtonGroup}>
                             <button
-                                className={`${styles.tab} ${activeTab === 'articles' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('articles')}
+                                className={styles.quickActionBtn}
+                                onClick={() => {
+                                    setCreateType('QUESTION');
+                                    setIsCreateModalOpen(true);
+                                }}
                             >
-                                <BookOpen size={18} />
-                                {t('room.articles')}
+                                <HelpCircle size={16} color="#f59e0b" />
+                                {t('rooms.question') || 'Вопрос'}
                             </button>
-                            <button
-                                className={`${styles.tab} ${activeTab === 'discussions' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('discussions')}
-                            >
-                                <MessageSquare size={18} />
-                                {t('room.discussions')}
-                            </button>
-                            <button
-                                className={`${styles.tab} ${activeTab === 'wiki' ? styles.active : ''}`}
-                                onClick={() => setActiveTab('wiki')}
-                            >
-                                <Lightbulb size={18} />
-                                {t('room.wiki')}
+                            <button className={styles.quickActionBtn}>
+                                <ImageIcon size={16} color="#10b981" />
+                                {t('rooms.photo') || 'Фото'}
                             </button>
                         </div>
+                        <button
+                            className={styles.editorLink}
+                            onClick={() => {
+                                toast('Редактор статей временно недоступен', { icon: '📝' });
+                            }}
+                        >
+                            {t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}
+                        </button>
                     </div>
+                </div>
 
-                    <div className={styles.tabContent}>
-                        {activeTab === 'articles' && (
-                            <div className={styles.articlesSection}>
-                                <div className={styles.actionsBar}>
-                                    <Button
-                                        icon={<Plus size={18} />}
-                                        onClick={() => setIsArticleModalOpen(true)}
-                                    >
-                                        {t('room.addArticle')}
-                                    </Button>
-                                </div>
-                                <div className={styles.grid}>
-                                    {articles.map(article => (
-                                        <Card key={article.id} title={article.title}>
-                                            <div className={styles.articleCard}>
-                                                <p className={styles.articlePreview}>
-                                                    {article.content.substring(0, 150)}...
-                                                </p>
-                                                <div className={styles.articleFooter}>
-                                                    <div className={styles.meta}>
-                                                        <span className={styles.badge}>{article.difficultyLevel}</span>
-                                                        {article.aiScore && (
-                                                            <span className={styles.aiBadge}>
-                                                                <Award size={14} />
-                                                                AI: {article.aiScore}/1.0
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className={styles.cardActions}>
-                                                        {(currentUser?.id === article.userId) && (
-                                                            <>
-                                                                <Button
-                                                                    variant="secondary"
-                                                                    icon={<Edit2 size={14} />}
-                                                                    onClick={() => handleEditArticle(article)}
-                                                                />
-                                                                <Button
-                                                                    variant="danger"
-                                                                    icon={<Trash2 size={14} />}
-                                                                    onClick={() => handleDeleteArticle(article.id)}
-                                                                />
-                                                            </>
-                                                        )}
-                                                        <Button
-                                                            variant="secondary"
-                                                            icon={<Star size={14} />}
-                                                            onClick={() => handlePromoteToWiki(article.id)}
-                                                            title={t('room.promoteToWiki')}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {activeTab === 'discussions' && (
-                            <div className={styles.discussionsList}>
-                                <div className={styles.actionsBar}>
-                                    <Button
-                                        icon={<Plus size={18} />}
-                                        onClick={() => setIsPostModalOpen(true)}
-                                    >
-                                        {t('room.newPost')}
-                                    </Button>
-                                </div>
-                                {posts.map(post => {
-                                    const postComments = comments[post.id] || [];
-                                    const isActive = activePostId === post.id;
-
-                                    return (
-                                        <Card key={post.id} title={post.authorName || 'User'}>
-                                            <div className={styles.postCard}>
-                                                <p>{post.content}</p>
-                                                <div className={styles.postFooter}>
-                                                    <span className={styles.date}>
-                                                        {new Date(post.createdAt).toLocaleDateString()}
-                                                    </span>
-                                                    <div className={styles.cardActions}>
-                                                        {(currentUser?.id === post.authorId) && (
-                                                            <Button
-                                                                variant="secondary"
-                                                                icon={<Edit2 size={14} />}
-                                                                onClick={() => handleEditPost(post)}
-                                                            />
-                                                        )}
-                                                        <Button
-                                                            variant="secondary"
-                                                            onClick={() => {
-                                                                if (!isActive) fetchComments(post.id);
-                                                                setActivePostId(isActive ? null : post.id);
-                                                            }}
-                                                        >
-                                                            {t('room.comments')} ({postComments.length})
-                                                        </Button>
-                                                    </div>
-                                                </div>
-
-                                                {isActive && (
-                                                    <div className={styles.commentsSection}>
-                                                        <div className={styles.commentsList}>
-                                                            {postComments.map(comment => (
-                                                                <div key={comment.id} className={`${styles.commentItem} ${comment.isAccepted ? styles.accepted : ''}`}>
-                                                                    <div className={styles.commentHeader}>
-                                                                        <span className={styles.commentAuthor}>{comment.authorName || 'User'}</span>
-                                                                        {comment.isAccepted && (
-                                                                            <span className={styles.acceptedMarker}>
-                                                                                <Star size={12} fill="currentColor" />
-                                                                                {t('comment.accepted')}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className={styles.commentContent}>{comment.content}</p>
-                                                                    {(currentUser?.id === post.authorId && !comment.isAccepted) && (
-                                                                        <Button
-                                                                            variant="secondary"
-                                                                            onClick={() => handleAcceptComment(post.id, comment.id)}
-                                                                        >
-                                                                            {t('comment.accept')}
-                                                                        </Button>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className={styles.commentForm}>
-                                                            <textarea
-                                                                className={styles.textarea}
-                                                                placeholder={t('comment.placeholder')}
-                                                                value={commentText}
-                                                                onChange={e => setCommentText(e.target.value)}
-                                                            />
-                                                            <Button onClick={() => handleCreateComment(post.id)}>
-                                                                {t('common.save')}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {activeTab === 'wiki' && (
-                            <div className={styles.wikiSection}>
-                                {wikiEntries.length === 0 ? (
-                                    <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-                                        {t('wiki.empty')}
-                                    </p>
-                                ) : (
-                                    <div className={styles.grid}>
-                                        {wikiEntries.map(entry => (
-                                            <Card key={entry.id} title={entry.title}>
-                                                <p>{entry.content.substring(0, 200)}...</p>
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                    {t('room.updated')}: {new Date(entry.updatedAt).toLocaleDateString()}
-                                                </span>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
+                <div className={styles.filtersRow}>
+                    <div className={styles.tabs}>
+                        <button
+                            className={`${styles.filterTab} ${activeSubTab === 'all' ? styles.active : ''}`}
+                            onClick={() => setActiveSubTab('all')}
+                        >
+                            Все обсуждения
+                        </button>
+                        <button
+                            className={`${styles.filterTab} ${activeSubTab === 'trends' ? styles.active : ''}`}
+                            onClick={() => setActiveSubTab('trends')}
+                        >
+                            Тренды
+                        </button>
                     </div>
+                    <div className={styles.chipGroup}>
+                        <button
+                            className={`${styles.filterChip} ${activeCategory === 'all' ? styles.active : ''}`}
+                            onClick={() => setActiveCategory('all')}
+                        >
+                            Все
+                        </button>
+                        <button
+                            className={`${styles.filterChip} ${activeCategory === 'posts' ? styles.active : ''}`}
+                            onClick={() => setActiveCategory('posts')}
+                        >
+                            Посты
+                        </button>
+                        <button
+                            className={`${styles.filterChip} ${activeCategory === 'questions' ? styles.active : ''}`}
+                            onClick={() => setActiveCategory('questions')}
+                        >
+                            Вопросы
+                        </button>
+                    </div>
+                </div>
 
-                    <div className={styles.sidebar}>
-                        <Card title={t('rooms.overview')}>
-                            <div className={styles.roomSidebarInfo}>
-                                <p className={styles.roomDescription}>
-                                    {room.description || t('rooms.noDescription')}
-                                </p>
-                                <div className={styles.sidebarStats}>
-                                    <div className={styles.sidebarStatItem}>
-                                        <Users size={16} />
-                                        <span>{t('rooms.members')}: {(room as any).membersCount || 0}</span>
+                <div className={styles.postsList}>
+                    {feedItems.map((item) => (
+                        <article key={`${item.feedType}-${item.id}`} className={styles.articleCard}>
+                            <div className={styles.cardTop}>
+                                <img
+                                    src={(item as any).authorAvatar || `https://ui-avatars.com/api/?name=${(item as any).authorName || (item as any).userName || (item as any).userId || 'User'}&background=random`}
+                                    className={styles.userAvatarMini}
+                                    alt="avatar"
+                                />
+                                <div className={styles.authorInfo}>
+                                    <h4>{(item as any).authorName || (item as any).userName || `User #${(item as any).userId || '?'}`}</h4>
+                                    <span className={styles.authorRole}>{(item as any).authorRole || 'Member'}</span>
+                                </div>
+                                <span className={`${styles.postTypeBadge} ${item.feedType === 'article' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
+                                    {item.feedType === 'article' ? 'Статья' : ((item as any).postType === 'QUESTION' ? 'Вопрос' : 'Пост')}
+                                </span>
+                            </div>
+
+                            <h3 className={styles.postTitle}>{(item as any).title || t('post.discussion')}</h3>
+                            <p className={styles.postPreview}>{item.content}</p>
+
+                            <div className={styles.cardFooter}>
+                                <div className={styles.statsLeft}>
+                                    <div className={styles.statItem}>
+                                        <MessageSquare size={14} />
+                                        <span>12 ответов</span>
                                     </div>
-                                    <div className={styles.sidebarStatItem}>
-                                        <BookOpen size={16} />
-                                        <span>{t('rooms.articles')}: {articles.length}</span>
+                                    <div className={`${styles.statItem} ${styles.liked}`}>
+                                        <Heart size={14} />
+                                        <span>128</span>
                                     </div>
                                 </div>
-                                <Button
-                                    variant="secondary"
-                                    fullWidth
-                                    onClick={() => navigate(`/rooms/${room.id}/members`)}
-                                >
-                                    {t('members.title')}
-                                </Button>
+                                <button className={styles.replyBtn}>
+                                    {t('common.reply') || 'Ответить'}
+                                </button>
                             </div>
-                        </Card>
-                    </div>
+                        </article>
+                    ))}
                 </div>
             </div>
 
-            <Modal
-                isOpen={isArticleModalOpen}
-                onClose={() => {
-                    setIsArticleModalOpen(false);
-                    setEditingArticleId(null);
-                    setArticleData({ title: '', content: '', difficultyLevel: 'BEGINNER' });
-                }}
-                title={editingArticleId ? t('article.edit') : t('room.addArticle')}
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => {
-                            setIsArticleModalOpen(false);
-                            setEditingArticleId(null);
-                            setArticleData({ title: '', content: '', difficultyLevel: 'BEGINNER' });
-                        }}>{t('common.cancel')}</Button>
-                        <Button onClick={handleCreateArticle}>{editingArticleId ? t('common.save') : t('common.create')}</Button>
-                    </>
-                }
-            >
-                <form className={styles.form} onSubmit={handleCreateArticle}>
-                    <Input
-                        label={t('article.title')}
-                        value={articleData.title}
-                        onChange={e => setArticleData({ ...articleData, title: e.target.value })}
-                        required
-                    />
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>{t('article.content')}</label>
-                        <textarea
-                            className={styles.textarea}
-                            value={articleData.content}
-                            onChange={e => setArticleData({ ...articleData, content: e.target.value })}
-                            required
-                        />
+            <aside className={styles.rightSidebar}>
+                <div className={styles.sidebarWidget}>
+                    <h4 className={styles.widgetTitle}>
+                        <Flame size={18} color="#f97316" />
+                        Нужна помощь
+                    </h4>
+                    <div className={styles.helpList}>
+                        <a href="#" className={styles.helpItem}>
+                            <p>Как настроить TLS для gRPC в Docker?</p>
+                            <span className={styles.helpMeta}>20 мин назад • 0 ответов</span>
+                        </a>
+                        <a href="#" className={styles.helpItem}>
+                            <p>Ошибка 504 при загрузке файлов через Nginx</p>
+                            <span className={styles.helpMeta}>1 час назад • 0 ответов</span>
+                        </a>
                     </div>
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>{t('article.difficulty')}</label>
-                        <select
-                            className={styles.select}
-                            value={articleData.difficultyLevel}
-                            onChange={e => setArticleData({ ...articleData, difficultyLevel: e.target.value as any })}
-                        >
-                            <option value="BEGINNER">{t('difficulty.beginner')}</option>
-                            <option value="INTERMEDIATE">{t('difficulty.intermediate')}</option>
-                            <option value="ADVANCED">{t('difficulty.advanced')}</option>
-                        </select>
+                </div>
+
+                <div className={styles.sidebarWidget}>
+                    <h4 className={styles.widgetTitle}>Популярно здесь</h4>
+                    <div className={styles.tagCloud}>
+                        <span className={styles.tag}>#postgresql</span>
+                        <span className={styles.tag}>#microservices</span>
+                        <span className={styles.tag}>#go</span>
+                        <span className={styles.tag}>#highload</span>
+                        <span className={styles.tag}>#kafka</span>
                     </div>
-                </form>
-            </Modal>
+                </div>
+            </aside>
 
             <Modal
                 isOpen={isPostModalOpen}
                 onClose={() => {
                     setIsPostModalOpen(false);
-                    setEditingPostId(null);
-                    setPostData({ content: '', type: 'DISCUSSION' });
+                    setPostData({ content: '', postType: 'DISCUSSION' });
                 }}
-                title={editingPostId ? t('post.edit') : t('room.newPost')}
+                title={t('rooms.newPost')}
                 footer={
                     <>
                         <Button variant="secondary" onClick={() => {
                             setIsPostModalOpen(false);
-                            setEditingPostId(null);
-                            setPostData({ content: '', type: 'DISCUSSION' });
+                            setPostData({ content: '', postType: 'DISCUSSION' });
                         }}>{t('common.cancel')}</Button>
-                        <Button onClick={handleCreatePost}>{editingPostId ? t('common.save') : t('common.create')}</Button>
+                        <Button onClick={handleCreatePost}>{t('common.create')}</Button>
                     </>
                 }
             >
@@ -529,6 +284,14 @@ const RoomDetailPage: React.FC = () => {
                     </div>
                 </form>
             </Modal>
+
+            <CreateContentModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                roomId={Number(roomId)}
+                initialType={createType}
+                onSuccess={fetchData}
+            />
         </div>
     );
 };

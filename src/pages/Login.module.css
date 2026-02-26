@@ -1,70 +1,211 @@
-.container {
+.bodyWrapper {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--background-color);
-    padding: 1.5rem;
+    background-color: #f8fafc;
+    padding: 1rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-.card {
+.loginContainer {
+    max-width: 440px;
     width: 100%;
-    max-width: 400px;
-    padding: 2.5rem;
-    background-color: var(--surface-color);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
 }
 
-.branding {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.header {
     text-align: center;
-    gap: 0.75rem;
+    margin-bottom: 2rem;
 }
 
-.logo {
+.logoWrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 4rem;
     height: 4rem;
-    background-color: var(--primary-color);
-    border-radius: 1rem;
+    background: white;
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 1rem;
+}
+
+.logoIcon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: #4f46e5;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 0.5rem;
+    color: white;
+    font-size: 1.25rem;
 }
 
-.brandName {
-    font-size: 1.75rem;
+.title {
+    font-size: 1.5rem;
     font-weight: 800;
-    color: var(--text-color);
+    color: #0f172a;
+    letter-spacing: -0.025em;
     margin: 0;
 }
 
 .subtitle {
-    color: var(--text-secondary);
-    font-size: 0.925rem;
-    margin: 0;
+    color: #64748b;
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
+
+.card {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: 32px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(226, 232, 240, 0.5);
+}
+
+.socialGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.socialButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: transparent;
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #334155;
+    transition: background-color 0.2s;
+}
+
+.socialButton:hover {
+    background-color: #f8fafc;
+}
+
+.socialButton i {
+    font-size: 1rem;
+}
+
+.divider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background-color: #f1f5f9;
+}
+
+.dividerText {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
-.inputGroup {
+.formGroup {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+}
+
+.labelWrapper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    margin-left: 0.25rem;
+}
+
+.label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    background-color: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    font-size: 1rem;
+    color: #0f172a;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.input::placeholder {
+    color: #94a3b8;
+}
+
+.input:focus {
+    background-color: white;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.forgotLink {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4f46e5;
+    text-decoration: none;
 }
 
 .submitButton {
     width: 100%;
-    padding: 0.75rem !important;
-    font-size: 1rem !important;
+    background-color: #0f172a;
+    color: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+    margin-top: 0.5rem;
+}
+
+.submitButton:hover {
+    background-color: #1e293b;
+}
+
+.submitButton:active {
+    transform: scale(0.98);
+}
+
+.registerText {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.registerLink {
+    color: #4f46e5;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.registerLink:hover {
+    text-decoration: underline;
 }

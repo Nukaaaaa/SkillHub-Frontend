@@ -10,6 +10,7 @@ import ProfilePage from './pages/ProfilePage';
 import CommunityPage from './pages/CommunityPage';
 import SettingsPage from './pages/SettingsPage';
 import RoomDetailPage from './pages/RoomDetailPage';
+import RoomLayout from './components/RoomLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -32,7 +33,7 @@ const Home = () => {
   if (user?.selectedDirectionId) {
     return <Navigate to={`/${user.selectedDirectionId}/rooms`} replace />;
   }
-  return <Dashboard />;
+  return <Navigate to="/dashboard" replace />;
 };
 
 function App() {
@@ -44,19 +45,32 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
+          <Route path="/dashboard" element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } />
+
+
           <Route path="/" element={
             <PrivateRoute>
               <Layout />
             </PrivateRoute>
           }>
             <Route index element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/:directionId/rooms" element={<RoomsPage />} />
-            <Route path="/rooms/:roomId/members" element={<RoomMembersPage />} />
-            <Route path="/rooms/:roomId" element={<RoomDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+
+          <Route path="/rooms/:roomId" element={
+            <PrivateRoute>
+              <RoomLayout />
+            </PrivateRoute>
+          }>
+            <Route index element={<RoomDetailPage />} />
+            <Route path="members" element={<RoomMembersPage />} />
           </Route>
         </Routes>
       </AuthProvider>

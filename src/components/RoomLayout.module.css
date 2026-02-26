@@ -1,0 +1,178 @@
+.roomLayout {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafb;
+}
+
+.roomSidebar {
+    width: 80px;
+    height: 100vh;
+    background-color: white;
+    border-right: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 0;
+    transition: width 0.3s ease;
+    z-index: 50;
+}
+
+@media (min-width: 1024px) {
+    .roomSidebar {
+        width: 256px;
+        align-items: flex-start;
+        padding: 1.5rem;
+    }
+}
+
+.sidebarBrand {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4f46e5;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.brandFull {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .brandShort {
+        display: none;
+    }
+
+    .brandFull {
+        display: inline;
+    }
+}
+
+.sidebarNav {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.navLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: #9ca3af;
+    text-decoration: none;
+    transition: all 0.2s;
+    gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .navLink {
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+    }
+}
+
+.navLink:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.navLink.active {
+    background-color: #eef2ff;
+    color: #4f46e5;
+}
+
+.navLink span:last-child {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .navLink span:last-child {
+        display: inline;
+        font-weight: 500;
+    }
+}
+
+.sidebarDivider {
+    width: 100%;
+    height: 1px;
+    background-color: #f3f4f6;
+    margin: 1rem 0;
+}
+
+.mainArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.header {
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+.headerContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.roomInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.roomIcon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: #2563eb;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.roomText h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.roomStats {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.onlineBadge {
+    color: #10b981;
+    font-weight: 700;
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.innerContent {
+    max-width: 1200px;
+    margin: 0 auto;
+}

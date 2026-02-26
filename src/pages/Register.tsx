@@ -3,10 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import styles from './Login.module.css';
-import { Zap, Mail, Lock, User, School, FileText } from 'lucide-react';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import styles from './Register.module.css';
 
 const Register: React.FC = () => {
     const { t } = useTranslation();
@@ -34,101 +31,154 @@ const Register: React.FC = () => {
                 universite,
                 bio
             });
-            toast.success(t('login.registerSuccess') || 'Registration successful!', { id: loadingToast });
+            toast.success(t('login.registerSuccess'), { id: loadingToast });
             navigate('/');
         } catch (error) {
-            toast.error(t('login.registerError') || 'Registration failed. Please check if the email is already in use.', { id: loadingToast });
+            toast.error(t('login.registerError'), { id: loadingToast });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.branding}>
-                    <div className={styles.logo}>
-                        <Zap size={32} color="white" fill="white" />
+        <div className={styles.bodyWrapper}>
+            <div className={styles.registerContainer}>
+                {/* Left Sidebar */}
+                <div className={styles.sidebar}>
+                    <div className={styles.circleDecoration}></div>
+
+                    <div className={styles.sidebarContent}>
+                        <div className={styles.iconWrapper}>
+                            <i className="fas fa-rocket"></i>
+                        </div>
+                        <h2 className={styles.sidebarTitle}>
+                            {t('login.registerSidebarTitle')}
+                        </h2>
+                        <p className={styles.sidebarText}>
+                            {t('login.registerSidebarText')}
+                        </p>
                     </div>
-                    <h1 className={styles.brandName}>SkillHub</h1>
-                    <p className={styles.subtitle}>{t('login.registerTitle') || 'Create your account'}</p>
+
+                    <div className={styles.sidebarFooter}>
+                        <div className={styles.avatars}>
+                            <img
+                                className={styles.avatar}
+                                src="https://ui-avatars.com/api/?name=Doc&background=random"
+                                alt="avatar"
+                            />
+                            <img
+                                className={styles.avatar}
+                                src="https://ui-avatars.com/api/?name=Artist&background=random"
+                                alt="avatar"
+                            />
+                            <img
+                                className={styles.avatar}
+                                src="https://ui-avatars.com/api/?name=Lawyer&background=random"
+                                alt="avatar"
+                            />
+                        </div>
+                        <p className={styles.statsText}>
+                            {t('login.registerSidebarStats')}
+                        </p>
+                    </div>
                 </div>
 
-                <form className={styles.form} onSubmit={handleSubmit}>
-                    <div className={styles.inputGroup}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <Input
-                                label={t('profile.name') || 'First Name'}
-                                type="text"
-                                icon={<User size={18} />}
-                                placeholder="John"
-                                value={firstname}
-                                onChange={(e) => setFirstname(e.target.value)}
-                                required
-                            />
-                            <Input
-                                label={t('profile.lastname') || 'Last Name'}
-                                type="text"
-                                icon={<User size={18} />}
-                                placeholder="Doe"
-                                value={lastname}
-                                onChange={(e) => setLastname(e.target.value)}
+                {/* Right Form Section */}
+                <div className={styles.formSection}>
+                    <h3 className={styles.formTitle}>{t('login.registerTitle')}</h3>
+                    <p className={styles.formSubtitle}>
+                        {t('login.registerFormSubtitle')}
+                    </p>
+
+                    <form className={styles.form} onSubmit={handleSubmit}>
+                        <div className={styles.formRow}>
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>{t('profile.name')}</label>
+                                <input
+                                    type="text"
+                                    placeholder="Имя"
+                                    className={styles.input}
+                                    value={firstname}
+                                    onChange={(e) => setFirstname(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label className={styles.label}>{t('profile.lastname')}</label>
+                                <input
+                                    type="text"
+                                    placeholder="Фамилия"
+                                    className={styles.input}
+                                    value={lastname}
+                                    onChange={(e) => setLastname(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>{t('login.email')}</label>
+                            <input
+                                type="email"
+                                placeholder="alex@example.com"
+                                className={styles.input}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
 
-                        <Input
-                            label={t('login.email')}
-                            type="email"
-                            icon={<Mail size={18} />}
-                            placeholder="user@example.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>{t('login.password')}</label>
+                            <input
+                                type="password"
+                                placeholder="••••••••"
+                                className={styles.input}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                        <Input
-                            label={t('login.password')}
-                            type="password"
-                            icon={<Lock size={18} />}
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>{t('profile.universite') || 'Университет'}</label>
+                            <input
+                                type="text"
+                                placeholder="Название учебного заведения"
+                                className={styles.input}
+                                value={universite}
+                                onChange={(e) => setUniversite(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                        <Input
-                            label={t('profile.university') || 'University'}
-                            type="text"
-                            icon={<School size={18} />}
-                            placeholder="Harvard University"
-                            value={universite}
-                            onChange={(e) => setUniversite(e.target.value)}
-                            required
-                        />
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>{t('profile.bio')}</label>
+                            <textarea
+                                placeholder="Краткая информация о себе..."
+                                className={`${styles.input} ${styles.textarea}`}
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                        <Input
-                            label={t('profile.bio') || 'About you'}
-                            type="text"
-                            icon={<FileText size={18} />}
-                            placeholder="Computer Science Student..."
-                            value={bio}
-                            onChange={(e) => setBio(e.target.value)}
-                            required
-                        />
-                    </div>
+                        <button
+                            type="submit"
+                            className={styles.submitButton}
+                            disabled={loading}
+                        >
+                            {loading ? '...' : t('login.registerSubmit')}
+                        </button>
+                    </form>
 
-                    <Button type="submit" className={styles.submitButton} disabled={loading}>
-                        {loading ? '...' : (t('login.registerSubmit') || 'Register')}
-                    </Button>
-
-                    <div className={styles.footer}>
-                        <span>{t('login.haveAccount') || 'Already have an account?'} </span>
-                        <Link to="/login" className={styles.link}>
+                    <p className={styles.loginPrompt}>
+                        {t('login.haveAccount')} {' '}
+                        <Link to="/login" className={styles.loginLink}>
                             {t('login.submit')}
                         </Link>
-                    </div>
-                </form>
+                    </p>
+                </div>
             </div>
         </div>
     );

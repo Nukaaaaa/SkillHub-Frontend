@@ -14,26 +14,34 @@
         "offline": "Режим оффлайн: используются демо-данные",
         "deleteConfirm": "Вы уверены? Это действие нельзя отменить.",
         "deleteSuccess": "Успешно удалено",
-        "back": "Назад"
+        "back": "Назад",
+        "reply": "Ответить"
     },
     "nav": {
         "directions": "Направления",
         "profile": "Профиль",
         "community": "Сообщество",
         "settings": "Настройки",
-        "overview": "Обзор"
+        "overview": "Обзор",
+        "saved": "Сохраненные статьи",
+        "wiki": "База знаний (Wiki)",
+        "achievements": "Достижения",
+        "rooms": "Комнаты"
     },
     "dashboard": {
-        "title": "Выберите своё направление",
-        "subtitle": "Нажмите на карточку, чтобы выбрать специализацию, и подтвердите выбор",
-        "addDirection": "Добавить направление",
-        "searchPlaceholder": "Поиск направлений...",
-        "rooms": "Войти в направление",
-        "directionName": "Название направления",
-        "directionDescription": "Описание направления",
-        "direction": "Направление",
+        "welcomeBadge": "Добро пожаловать в экосистему",
+        "title": "В какой области вы {{highlight}}?",
+        "titleHighlight": "эксперт",
+        "subtitle": "Выберите основные направления вашей деятельности. Это поможет нам сформировать вашу персональную базу знаний и подобрать профессиональные сообщества.",
+        "addDirection": "Добавить сферу",
+        "rooms": "К комнатам",
+        "directionName": "Название сферы",
+        "directionDescription": "Описание сферы",
+        "direction": "Сфера",
         "pleaseSelect": "Пожалуйста, выберите направление",
-        "selectToConfirm": "Выберите направление"
+        "selectToConfirm": "Выберите направление",
+        "selectedCount": "выбрано",
+        "startWorking": "Начать работу"
     },
     "profile": {
         "title": "Мой профиль",
@@ -146,7 +154,11 @@
         "lastActivity": "Последняя активность",
         "hoursAgo": "ч. назад",
         "yourProgress": "Ваш прогресс",
-        "lessonsCompleted": "уроков завершено"
+        "lessonsCompleted": "уроков завершено",
+        "createPrompt": "Задать вопрос или поделиться мыслью в этой комнате...",
+        "question": "Вопрос",
+        "photo": "Фото",
+        "writeArticlePrompt": "Статью лучше писать в редакторе →"
     },
     "members": {
         "title": "Участники комнаты",
@@ -163,16 +175,30 @@
         "guest": "Гость"
     },
     "login": {
-        "title": "Вход в SkillHub",
-        "email": "Email",
+        "title": "Добро пожаловать в SkillHub",
+        "subtitle": "Единое пространство для профессионалов",
+        "email": "Электронная почта",
         "password": "Пароль",
         "submit": "Войти",
         "defaultUser": "Пользователь",
         "noAccount": "Нет аккаунта?",
         "registerHeader": "Зарегистрироваться",
         "registerTitle": "Создайте свой аккаунт",
-        "registerSubmit": "Зарегистрироваться",
-        "haveAccount": "Уже есть аккаунт?"
+        "registerSubmit": "Создать аккаунт",
+        "haveAccount": "Уже есть аккаунт?",
+        "orWithEmail": "Или через почту",
+        "forgotPassword": "Забыли?",
+        "newHere": "Впервые у нас?",
+        "createAccount": "Создать аккаунт бесплатно",
+        "signInAccount": "Войти в аккаунт",
+        "success": "С возвращением!",
+        "error": "Неверный логин или пароль",
+        "registerSuccess": "Регистрация прошла успешно!",
+        "registerError": "Ошибка регистрации. Возможно, этот Email уже занят.",
+        "registerSidebarTitle": "Ваш профессиональный рост начинается здесь",
+        "registerSidebarText": "Присоединяйтесь к тысячам экспертов из разных областей: от IT и медицины до искусства и менеджмента.",
+        "registerSidebarStats": "Уже 10,000+ профессионалов с нами",
+        "registerFormSubtitle": "Заполните данные, чтобы мы могли настроить ленту под вас"
     },
     "article": {
         "created": "Статья создана!",

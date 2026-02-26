@@ -3,17 +3,26 @@ import styles from './Dashboard.module.css';
 import { directionService } from '../api/directionService';
 import type { Direction } from '../types';
 import Loader from '../components/Loader';
-import { Plus, Edit2, Trash2, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Input from '../components/Input';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
-// Map direction icons by index
-const DIRECTION_ICONS = ['💻', '🏥', '📐', '⚙️', '📈', '🔬', '🎨', '📚', '🌍', '🎯'];
+// Mockup styling mapping
+const DIRECTION_STYLES = [
+    { icon: 'fas fa-laptop-code', bg: '#eff6ff', color: '#3b82f6' }, // Blue
+    { icon: 'fas fa-stethoscope', bg: '#fef2f2', color: '#ef4444' }, // Red
+    { icon: 'fas fa-chart-line', bg: '#fffbeb', color: '#f59e0b' }, // Amber
+    { icon: 'fas fa-graduation-cap', bg: '#ecfdf5', color: '#10b981' }, // Emerald
+    { icon: 'fas fa-gavel', bg: '#eef2ff', color: '#6366f1' }, // Indigo
+    { icon: 'fas fa-microchip', bg: '#fff7ed', color: '#f97316' }, // Orange
+    { icon: 'fas fa-paint-brush', bg: '#fdf2f8', color: '#ec4899' }, // Pink
+    { icon: 'fas fa-brain', bg: '#faf5ff', color: '#a855f7' }, // Purple
+];
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
@@ -78,6 +87,7 @@ const Dashboard: React.FC = () => {
                 await directionService.deleteDirection(id);
                 toast.success(t('common.delete'));
                 fetchDirections();
+                if (selectedId === id) setSelectedId(null);
             } catch (error) {
                 toast.error(t('common.error'));
             }
@@ -85,10 +95,7 @@ const Dashboard: React.FC = () => {
     };
 
     const handleConfirm = () => {
-        if (!selectedId) {
-            toast.error(t('dashboard.pleaseSelect'));
-            return;
-        }
+        if (!selectedId) return;
         selectDirection(selectedId);
         navigate(`/${selectedId}/rooms`);
     };
@@ -98,7 +105,16 @@ const Dashboard: React.FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.pageHeader}>
-                <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+                <div className={styles.welcomeBadge}>
+                    {t('dashboard.welcomeBadge')}
+                </div>
+                <h1 className={styles.pageTitle}>
+                    <Trans
+                        i18nKey="dashboard.title"
+                        values={{ highlight: t('dashboard.titleHighlight') }}
+                        components={{ span: <span className={styles.highlight} /> }}
+                    />
+                </h1>
                 <p className={styles.pageSubtitle}>{t('dashboard.subtitle')}</p>
             </div>
 
@@ -115,24 +131,24 @@ const Dashboard: React.FC = () => {
             <div className={styles.grid}>
                 {directions.map((dir, idx) => {
                     const isSelected = selectedId === dir.id;
+                    const style = DIRECTION_STYLES[idx % DIRECTION_STYLES.length];
+
                     return (
                         <div
                             key={dir.id}
                             className={`${styles.card} ${isSelected ? styles.selected : ''}`}
-                            onClick={() => setSelectedId(dir.id)}
+                            onClick={() => setSelectedId(isSelected ? null : dir.id)}
                         >
-                            <div className={styles.cardIcon}>
-                                {DIRECTION_ICONS[idx % DIRECTION_ICONS.length]}
+                            <div
+                                className={styles.cardIconWrapper}
+                                style={{ backgroundColor: style.bg, color: style.color }}
+                            >
+                                <i className={style.icon}></i>
                             </div>
-                            <div className={styles.cardContent}>
-                                <h3 className={styles.cardTitle}>{t(dir.name)}</h3>
-                                <p className={styles.cardDescription}>{t(dir.description)}</p>
-                            </div>
-                            {isSelected && (
-                                <div className={styles.selectedBadge}>
-                                    <Check size={14} />
-                                </div>
-                            )}
+
+                            <h3 className={styles.cardTitle}>{t(dir.name)}</h3>
+                            <p className={styles.cardDescription}>{t(dir.description)}</p>
+
                             <div className={styles.cardAdminActions}>
                                 <button
                                     className={styles.adminBtn}
@@ -152,6 +168,7 @@ const Dashboard: React.FC = () => {
                         </div>
                     );
                 })}
+
                 {directions.length === 0 && !loading && (
                     <div className={styles.empty}>
                         <p>{t('common.noData')}</p>
@@ -159,18 +176,23 @@ const Dashboard: React.FC = () => {
                 )}
             </div>
 
-            {directions.length > 0 && (
-                <div className={styles.confirmSection}>
-                    <Button
-                        onClick={handleConfirm}
-                        className={styles.confirmBtn}
-                    >
-                        {selectedId
-                            ? `${t('dashboard.rooms')} →`
-                            : t('dashboard.selectToConfirm')}
-                    </Button>
+            <div className={styles.stickyFooter}>
+                <div className={styles.counterSection}>
+                    <span className={styles.counterValue}>
+                        {selectedId ? 1 : 0}
+                    </span>
+                    <span className={styles.counterLabel}>
+                        {t('dashboard.selectedCount')}
+                    </span>
                 </div>
-            )}
+                <button
+                    onClick={handleConfirm}
+                    disabled={!selectedId}
+                    className={`${styles.confirmBtn} ${selectedId ? styles.activeConfirmBtn : ''}`}
+                >
+                    {t('dashboard.startWorking')}
+                </button>
+            </div>
 
             <Modal
                 isOpen={isModalOpen}

@@ -22,7 +22,7 @@ export const directionService = {
         await apiClient.delete(`/directions/${id}`);
     },
     getDirection: async (id: number): Promise<Direction> => {
-        const response = await apiClient.get<Direction>(`/directions/${id}`);
+        const response = await apiClient.get<Direction>(`/rooms/direction/${id}`);
         return response.data;
     },
 };
