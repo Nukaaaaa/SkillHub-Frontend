@@ -12,7 +12,8 @@ import {
 
 import { contentService } from '../api/contentService';
 import { roomService } from '../api/roomService';
-import type { Room, Article, Post } from '../types';
+import { userService } from '../api/userService';
+import type { Room, Article, Post, User } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 import Loader from '../components/Loader';
@@ -33,6 +34,7 @@ const RoomDetailPage: React.FC = () => {
 
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
 
     const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
@@ -57,7 +59,23 @@ const RoomDetailPage: React.FC = () => {
             if (!room) setRoom(roomData);
             setArticles(articlesData);
             setPosts(postsData);
+
+            // Fetch profiles for all authors (unique IDs only)
+            const authorIds = Array.from(new Set([
+                ...articlesData.map(a => a.userId),
+                ...postsData.map(p => p.userId)
+            ])).filter(id => id !== undefined && id !== null);
+
+            const profilePromises = authorIds.map(id => userService.getUserById(id));
+            const profiles = await Promise.all(profilePromises);
+
+            const profileMap: Record<number, User> = {};
+            profiles.forEach(p => {
+                profileMap[p.id] = p;
+            });
+            setAuthorProfiles(profileMap);
         } catch (error) {
+            console.error('Failed to fetch data or authors:', error);
             toast.error(t('common.error'));
         } finally {
             setLoading(false);
@@ -201,13 +219,17 @@ const RoomDetailPage: React.FC = () => {
                         <article key={`${item.feedType}-${item.id}`} className={styles.articleCard}>
                             <div className={styles.cardTop}>
                                 <img
-                                    src={(item as any).authorAvatar || `https://ui-avatars.com/api/?name=${(item as any).authorName || (item as any).userName || (item as any).userId || 'User'}&background=random`}
+                                    src={authorProfiles[item.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[item.userId]?.firstname || 'User'}&background=random`}
                                     className={styles.userAvatarMini}
                                     alt="avatar"
                                 />
                                 <div className={styles.authorInfo}>
-                                    <h4>{(item as any).authorName || (item as any).userName || `User #${(item as any).userId || '?'}`}</h4>
-                                    <span className={styles.authorRole}>{(item as any).authorRole || 'Member'}</span>
+                                    <h4>
+                                        {authorProfiles[item.userId]
+                                            ? `${authorProfiles[item.userId].firstname} ${authorProfiles[item.userId].lastname}`
+                                            : `User #${item.userId}`}
+                                    </h4>
+                                    <span className={styles.authorRole}>{authorProfiles[item.userId]?.role || 'Member'}</span>
                                 </div>
                                 <span className={`${styles.postTypeBadge} ${item.feedType === 'article' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
                                     {item.feedType === 'article' ? 'Статья' : ((item as any).postType === 'QUESTION' ? 'Вопрос' : 'Пост')}

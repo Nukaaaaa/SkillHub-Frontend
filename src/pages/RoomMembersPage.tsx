@@ -7,24 +7,22 @@ import {
     Medal,
     MessageSquare,
     Heart,
-    ChevronRight,
-    User as UserIcon,
-    Shield
+    ChevronRight
 } from 'lucide-react';
 
 import { roomService } from '../api/roomService';
-import type { UserRoom } from '../types';
+import { userService } from '../api/userService';
+import type { UserRoom, User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
 
 const RoomMembersPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
-    const { user: currentUser } = useAuth();
-    const navigate = useNavigate();
     const { t } = useTranslation();
 
     const [members, setMembers] = useState<UserRoom[]>([]);
+    const [memberProfiles, setMemberProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<'reputation' | 'date'>('reputation');
@@ -35,8 +33,18 @@ const RoomMembersPage: React.FC = () => {
             setLoading(true);
             const data = await roomService.getMembers(Number(roomId));
             setMembers(data);
+
+            // Fetch profiles for all members
+            const profilePromises = data.map(m => userService.getUserById(m.userId));
+            const profiles = await Promise.all(profilePromises);
+
+            const profileMap: Record<number, User> = {};
+            profiles.forEach(p => {
+                profileMap[p.id] = p;
+            });
+            setMemberProfiles(profileMap);
         } catch (error) {
-            console.error('Failed to fetch members:', error);
+            console.error('Failed to fetch members or profiles:', error);
         } finally {
             setLoading(false);
         }
@@ -46,15 +54,27 @@ const RoomMembersPage: React.FC = () => {
         fetchMembers();
     }, [roomId]);
 
-    const filteredMembers = members.filter(m =>
-        (m.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => {
+    const filteredMembers = members.filter(m => {
+        const profile = memberProfiles[m.userId];
+        const name = profile ? `${profile.firstname} ${profile.lastname}` : (m.name || '');
+        return name.toLowerCase().includes(searchTerm.toLowerCase());
+    }).sort((a, b) => {
         if (sortBy === 'reputation') {
-            // Mock reputation based on userId for sorting
             return (b.userId % 500) - (a.userId % 500);
         }
-        return 0; // Default order
+        return 0;
     });
+
+    const getMemberName = (m: UserRoom) => {
+        const profile = memberProfiles[m.userId];
+        return profile ? `${profile.firstname} ${profile.lastname}` : `User #${m.userId}`;
+    };
+
+    const getMemberAvatar = (m: UserRoom) => {
+        const profile = memberProfiles[m.userId];
+        if (profile?.avatar) return profile.avatar;
+        return `https://ui-avatars.com/api/?name=${getMemberName(m)}&background=random`;
+    };
 
     const leaders = filteredMembers.slice(0, 3);
 
@@ -98,14 +118,14 @@ const RoomMembersPage: React.FC = () => {
                                 </div>
                                 <div className={styles.avatarWrapper}>
                                     <img
-                                        src={`https://ui-avatars.com/api/?name=${leader.name || 'User'}&background=${index === 0 ? '4f46e5' : 'random'}&color=fff`}
+                                        src={getMemberAvatar(leader)}
                                         className={styles.leaderAvatar}
                                         alt="avatar"
                                     />
                                     <span className={styles.rankBadge}>{index + 1}</span>
                                 </div>
-                                <h4 className={styles.leaderName}>{leader.name || `User #${leader.userId}`}</h4>
-                                <p className={styles.leaderHandle}>@{(leader.name || 'user').toLowerCase().replace(/\s+/g, '_')}</p>
+                                <h4 className={styles.leaderName}>{getMemberName(leader)}</h4>
+                                <p className={styles.leaderHandle}>@{getMemberName(leader).toLowerCase().replace(/\s+/g, '_')}</p>
 
                                 <div className={styles.badgeStack}>
                                     <span className={`${styles.badge} ${leader.role === 'OWNER' ? styles.roleAdmin : styles.roleExpert}`}>
@@ -171,20 +191,20 @@ const RoomMembersPage: React.FC = () => {
                                         <td className={styles.memberCell}>
                                             <div className={styles.userCellInfo}>
                                                 <img
-                                                    src={`https://ui-avatars.com/api/?name=${member.name || 'User'}&background=random`}
+                                                    src={getMemberAvatar(member)}
                                                     className={styles.tableAvatar}
                                                     alt="avatar"
                                                 />
                                                 <div>
-                                                    <p className={styles.userName}>{member.name || `User #${member.userId}`}</p>
-                                                    <p className={styles.userHandle}>@{(member.name || 'user').toLowerCase().replace(/\s+/g, '_')}</p>
+                                                    <p className={styles.userName}>{getMemberName(member)}</p>
+                                                    <p className={styles.userHandle}>@{getMemberName(member).toLowerCase().replace(/\s+/g, '_')}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className={styles.memberCell}>
                                             <span className={`${styles.badge} ${member.role === 'OWNER' ? styles.roleAdmin :
-                                                    member.role === 'ADMIN' ? styles.roleExpert :
-                                                        styles.roleMember
+                                                member.role === 'ADMIN' ? styles.roleExpert :
+                                                    styles.roleMember
                                                 }`}>
                                                 {member.role}
                                             </span>

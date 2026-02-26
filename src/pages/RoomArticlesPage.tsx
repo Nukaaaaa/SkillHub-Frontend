@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 
 import { contentService } from '../api/contentService';
-import type { Article } from '../types';
+import { userService } from '../api/userService';
+import type { Article, User } from '../types';
 import Loader from '../components/Loader';
 import CreateArticleModal from '../components/CreateArticleModal';
 import { useAuth } from '../context/AuthContext';
@@ -23,8 +24,8 @@ const RoomArticlesPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { t } = useTranslation();
     const { isMember } = useAuth();
-    const navigate = useNavigate();
     const [articles, setArticles] = useState<Article[]>([]);
+    const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'new' | 'popular'>('all');
     const [difficulty, setDifficulty] = useState<string>('Любая');
@@ -36,7 +37,19 @@ const RoomArticlesPage: React.FC = () => {
         try {
             const data = await contentService.getArticlesByRoom(Number(roomId));
             setArticles(data);
+
+            // Fetch profiles for all authors (unique IDs only)
+            const authorIds = Array.from(new Set(data.map(a => a.userId)));
+            const profilePromises = authorIds.map(id => userService.getUserById(id));
+            const profiles = await Promise.all(profilePromises);
+
+            const profileMap: Record<number, User> = {};
+            profiles.forEach(p => {
+                profileMap[p.id] = p;
+            });
+            setAuthorProfiles(profileMap);
         } catch (error) {
+            console.error('Failed to fetch articles or authors:', error);
             toast.error(t('common.error'));
         } finally {
             setLoading(false);
@@ -167,11 +180,15 @@ const RoomArticlesPage: React.FC = () => {
                             <div className={styles.cardBody}>
                                 <div className={styles.authorRow}>
                                     <img
-                                        src={(article as any).authorAvatar || `https://ui-avatars.com/api/?name=${(article as any).authorName || 'User'}&background=random`}
+                                        src={authorProfiles[article.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[article.userId]?.firstname || 'User'}&background=random`}
                                         className={styles.authorAvatar}
                                         alt="avatar"
                                     />
-                                    <span className={styles.authorName}>{(article as any).authorName || `User #${article.userId}`}</span>
+                                    <span className={styles.authorName}>
+                                        {authorProfiles[article.userId]
+                                            ? `${authorProfiles[article.userId].firstname} ${authorProfiles[article.userId].lastname}`
+                                            : `User #${article.userId}`}
+                                    </span>
                                     <span className={styles.separator}>•</span>
                                     <span className={styles.readTime}>12 мин чтения</span>
                                 </div>
