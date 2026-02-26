@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     Camera,
@@ -17,7 +18,6 @@ import { directionService } from '../api/directionService';
 import { MOCK_DIRECTIONS } from '../mockData';
 import type { Article, Post, Direction } from '../types';
 import styles from './ProfilePage.module.css';
-import { toast } from 'react-hot-toast';
 
 const FAKE_ARTICLES: Article[] = [
     {
@@ -58,7 +58,8 @@ const FAKE_POSTS: Post[] = [
 ];
 
 const ProfilePage: React.FC = () => {
-    const { user, selectDirection } = useAuth();
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
@@ -92,17 +93,16 @@ const ProfilePage: React.FC = () => {
             }
         };
         fetchData();
-    }, [user?.id]);
+    }, [user?.id, user?.selectedDirectionId]);
 
-    const handleDirectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const dirId = Number(e.target.value);
-        if (dirId) {
-            selectDirection(dirId);
-            toast.success('Направление успешно изменено!');
-        }
+    const handleDirectionChange = () => {
+        navigate('/dashboard?from=profile');
     };
 
     if (!user) return <div className={styles.profileContainer}>Загрузка...</div>;
+
+    // Find current direction object
+    const currentDir = directions.find(d => d.id === user.selectedDirectionId);
 
     // Mock contribution data (still random but based on ID for consistency)
     const seed = user.id || 1;
@@ -163,20 +163,15 @@ const ProfilePage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Direction Selection Card */}
                     <div className={styles.directionCard}>
                         <h3 className={styles.directionTitle}>Текущее направление</h3>
-                        <div className="relative">
-                            <select
-                                className={styles.directionSelect}
-                                value={user.selectedDirectionId || ''}
-                                onChange={handleDirectionChange}
-                            >
-                                <option value="" disabled>Выберите направление</option>
-                                {directions.map(dir => (
-                                    <option key={dir.id} value={dir.id}>{t(dir.name)}</option>
-                                ))}
-                            </select>
+                        <div className={styles.currentDirection}>
+                            <span className={styles.directionName}>
+                                {currentDir ? t(currentDir.name) : 'Не выбрано'}
+                            </span>
+                            <button className={styles.changeDirBtn} onClick={handleDirectionChange}>
+                                <Share2 size={14} style={{ transform: 'rotate(-90deg)' }} /> Сменить
+                            </button>
                         </div>
                     </div>
 

@@ -7,7 +7,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Input from '../components/Input';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +34,8 @@ const Dashboard: React.FC = () => {
     const [formData, setFormData] = useState({ name: '', description: '' });
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const from = searchParams.get('from');
 
     const fetchDirections = async () => {
         try {
@@ -97,7 +99,11 @@ const Dashboard: React.FC = () => {
     const handleConfirm = () => {
         if (!selectedId) return;
         selectDirection(selectedId);
-        navigate(`/${selectedId}/rooms`);
+        if (from === 'profile') {
+            navigate('/profile');
+        } else {
+            navigate(`/${selectedId}/rooms`);
+        }
     };
 
     if (loading) return <Loader />;

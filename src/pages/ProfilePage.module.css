@@ -42,29 +42,42 @@
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #4f46e5;
-    margin-bottom: 1rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
     display: block;
 }
 
-.directionSelect {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #0f172a;
-    cursor: pointer;
-    transition: all 0.2s;
-    outline: none;
+.currentDirection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
 }
 
-.directionSelect:focus {
-    border-color: #4f46e5;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+.directionName {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.changeDirBtn {
+    background: #f1f5f9;
+    color: #4f46e5;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.changeDirBtn:hover {
+    background: #e0e7ff;
+    transform: translateX(2px);
 }
 
 .mainColumn {
