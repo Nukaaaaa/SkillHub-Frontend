@@ -13,6 +13,9 @@ import RoomDetailPage from './pages/RoomDetailPage';
 import RoomLayout from './components/RoomLayout';
 import RoomArticlesPage from './pages/RoomArticlesPage';
 import RoomWikiPage from './pages/RoomWikiPage';
+import SavedArticlesPage from './pages/SavedArticlesPage';
+import AchievementsPage from './pages/AchievementsPage';
+import WikiPage from './pages/WikiPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -64,6 +67,9 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/saved" element={<SavedArticlesPage />} />
+            <Route path="/wiki" element={<WikiPage />} />
+            <Route path="/achievements" element={<AchievementsPage />} />
           </Route>
 
           <Route path="/rooms/:roomId" element={

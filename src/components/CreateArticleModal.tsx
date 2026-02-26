@@ -157,7 +157,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
 
                             <div className={styles.settingGroup}>
                                 <label className={styles.settingLabel}>Уровень сложности</label>
-                                <select 
+                                <select
                                     className={styles.select}
                                     value={difficulty}
                                     onChange={(e) => setDifficulty(e.target.value as any)}
@@ -169,7 +169,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                             </div>
 
                             <div className={styles.settingGroup}>
-                                <label className={styles.settingLabel} style={{marginTop: '1.5rem'}}>Теги</label>
+                                <label className={styles.settingLabel} style={{ marginTop: '1.5rem' }}>Теги</label>
                                 <div className={styles.tagInputWrapper}>
                                     <input
                                         type="text"

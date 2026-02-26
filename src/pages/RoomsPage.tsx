@@ -87,15 +87,15 @@ const RoomsPage: React.FC = () => {
                 <p className={styles.subtitle}>
                     {direction ? t(direction.name) : '...'} - {t('rooms.subtitle') || 'Выберите направление для общения и обмена опытом'}
                 </p>
-                
+
                 <div className={styles.filterTabs}>
-                    <button 
+                    <button
                         className={`${styles.filterTab} ${filterType === 'all' ? styles.activeTab : ''}`}
                         onClick={() => setFilterType('all')}
                     >
                         {t('rooms.allRooms') || 'Все комнаты'}
                     </button>
-                    <button 
+                    <button
                         className={`${styles.filterTab} ${filterType === 'my' ? styles.activeTab : ''}`}
                         onClick={() => setFilterType('my')}
                     >
@@ -108,44 +108,44 @@ const RoomsPage: React.FC = () => {
                 {rooms
                     .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
                     .map(room => {
-                    const stats = getRoomStats(room.id);
+                        const stats = getRoomStats(room.id);
 
-                    return (
-                        <div
-                            key={room.id}
-                            className={styles.roomCard}
-                            onClick={() => handleRoomClick(room.id)}
-                        >
-                            <div className={styles.cardTop}>
-                                <span className={`${styles.categoryBadge} ${getBadgeClass(stats.category)}`}>
-                                    {stats.category}
-                                </span>
-                                <div className={styles.memberStack}>
-                                    {stats.members.map((m, i) => (
-                                        <div key={i} className={styles.memberAvatar}>
-                                            <img src={m} alt="member" />
-                                        </div>
-                                    ))}
-                                    <div className={styles.moreMembers}>+{stats.extraMembers}</div>
+                        return (
+                            <div
+                                key={room.id}
+                                className={styles.roomCard}
+                                onClick={() => handleRoomClick(room.id)}
+                            >
+                                <div className={styles.cardTop}>
+                                    <span className={`${styles.categoryBadge} ${getBadgeClass(stats.category)}`}>
+                                        {stats.category}
+                                    </span>
+                                    <div className={styles.memberStack}>
+                                        {stats.members.map((m, i) => (
+                                            <div key={i} className={styles.memberAvatar}>
+                                                <img src={m} alt="member" />
+                                            </div>
+                                        ))}
+                                        <div className={styles.moreMembers}>+{stats.extraMembers}</div>
+                                    </div>
+                                </div>
+
+                                <h3 className={styles.roomTitle}>{t(room.name)}</h3>
+                                <p className={styles.roomDescription}>{t(room.description) || t('rooms.noDescription')}</p>
+
+                                <div className={styles.cardFooter}>
+                                    <div className={styles.statItem}>
+                                        <MessageSquare size={14} />
+                                        <span>{stats.posts} постов</span>
+                                    </div>
+                                    <div className={styles.statItem}>
+                                        <Users size={14} />
+                                        <span>{stats.participants} участников</span>
+                                    </div>
                                 </div>
                             </div>
-
-                            <h3 className={styles.roomTitle}>{t(room.name)}</h3>
-                            <p className={styles.roomDescription}>{t(room.description) || t('rooms.noDescription')}</p>
-
-                            <div className={styles.cardFooter}>
-                                <div className={styles.statItem}>
-                                    <MessageSquare size={14} />
-                                    <span>{stats.posts} постов</span>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <Users size={14} />
-                                    <span>{stats.participants} участников</span>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
 
                 {rooms.length === 0 && (
                     <div className={styles.empty}>

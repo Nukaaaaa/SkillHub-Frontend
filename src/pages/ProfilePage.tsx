@@ -84,7 +84,7 @@ const ProfilePage: React.FC = () => {
                 // Merge real data with fake data for "full" look
                 setArticles([...(Array.isArray(userArticles) ? userArticles : []), ...FAKE_ARTICLES]);
                 setPosts([...(Array.isArray(userPosts) ? userPosts : []), ...FAKE_POSTS]);
-                
+
                 // Robust direction merging
                 const merged = [...MOCK_DIRECTIONS];
                 (allDirections || []).forEach(serverDir => {
