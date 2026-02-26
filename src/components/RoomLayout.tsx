@@ -7,12 +7,15 @@ import {
     FileText,
     BookOpen,
     Users,
-    Server
+    Server,
+    LogOut
 } from 'lucide-react';
 import { roomService } from '../api/roomService';
 import type { Room } from '../types';
 import styles from './RoomLayout.module.css';
 import Loader from './Loader';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const RoomLayout: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -20,6 +23,9 @@ const RoomLayout: React.FC = () => {
     const navigate = useNavigate();
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [joining, setJoining] = useState(false);
+    const [leaving, setLeaving] = useState(false);
+    const { isMember, joinRoom, leaveRoom } = useAuth();
 
     useEffect(() => {
         const fetchRoom = async () => {
@@ -35,6 +41,34 @@ const RoomLayout: React.FC = () => {
         };
         fetchRoom();
     }, [roomId]);
+
+    const handleJoin = async () => {
+        if (!roomId) return;
+        setJoining(true);
+        try {
+            await joinRoom(Number(roomId));
+            toast.success(t('rooms.joinedSuccess') || 'Вы вступили в комнату!');
+        } catch (error) {
+            toast.error(t('common.error'));
+        } finally {
+            setJoining(false);
+        }
+    };
+
+    const handleLeave = async () => {
+        if (!roomId) return;
+        if (!window.confirm(t('rooms.leaveConfirm') || 'Вы уверены, что хотите покинуть комнату?')) return;
+
+        setLeaving(true);
+        try {
+            await leaveRoom(Number(roomId));
+            toast.success(t('rooms.leftSuccess') || 'Вы покинули комнату');
+        } catch (error) {
+            toast.error(t('common.error'));
+        } finally {
+            setLeaving(false);
+        }
+    };
 
     if (loading) return <Loader />;
     if (!room) return <div>Room not found</div>;
@@ -116,6 +150,29 @@ const RoomLayout: React.FC = () => {
                         </div>
 
                         <div className={styles.headerActions}>
+                            {isMember(Number(roomId)) ? (
+                                <button
+                                    className={styles.leaveBtn}
+                                    onClick={handleLeave}
+                                    disabled={leaving}
+                                >
+                                    <LogOut size={16} />
+                                    <span>{leaving ? t('common.loading') : (t('rooms.leave') || 'Покинуть')}</span>
+                                </button>
+                            ) : (
+                                <button
+                                    className={styles.joinBtn}
+                                    onClick={handleJoin}
+                                    disabled={joining}
+                                >
+                                    {joining ? t('common.loading') : (
+                                        <>
+                                            <Users size={16} />
+                                            <span>{t('rooms.join') || 'Вступить в комнату'}</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </header>

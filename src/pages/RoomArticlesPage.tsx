@@ -16,11 +16,13 @@ import { contentService } from '../api/contentService';
 import type { Article } from '../types';
 import Loader from '../components/Loader';
 import CreateArticleModal from '../components/CreateArticleModal';
+import { useAuth } from '../context/AuthContext';
 import styles from './RoomArticlesPage.module.css';
 
 const RoomArticlesPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { t } = useTranslation();
+    const { isMember } = useAuth();
     const navigate = useNavigate();
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
@@ -93,7 +95,14 @@ const RoomArticlesPage: React.FC = () => {
                     </div>
                     <button
                         className={styles.primaryBtn}
-                        onClick={() => setIsCreateModalOpen(true)}
+                        onClick={() => {
+                            if (!isMember(Number(roomId))) {
+                                toast.error('Вступите в комнату, чтобы написать статью');
+                                return;
+                            }
+                            setIsCreateModalOpen(true);
+                        }}
+                        style={{ opacity: isMember(Number(roomId)) ? 1 : 0.6 }}
                     >
                         Написать статью
                     </button>

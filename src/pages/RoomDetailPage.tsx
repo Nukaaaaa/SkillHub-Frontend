@@ -24,7 +24,7 @@ import styles from './RoomDetailPage.module.css';
 const RoomDetailPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { t } = useTranslation();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, isMember } = useAuth();
 
     const { room: roomFromContext } = useOutletContext<{ room: Room }>() || {};
 
@@ -112,11 +112,15 @@ const RoomDetailPage: React.FC = () => {
                         <button
                             className={styles.fakeInput}
                             onClick={() => {
+                                if (!isMember(Number(roomId))) {
+                                    toast.error('Вступите в комнату, чтобы написать пост');
+                                    return;
+                                }
                                 setCreateType('POST');
                                 setIsCreateModalOpen(true);
                             }}
                         >
-                            {t('rooms.writeSomething')}
+                            {isMember(Number(roomId)) ? t('rooms.writeSomething') : 'Вступите в комнату, чтобы написать пост'}
                         </button>
                     </div>
                     <div className={styles.creationActions}>
@@ -124,6 +128,10 @@ const RoomDetailPage: React.FC = () => {
                             <button
                                 className={styles.quickActionBtn}
                                 onClick={() => {
+                                    if (!isMember(Number(roomId))) {
+                                        toast.error('Вступите в комнату, чтобы задать вопрос');
+                                        return;
+                                    }
                                     setCreateType('QUESTION');
                                     setIsCreateModalOpen(true);
                                 }}
@@ -139,7 +147,11 @@ const RoomDetailPage: React.FC = () => {
                         <button
                             className={styles.editorLink}
                             onClick={() => {
-                                toast('Редактор статей временно недоступен', { icon: '📝' });
+                                if (!isMember(Number(roomId))) {
+                                    toast.error('Вступите в комнату, чтобы писать статьи');
+                                    return;
+                                }
+                                toast('Используйте вкладку "Статьи" для написания', { icon: '📝' });
                             }}
                         >
                             {t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}

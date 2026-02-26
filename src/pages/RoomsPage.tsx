@@ -8,6 +8,7 @@ import Loader from '../components/Loader';
 import { MessageSquare, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 // Mock helper to generate card stats based on room ID
 const getRoomStats = (roomId: number) => {
@@ -33,6 +34,8 @@ const RoomsPage: React.FC = () => {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [direction, setDirection] = useState<Direction | null>(null);
     const [loading, setLoading] = useState(true);
+    const [filterType, setFilterType] = useState<'all' | 'my'>('all');
+    const { joinedRoomIds } = useAuth();
 
     const fetchData = async () => {
         if (!directionId) return;
@@ -84,10 +87,27 @@ const RoomsPage: React.FC = () => {
                 <p className={styles.subtitle}>
                     {direction ? t(direction.name) : '...'} - {t('rooms.subtitle') || 'Выберите направление для общения и обмена опытом'}
                 </p>
+                
+                <div className={styles.filterTabs}>
+                    <button 
+                        className={`${styles.filterTab} ${filterType === 'all' ? styles.activeTab : ''}`}
+                        onClick={() => setFilterType('all')}
+                    >
+                        {t('rooms.allRooms') || 'Все комнаты'}
+                    </button>
+                    <button 
+                        className={`${styles.filterTab} ${filterType === 'my' ? styles.activeTab : ''}`}
+                        onClick={() => setFilterType('my')}
+                    >
+                        {t('rooms.myRooms') || 'Мои комнаты'}
+                    </button>
+                </div>
             </div>
 
             <div className={styles.grid}>
-                {rooms.map(room => {
+                {rooms
+                    .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
+                    .map(room => {
                     const stats = getRoomStats(room.id);
 
                     return (
