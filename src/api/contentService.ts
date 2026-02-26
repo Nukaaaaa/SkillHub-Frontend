@@ -9,6 +9,10 @@ export const contentService = {
         const response = await apiClient.get<Article[]>(`/articles/room/${roomId}`);
         return response.data;
     },
+    getArticlesByUser: async (userId: number): Promise<Article[]> => {
+        const response = await apiClient.get<Article[]>(`/articles/user/${userId}`);
+        return response.data;
+    },
     getArticle: async (id: number): Promise<Article> => {
         const response = await apiClient.get<Article>(`/articles/${id}`);
         return response.data;
@@ -35,6 +39,10 @@ export const contentService = {
     // Posts & Discussions
     getPostsByRoom: async (roomId: number): Promise<Post[]> => {
         const response = await apiClient.get<Post[]>(`/posts/room/${roomId}`);
+        return response.data;
+    },
+    getPostsByUser: async (userId: number): Promise<Post[]> => {
+        const response = await apiClient.get<Post[]>(`/posts/user/${userId}`);
         return response.data;
     },
     createPost: async (post: Partial<Post>): Promise<Post> => {

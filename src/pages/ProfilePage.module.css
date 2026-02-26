@@ -1,0 +1,496 @@
+.profileContainer {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profileLayout {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2rem;
+}
+
+.sidebarColumn {
+    grid-column: span 4;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.directionCard {
+    background: white;
+    border-radius: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.directionTitle {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4f46e5;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.directionSelect {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.directionSelect:focus {
+    border-color: #4f46e5;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.mainColumn {
+    grid-column: span 8;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Profile Card */
+.profileCard {
+    background: white;
+    border-radius: 2rem;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.cardBanner {
+    height: 8rem;
+    background: #4f46e5;
+    position: relative;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.cameraBtn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cameraBtn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.cardBody {
+    padding: 0 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin-top: -4rem;
+}
+
+.profileAvatar {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 1.75rem;
+    border: 8px solid white;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+    background: white;
+}
+
+.userName {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.userHandle {
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+}
+
+.actionGroup {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.editBtn {
+    flex: 1;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 1.25rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editBtn:hover {
+    background: #4338ca;
+    transform: translateY(-1px);
+}
+
+.shareBtn {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 0 1rem;
+    border-radius: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shareBtn:hover {
+    background: #e2e8f0;
+}
+
+.infoSection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.infoItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+.infoIcon {
+    color: #94a3b8;
+    width: 1.25rem;
+}
+
+.infoLink {
+    color: #4f46e5;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* AI Analysis Card */
+.aiAnalysisCard {
+    background: #0f172a;
+    border-radius: 2rem;
+    padding: 1.5rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.aiTitle {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #818cf8;
+    margin-bottom: 1.5rem;
+}
+
+.skillItem {
+    margin-bottom: 1.5rem;
+}
+
+.skillHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.skillLabel {
+    color: #94a3b8;
+}
+
+.skillValue {
+    font-weight: 700;
+}
+
+.progressBarTrack {
+    height: 0.5rem;
+    background: #1e293b;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progressBarFillIndigo {
+    height: 100%;
+    background: #6366f1;
+    border-radius: 9999px;
+}
+
+.progressBarFillEmerald {
+    height: 100%;
+    background: #10b981;
+    border-radius: 9999px;
+}
+
+.aiNote {
+    font-size: 0.65rem;
+    color: #475569;
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: 1.5rem;
+}
+
+/* Stats Row */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.statItemCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.statItemPremium {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+}
+
+.statNumber {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.25rem;
+}
+
+.statLabel {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.statLabelDark {
+    color: #94a3b8;
+    opacity: 1;
+}
+
+/* Contribution Card */
+.contributionCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #0f172a;
+}
+
+.sectionSubtitle {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.contributionGrid {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.gridCol {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 0.25rem;
+}
+
+.gridCell {
+    width: 0.75rem;
+    height: 0.75rem;
+    background: #f1f5f9;
+    border-radius: 2px;
+}
+
+.cellL1 {
+    background: #c7d2fe;
+}
+
+.cellL2 {
+    background: #818cf8;
+}
+
+.cellL3 {
+    background: #4f46e5;
+}
+
+/* Tabs & Articles */
+.tabsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tabsHeader {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tabBtn {
+    padding-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #94a3b8;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tabBtn:hover {
+    color: #475569;
+}
+
+.tabBtnActive {
+    color: #0f172a;
+    border-bottom-color: #4f46e5;
+}
+
+.articleList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.articleMiniCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.articleMiniCard:hover {
+    border-color: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.articleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.articleTag {
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4f46e5;
+}
+
+.articleTagAlt {
+    color: #d97706;
+}
+
+.articleDate {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.articleTitle {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.75rem;
+}
+
+.articleMeta {
+    display: flex;
+    gap: 1rem;
+}
+
+.metaLink {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.aiScore {
+    color: #10b981;
+}
+
+.statusTag {
+    color: #4f46e5;
+}
+
+@media (max-width: 1024px) {
+
+    .sidebarColumn,
+    .mainColumn {
+        grid-column: span 12;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
