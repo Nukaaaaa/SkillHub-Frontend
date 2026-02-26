@@ -1,0 +1,440 @@
+.wikiContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f8fafc;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.wikiHeader {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.searchWrapper {
+    position: relative;
+    max-width: 40rem;
+    width: 100%;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 0.625rem 1rem 0.625rem 3rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.searchInput:focus {
+    background: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+.headerMeta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.versionTag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.historyBtn {
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.historyBtn:hover {
+    color: #4f46e5;
+}
+
+.mainLayout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Left Sidebar */
+.leftSidebar {
+    width: 18rem;
+    background: white;
+    border-right: 1px solid #f1f5f9;
+    overflow-y: auto;
+    padding: 1.5rem 0;
+}
+
+.sidebarTitle {
+    padding: 0 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 3px solid transparent;
+}
+
+.navItem:hover {
+    background: #f8fafc;
+    color: #4f46e5;
+}
+
+.navItemActive {
+    background: #eff6ff;
+    color: #2563eb;
+    border-right-color: #2563eb;
+}
+
+.subNavItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem 0.5rem 3rem;
+    font-size: 0.875rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.subNavItem:hover {
+    color: #4f46e5;
+}
+
+.subItemActive {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+/* Content Area */
+.contentArea {
+    flex: 1;
+    overflow-y: auto;
+    background: white;
+    padding: 3rem;
+}
+
+.articleWrapper {
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+.breadcrumbs {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+.breadcrumbActive {
+    color: #1e293b;
+}
+
+.articleTitle {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+}
+
+.metadataBar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 2.5rem;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.aiIcon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+.metaLabel {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.metaValue {
+    font-size: 0.875rem;
+    font-weight: 900;
+    color: #334155;
+}
+
+.scoreValue {
+    color: #10b981;
+}
+
+.diffValue {
+    color: #2563eb;
+}
+
+.divider {
+    width: 1px;
+    height: 2rem;
+    background: #f1f5f9;
+}
+
+.richContent {
+    color: #334155;
+    line-height: 1.75;
+}
+
+.quoteBlock {
+    font-size: 1.25rem;
+    font-weight: 500;
+    font-style: italic;
+    color: #1e293b;
+    border-left: 4px solid #3b82f6;
+    padding: 0.5rem 0 0.5rem 1.5rem;
+    background: #f0f7ff;
+    margin: 2rem 0;
+}
+
+.contentTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 2rem 0 1rem 0;
+}
+
+.contentList {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.contentList li {
+    margin-bottom: 0.75rem;
+}
+
+.codeBlock {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875rem;
+    margin: 2rem 0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.codeComment {
+    color: #64748b;
+}
+
+.footerSection {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.authorsList {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.authorLabel {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.authorAvatars {
+    display: flex;
+    margin-left: -0.5rem;
+}
+
+.authorAvatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    border: 2px solid white;
+    margin-left: -0.5rem;
+}
+
+.footerActions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.ghostBtn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.ghostBtn:hover {
+    background: #f8fafc;
+}
+
+.primaryBtn {
+    padding: 0.5rem 1rem;
+    background: #1e293b;
+    color: white;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.primaryBtn:hover {
+    background: #0f172a;
+}
+
+/* Right Sidebar */
+.rightSidebar {
+    width: 20rem;
+    background: #f8fafc;
+    overflow-y: auto;
+    padding: 2.5rem 1.5rem;
+}
+
+.tocTitle {
+    font-size: 10px;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 1.5rem;
+}
+
+.tocList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 3rem;
+    border-left: 1px solid #e2e8f0;
+}
+
+.tocItem {
+    padding: 0.5rem 0 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tocItem:hover {
+    color: #1e293b;
+}
+
+.tocItemActive {
+    color: #2563eb;
+    border-left: 2px solid #2563eb;
+    margin-left: -1px;
+}
+
+.aiWidget {
+    background: #2563eb;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    color: white;
+}
+
+.aiWidgetTitle {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+
+.aiWidgetDesc {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+}
+
+.aiWidgetBtn {
+    width: 100%;
+    padding: 0.625rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    transition: all 0.2s;
+}
+
+.aiWidgetBtn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}

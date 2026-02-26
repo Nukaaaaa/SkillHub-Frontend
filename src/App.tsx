@@ -12,6 +12,7 @@ import SettingsPage from './pages/SettingsPage';
 import RoomDetailPage from './pages/RoomDetailPage';
 import RoomLayout from './components/RoomLayout';
 import RoomArticlesPage from './pages/RoomArticlesPage';
+import RoomWikiPage from './pages/RoomWikiPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -72,6 +73,7 @@ function App() {
           }>
             <Route index element={<RoomDetailPage />} />
             <Route path="articles" element={<RoomArticlesPage />} />
+            <Route path="wiki" element={<RoomWikiPage />} />
             <Route path="members" element={<RoomMembersPage />} />
           </Route>
         </Routes>
