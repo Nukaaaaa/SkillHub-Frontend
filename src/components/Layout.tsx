@@ -103,9 +103,6 @@ const Layout: React.FC = () => {
                         />
                     </div>
                     <div className={styles.headerActions}>
-                        <button className={styles.createRoomBtn}>
-                            + Создать комнату
-                        </button>
                         <div className={styles.userAvatar}>
                             <img
                                 src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name}&background=random`}

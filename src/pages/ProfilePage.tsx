@@ -69,22 +69,32 @@ const ProfilePage: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.id) return;
+            if (!user?.id) {
+                setLoading(false);
+                return;
+            }
             try {
                 setLoading(true);
                 const [userArticles, userPosts, allDirections] = await Promise.all([
-                    contentService.getArticlesByUser(user.id),
-                    contentService.getPostsByUser(user.id),
-                    directionService.getDirections()
+                    contentService.getArticlesByUser(user.id).catch(() => []),
+                    contentService.getPostsByUser(user.id).catch(() => []),
+                    directionService.getDirections().catch(() => [])
                 ]);
 
                 // Merge real data with fake data for "full" look
-                setArticles([...userArticles, ...FAKE_ARTICLES]);
-                setPosts([...userPosts, ...FAKE_POSTS]);
-                setDirections(allDirections);
+                setArticles([...(Array.isArray(userArticles) ? userArticles : []), ...FAKE_ARTICLES]);
+                setPosts([...(Array.isArray(userPosts) ? userPosts : []), ...FAKE_POSTS]);
+                
+                // Robust direction merging
+                const merged = [...MOCK_DIRECTIONS];
+                (allDirections || []).forEach(serverDir => {
+                    const idx = merged.findIndex(m => Number(m.id) === Number(serverDir.id));
+                    if (idx > -1) merged[idx] = serverDir;
+                    else merged.push(serverDir);
+                });
+                setDirections(merged);
             } catch (error) {
                 console.error('Failed to fetch user context:', error);
-                // Fallback to fake data only on error
                 setArticles(FAKE_ARTICLES);
                 setPosts(FAKE_POSTS);
                 setDirections(MOCK_DIRECTIONS);
@@ -101,8 +111,10 @@ const ProfilePage: React.FC = () => {
 
     if (!user) return <div className={styles.profileContainer}>Загрузка...</div>;
 
-    // Find current direction object
-    const currentDir = directions.find(d => d.id === user.selectedDirectionId);
+    // Find current direction object with loose equality and localStorage fallback
+    const savedDirId = localStorage.getItem(`selected_direction_${user?.id}`);
+    const effectiveDirId = user.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
+    const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
 
     // Mock contribution data (still random but based on ID for consistency)
     const seed = user.id || 1;
@@ -167,9 +179,9 @@ const ProfilePage: React.FC = () => {
                         <h3 className={styles.directionTitle}>Текущее направление</h3>
                         <div className={styles.currentDirection}>
                             <span className={styles.directionName}>
-                                {currentDir ? t(currentDir.name) : 'Не выбрано'}
+                                {loading ? 'Загрузка...' : (currentDir ? t(currentDir.name) : 'Нет в списке')}
                             </span>
-                            <button className={styles.changeDirBtn} onClick={handleDirectionChange}>
+                            <button className={styles.changeDirBtn} onClick={handleDirectionChange} disabled={loading}>
                                 <Share2 size={14} style={{ transform: 'rotate(-90deg)' }} /> Сменить
                             </button>
                         </div>
@@ -294,43 +306,55 @@ const ProfilePage: React.FC = () => {
                         <div className={styles.articleList}>
                             {loading ? (
                                 <p className="text-center py-8 text-gray-400">Загрузка контента...</p>
+                            ) : activeTab === 'publications' ? (
+                                articles.length === 0 && posts.length === 0 ? (
+                                    <p className="text-center py-8 text-gray-400 italic">Пока нет публикаций.</p>
+                                ) : (
+                                    <>
+                                        {articles.map(article => (
+                                            <article key={article.id} className={styles.articleMiniCard}>
+                                                <div className={styles.articleHeader}>
+                                                    <span className={styles.articleTag}>Статья • {currentDir ? t(currentDir.name) : 'Backend'}</span>
+                                                    <span className={styles.articleDate}>
+                                                        {new Date(article.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <h4 className={styles.articleTitle}>{article.title}</h4>
+                                                <div className={styles.articleMeta}>
+                                                    <div className={styles.metaLink}>
+                                                        <Heart size={14} /> {article.id > 9000 ? (article.id % 100) * 10 : 0}
+                                                    </div>
+                                                    <div className={`${styles.metaLink} ${styles.aiScore}`}>
+                                                        <Bot size={14} /> AI: {article.aiScore ? article.aiScore.toFixed(1) : '—'}
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                        {posts.map(post => (
+                                            <article key={post.id} className={styles.articleMiniCard}>
+                                                <div className={styles.articleHeader}>
+                                                    <span className={`${styles.articleTag} ${styles.articleTagAlt}`}>{post.postType}</span>
+                                                    <span className={styles.articleDate}>
+                                                        {new Date(post.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                                <h4 className={styles.articleTitle}>{post.title || post.content.substring(0, 50) + '...'}</h4>
+                                                <div className={styles.articleMeta}>
+                                                    <div className={styles.metaLink}>
+                                                        <MessageSquare size={14} /> {post.id > 9000 ? (post.id % 10) + 2 : '—'}
+                                                    </div>
+                                                    <div className={`${styles.metaLink} ${styles.statusTag}`}>
+                                                        <Trophy size={14} /> {post.aiStatus === 'APPROVED' ? 'Решен' : 'В обсуждении'}
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        ))}
+                                    </>
+                                )
                             ) : (
-                                <>
-                                    {articles.map(article => (
-                                        <article key={article.id} className={styles.articleMiniCard}>
-                                            <div className={styles.articleHeader}>
-                                                <span className={styles.articleTag}>Статья • Backend Разработка</span>
-                                                <span className={styles.articleDate}>{new Date(article.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                            </div>
-                                            <h4 className={styles.articleTitle}>{article.title}</h4>
-                                            <div className={styles.articleMeta}>
-                                                <div className={styles.metaLink}>
-                                                    <Heart size={14} /> 245
-                                                </div>
-                                                <div className={`${styles.metaLink} ${styles.aiScore}`}>
-                                                    <Bot size={14} /> AI: {article.aiScore ? article.aiScore.toFixed(1) : '9.6'}
-                                                </div>
-                                            </div>
-                                        </article>
-                                    ))}
-                                    {posts.map(post => (
-                                        <article key={post.id} className={styles.articleMiniCard}>
-                                            <div className={styles.articleHeader}>
-                                                <span className={`${styles.articleTag} ${styles.articleTagAlt}`}>{post.postType} • Highload</span>
-                                                <span className={styles.articleDate}>{new Date(post.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                            </div>
-                                            <h4 className={styles.articleTitle}>{post.title || post.content.substring(0, 50) + '...'}</h4>
-                                            <div className={styles.articleMeta}>
-                                                <div className={styles.metaLink}>
-                                                    <MessageSquare size={14} /> 12 ответов
-                                                </div>
-                                                <div className={`${styles.metaLink} ${styles.statusTag}`}>
-                                                    <Trophy size={14} /> Решен
-                                                </div>
-                                            </div>
-                                        </article>
-                                    ))}
-                                </>
+                                <p className="text-center py-8 text-gray-400 italic">
+                                    {activeTab === 'achievements' ? 'Раздел достижений в разработке.' : 'Раздел закладок пуст.'}
+                                </p>
                             )}
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -15,13 +15,13 @@ import {
 import { contentService } from '../api/contentService';
 import type { Article } from '../types';
 import Loader from '../components/Loader';
-import CreateContentModal from '../components/CreateContentModal';
+import CreateArticleModal from '../components/CreateArticleModal';
 import styles from './RoomArticlesPage.module.css';
 
 const RoomArticlesPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const { t } = useTranslation();
-
+    const navigate = useNavigate();
     const [articles, setArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'new' | 'popular'>('all');
@@ -188,11 +188,10 @@ const RoomArticlesPage: React.FC = () => {
                     ))}
                 </div>
 
-                <CreateContentModal
+                <CreateArticleModal
                     isOpen={isCreateModalOpen}
                     onClose={() => setIsCreateModalOpen(false)}
                     roomId={Number(roomId)}
-                    initialType="POST"
                     onSuccess={fetchArticles}
                 />
             </div>

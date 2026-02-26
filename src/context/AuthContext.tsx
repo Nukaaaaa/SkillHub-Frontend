@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getStoredUser, setStoredUser as saveUserToStorage, MOCK_USERS, updateMockUsers } from '../mockData';
 import type { User } from '../types';
 import { getServiceClient } from '../api/client';
+import { userService } from '../api/userService';
 
 const userClient = getServiceClient('USER');
 
@@ -20,7 +21,7 @@ interface AuthContextType {
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
     resetToDefaults: () => void;
-    selectDirection: (id: number) => void;
+    selectDirection: (id: number) => Promise<void>;
     isAuthenticated: boolean;
     loading: boolean;
 }
@@ -132,12 +133,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.reload();
     };
 
-    const selectDirection = (id: number) => {
+    const selectDirection = async (id: number) => {
         if (!user) return;
         const updatedUser = { ...user, selectedDirectionId: id };
         setUser(updatedUser);
         saveUserToStorage(updatedUser);
         localStorage.setItem(`selected_direction_${user.id}`, id.toString());
+
+        // Try to persist to backend as well
+        try {
+            await userService.updateUser(user.id, { selectedDirectionId: id });
+        } catch (error) {
+            console.error('Failed to sync direction with backend:', error);
+            // We keep the local state updated even if backend fails
+        }
     };
 
     return (
