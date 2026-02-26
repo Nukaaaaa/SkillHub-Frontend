@@ -94,8 +94,8 @@ const RoomDetailPage: React.FC = () => {
     ].filter(item => {
         if (activeCategory === 'all') return true;
         if (item.feedType === 'article') return false;
-        if (activeCategory === 'posts') return item.postType === 'DISCUSSION' || item.postType === 'ANNOUNCEMENT';
-        if (activeCategory === 'questions') return item.postType === 'QUESTION';
+        if (activeCategory === 'posts') return (item as any).postType === 'DISCUSSION' || (item as any).postType === 'ANNOUNCEMENT';
+        if (activeCategory === 'questions') return (item as any).postType === 'QUESTION';
         return true;
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
