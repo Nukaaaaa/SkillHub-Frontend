@@ -3,15 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
     X,
-    Bold,
-    Italic,
-    Link as LinkIcon,
-    Code,
-    Image as ImageIcon,
-    List,
     Brain,
     Bot
 } from 'lucide-react';
+import RichTextEditor from './RichTextEditor';
 
 import { contentService } from '../api/contentService';
 import { useAuth } from '../context/AuthContext';
@@ -30,7 +25,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
     roomId,
     onSuccess
 }) => {
-    const { t } = useTranslation();
+    const { } = useTranslation();
     const { user } = useAuth();
 
     const [title, setTitle] = useState('');
@@ -132,21 +127,10 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                                 autoFocus
                             />
 
-                            <div className={styles.toolbar}>
-                                <button className={styles.toolBtn}><Bold size={18} /></button>
-                                <button className={styles.toolBtn}><Italic size={18} /></button>
-                                <button className={styles.toolBtn}><LinkIcon size={18} /></button>
-                                <button className={styles.toolBtn}><Code size={18} /></button>
-                                <button className={styles.toolBtn}><ImageIcon size={18} /></button>
-                                <div className={styles.divider} />
-                                <button className={styles.toolBtn}><List size={18} /></button>
-                            </div>
-
-                            <textarea
-                                className={styles.contentArea}
+                            <RichTextEditor
+                                content={content}
+                                onChange={setContent}
                                 placeholder="Начните писать здесь профессиональный контент..."
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
                             />
                         </div>
                     </div>
