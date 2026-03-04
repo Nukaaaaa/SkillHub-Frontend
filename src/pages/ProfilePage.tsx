@@ -1,362 +1,238 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import {
-    Camera,
-    MapPin,
-    Link as LinkIcon,
-    Calendar,
-    Share2,
+    Settings,
+    LogOut,
+    FileText,
+    MessageSquare,
+    Users,
     Heart,
     Bot,
-    MessageSquare,
-    Trophy
+    Clock,
+    Trophy,
+    Pencil
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { directionService } from '../api/directionService';
-import { MOCK_DIRECTIONS } from '../mockData';
+import { useAuth } from '../context/AuthContext';
 import type { Article, Post, Direction } from '../types';
 import styles from './ProfilePage.module.css';
 
-const FAKE_ARTICLES: Article[] = [
-    {
-        id: 9991,
-        roomId: 0,
-        userId: 0,
-        title: 'Глубокое погружение в индексы PostgreSQL',
-        content: '',
-        difficultyLevel: 'ADVANCED',
-        createdAt: '2026-02-12T10:00:00Z',
-        aiScore: 9.6,
-        aiReviewStatus: 'APPROVED'
-    },
-    {
-        id: 9992,
-        roomId: 0,
-        userId: 0,
-        title: 'Микросервисы: паттерн Saga и распределенные транзакции',
-        content: '',
-        difficultyLevel: 'ADVANCED',
-        createdAt: '2026-01-25T14:30:00Z',
-        aiScore: 9.8,
-        aiReviewStatus: 'APPROVED'
-    }
-];
-
-const FAKE_POSTS: Post[] = [
-    {
-        id: 9993,
-        roomId: 0,
-        userId: 0,
-        title: 'Как шардировать таблицу на 10 миллиардов записей?',
-        content: 'Интересует опыт шардирования в высоконагруженных системах...',
-        createdAt: '2026-02-08T09:15:00Z',
-        postType: 'QUESTION',
-        aiStatus: 'APPROVED'
-    }
-];
-
 const ProfilePage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
     const { t } = useTranslation();
+
+    const [activeTab, setActiveTab] = useState<'publications' | 'bookmarks'>('publications');
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [directions, setDirections] = useState<Direction[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'publications' | 'achievements' | 'bookmarks'>('publications');
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!user?.id) {
-                setLoading(false);
-                return;
-            }
-            try {
-                setLoading(true);
-                const [userArticles, userPosts, allDirections] = await Promise.all([
-                    contentService.getArticlesByUser(user.id).catch(() => []),
-                    contentService.getPostsByUser(user.id).catch(() => []),
-                    directionService.getDirections().catch(() => [])
-                ]);
-
-                // Merge real data with fake data for "full" look
-                setArticles([...(Array.isArray(userArticles) ? userArticles : []), ...FAKE_ARTICLES]);
-                setPosts([...(Array.isArray(userPosts) ? userPosts : []), ...FAKE_POSTS]);
-
-                // Robust direction merging
-                const merged = [...MOCK_DIRECTIONS];
-                (allDirections || []).forEach(serverDir => {
-                    const idx = merged.findIndex(m => Number(m.id) === Number(serverDir.id));
-                    if (idx > -1) merged[idx] = serverDir;
-                    else merged.push(serverDir);
-                });
-                setDirections(merged);
-            } catch (error) {
-                console.error('Failed to fetch user context:', error);
-                setArticles(FAKE_ARTICLES);
-                setPosts(FAKE_POSTS);
-                setDirections(MOCK_DIRECTIONS);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [user?.id, user?.selectedDirectionId]);
-
-    const handleDirectionChange = () => {
-        navigate('/dashboard?from=profile');
+    const fetchData = async () => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const [userArticles, userPosts, allDirs] = await Promise.all([
+                contentService.getArticlesByUser(user.id),
+                contentService.getPostsByUser(user.id),
+                directionService.getDirections()
+            ]);
+            setArticles(userArticles);
+            setPosts(userPosts);
+            setDirections(allDirs);
+        } catch (error) {
+            console.error('Failed to fetch profile data', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (!user) return <div className={styles.profileContainer}>Загрузка...</div>;
+    useEffect(() => {
+        fetchData();
+    }, [user]);
 
-    // Find current direction object with loose equality and localStorage fallback
-    const savedDirId = localStorage.getItem(`selected_direction_${user?.id}`);
-    const effectiveDirId = user.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
-    const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
+    const getUserInitials = (firstname?: string, lastname?: string) => {
+        return `${firstname?.[0] || ''}${lastname?.[0] || ''}`;
+    };
 
-    // Mock contribution data (still random but based on ID for consistency)
-    const seed = user.id || 1;
-    const contributionData = Array.from({ length: 52 }, (_, i) =>
-        Array.from({ length: 7 }, (_, j) => ((seed + i + j) % 5 === 0 ? Math.floor(((seed + i * j) % 3) + 1) : 0))
-    );
-
-    // Derived stats
-    const reputation = (user.stats?.points || 0) + 12500; // Adding offset for premium look as requested
-    const articlesCount = articles.length;
-    const answersCount = (user.stats?.sessionsAttended || 0) + 1200;
-    const awardsCount = 18; // Hardcoded for premium look
+    const currentDir = user?.selectedDirectionId ? directions.find(d => d.id === user.selectedDirectionId) : null;
 
     return (
         <div className={styles.profileContainer}>
-            <div className={styles.profileLayout}>
-                {/* Left Sidebar */}
-                <aside className={styles.sidebarColumn}>
-                    {/* Profile Card */}
-                    <div className={styles.profileCard}>
-                        <div className={styles.cardBanner}>
-                            <button className={styles.cameraBtn}>
-                                <Camera size={18} />
+            <header className={styles.header}>
+                <div className={styles.headerBg}></div>
+                <div className={styles.headerContent}>
+                    <div className={styles.userProfile}>
+                        <div className={styles.avatarWrapper}>
+                            {user?.avatar ? (
+                                <img src={user.avatar} className={styles.avatar} alt="Profile" />
+                            ) : (
+                                <div className={styles.avatarFallback}>
+                                    {getUserInitials(user?.firstname, user?.lastname)}
+                                </div>
+                            )}
+                            <button className={styles.editAvatarBtn}>
+                                <Pencil size={18} />
                             </button>
                         </div>
-                        <div className={styles.cardBody}>
-                            <img
-                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=4f46e5&color=fff&size=256`}
-                                className={styles.profileAvatar}
-                                alt="avatar"
-                            />
-                            <h2 className={styles.userName}>{user.name || 'Александр Захаров'}</h2>
-                            <p className={styles.userHandle}>
-                                @{(user.name || 'user').toLowerCase().replace(/\s+/g, '_')} • {user.role || (user.isMentor ? 'Senior Backend Engineer' : 'Student')}
-                            </p>
-
-                            <div className={styles.actionGroup}>
-                                <button className={styles.editBtn}>Редактировать</button>
-                                <button className={styles.shareBtn}>
-                                    <Share2 size={18} />
-                                </button>
+                        <div className={styles.userInfo}>
+                            <h1 className={styles.userName}>{user?.firstname} {user?.lastname}</h1>
+                            <div className={styles.userMeta}>
+                                <span className={styles.userRole}>{user?.role || 'Full-stack Developer'}</span>
+                                <span className={styles.userLocation}>Almaty • Kazakhstan</span>
                             </div>
+                        </div>
+                    </div>
+                    <div className={styles.headerActions}>
+                        <button className={styles.secondaryBtn} onClick={() => navigate('/settings')}>
+                            <Settings size={20} />
+                            <span>Настройки</span>
+                        </button>
+                        <button className={styles.secondaryBtn} onClick={logout}>
+                            <LogOut size={20} />
+                            <span>Выйти</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
 
-                            <div className={styles.infoSection}>
-                                <div className={styles.infoItem}>
-                                    <MapPin className={styles.infoIcon} size={16} />
-                                    <span>Almaty, Kazakhstan</span>
-                                </div>
-                                <div className={styles.infoItem}>
-                                    <LinkIcon className={styles.infoIcon} size={16} />
-                                    <a href="#" className={styles.infoLink}>github.com/{(user.name || 'user').toLowerCase().split(' ')[0]}</a>
-                                </div>
-                                <div className={styles.infoItem}>
-                                    <Calendar className={styles.infoIcon} size={16} />
-                                    <span>В системе с февраля 2024</span>
-                                </div>
+            <div className={styles.mainContent}>
+                <aside className={styles.sidebar}>
+                    <div className={styles.statCard}>
+                        <h3 className={styles.sidebarTitle}>Общая статистика</h3>
+                        <div className={styles.statGrid}>
+                            <div className={styles.statItem}>
+                                <span className={styles.statValue}>{articles.length}</span>
+                                <span className={styles.statLabel}>Статьи</span>
+                            </div>
+                            <div className={styles.statItem}>
+                                <span className={styles.statValue}>{posts.length}</span>
+                                <span className={styles.statLabel}>Обсуждения</span>
+                            </div>
+                            <div className={styles.statItem}>
+                                <span className={styles.statValue}>1.25k</span>
+                                <span className={styles.statLabel}>Очки</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className={styles.directionCard}>
-                        <h3 className={styles.directionTitle}>Текущее направление</h3>
-                        <div className={styles.currentDirection}>
-                            <span className={styles.directionName}>
-                                {loading ? 'Загрузка...' : (currentDir ? t(currentDir.name) : 'Нет в списке')}
-                            </span>
-                            <button className={styles.changeDirBtn} onClick={handleDirectionChange} disabled={loading}>
-                                <Share2 size={14} style={{ transform: 'rotate(-90deg)' }} /> Сменить
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* AI Analysis Card */}
-                    <div className={styles.aiAnalysisCard}>
-                        <h3 className={styles.aiTitle}>AI Эксперт-анализ</h3>
-                        {user.skillLevels && user.skillLevels.length > 0 ? (
-                            user.skillLevels.slice(0, 3).map((skill, idx) => (
-                                <div key={idx} className={styles.skillItem}>
-                                    <div className={styles.skillHeader}>
-                                        <span className={styles.skillLabel}>{t(skill.subject)}</span>
-                                        <span className={styles.skillValue}>{skill.value}/100</span>
-                                    </div>
-                                    <div className={styles.progressBarTrack}>
-                                        <div
-                                            className={idx % 2 === 0 ? styles.progressBarFillIndigo : styles.progressBarFillEmerald}
-                                            style={{ width: `${skill.value}%` }}
-                                        />
-                                    </div>
+                    <div className={styles.statCard}>
+                        <h3 className={styles.sidebarTitle}>Специализация</h3>
+                        {currentDir ? (
+                            <div className={styles.specializationBox}>
+                                <div className={styles.specIcon}>
+                                    <FileText color="white" size={24} />
                                 </div>
-                            ))
+                                <div className={styles.specInfo}>
+                                    <span className={styles.specName}>{t(`directions.${currentDir.name.toLowerCase()}`, currentDir.name)}</span>
+                                    <span className={styles.specLevel}>{user?.role || 'Developer'}</span>
+                                </div>
+                            </div>
                         ) : (
-                            <>
-                                <div className={styles.skillItem}>
-                                    <div className={styles.skillHeader}>
-                                        <span className={styles.skillLabel}>Архитектура</span>
-                                        <span className={styles.skillValue}>98/100</span>
-                                    </div>
-                                    <div className={styles.progressBarTrack}>
-                                        <div className={styles.progressBarFillIndigo} style={{ width: '98%' }} />
-                                    </div>
-                                </div>
-                                <div className={styles.skillItem}>
-                                    <div className={styles.skillHeader}>
-                                        <span className={styles.skillLabel}>Безопасность</span>
-                                        <span className={styles.skillValue}>74/100</span>
-                                    </div>
-                                    <div className={styles.progressBarTrack}>
-                                        <div className={styles.progressBarFillEmerald} style={{ width: '74%' }} />
-                                    </div>
-                                </div>
-                            </>
+                            <button className={styles.addSpecBtn} onClick={() => navigate('/settings')}>
+                                Выбрать направление
+                            </button>
                         )}
-                        <p className={styles.aiNote}>
-                            Данные сформированы на основе профессионализма опубликованных статей.
-                        </p>
+                    </div>
+
+                    <div className={styles.menuList}>
+                        <button className={`${styles.menuItem} ${activeTab === 'publications' ? styles.active : ''}`} onClick={() => setActiveTab('publications')}>
+                            <FileText size={18} />
+                            Публикации
+                        </button>
+                        <button className={`${styles.menuItem} ${activeTab === 'bookmarks' ? styles.active : ''}`} onClick={() => setActiveTab('bookmarks')}>
+                            <Clock size={18} />
+                            История
+                        </button>
+                        <button className={styles.menuItem} onClick={() => navigate('/dashboard')}>
+                            <Users size={18} />
+                            Мои комнаты
+                        </button>
                     </div>
                 </aside>
 
-                {/* Main Content */}
-                <main className={styles.mainColumn}>
-                    {/* Stats Row */}
-                    <div className={styles.statsGrid}>
-                        <div className={`${styles.statItemCard} ${styles.statItemPremium}`}>
-                            <p className={styles.statNumber}>
-                                {reputation >= 1000 ? (reputation / 1000).toFixed(1) + 'k' : reputation}
-                            </p>
-                            <p className={styles.statLabel}>Репутация</p>
-                        </div>
-                        <div className={styles.statItemCard}>
-                            <p className={styles.statNumber}>{articlesCount}</p>
-                            <p className={`${styles.statLabel} ${styles.statLabelDark}`}>Статьи</p>
-                        </div>
-                        <div className={styles.statItemCard}>
-                            <p className={styles.statNumber}>{answersCount >= 1000 ? (answersCount / 1000).toFixed(1) + 'k' : answersCount}</p>
-                            <p className={`${styles.statLabel} ${styles.statLabelDark}`}>Ответы</p>
-                        </div>
-                        <div className={styles.statItemCard}>
-                            <p className={styles.statNumber}>{awardsCount}</p>
-                            <p className={`${styles.statLabel} ${styles.statLabelDark}`}>Награды</p>
-                        </div>
-                    </div>
-
-                    {/* Contribution Card */}
-                    <div className={styles.contributionCard}>
-                        <div className={styles.sectionHeader}>
-                            <h3 className={styles.sectionTitle}>Активность вкладов</h3>
-                            <span className={styles.sectionSubtitle}>842 вклада за год</span>
-                        </div>
-                        <div className={styles.contributionGrid}>
-                            {contributionData.map((week, wIndex) => (
-                                <div key={wIndex} className={styles.gridCol}>
-                                    {week.map((level, dIndex) => (
-                                        <div
-                                            key={dIndex}
-                                            className={`${styles.gridCell} ${level === 1 ? styles.cellL1 :
-                                                level === 2 ? styles.cellL2 :
-                                                    level === 3 ? styles.cellL3 : ''
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Tabs & Content */}
-                    <div className={styles.tabsContainer}>
-                        <div className={styles.tabsHeader}>
+                <main className={styles.contentArea}>
+                    <div className={styles.tabsHeader}>
+                        <div className={styles.tabs}>
                             <button
-                                className={`${styles.tabBtn} ${activeTab === 'publications' ? styles.tabBtnActive : ''}`}
+                                className={`${styles.tabLink} ${activeTab === 'publications' ? styles.active : ''}`}
                                 onClick={() => setActiveTab('publications')}
                             >
                                 Публикации
                             </button>
                             <button
-                                className={`${styles.tabBtn} ${activeTab === 'achievements' ? styles.tabBtnActive : ''}`}
-                                onClick={() => setActiveTab('achievements')}
-                            >
-                                Достижения
-                            </button>
-                            <button
-                                className={`${styles.tabBtn} ${activeTab === 'bookmarks' ? styles.tabBtnActive : ''}`}
+                                className={`${styles.tabLink} ${activeTab === 'bookmarks' ? styles.active : ''}`}
                                 onClick={() => setActiveTab('bookmarks')}
                             >
                                 Закладки
                             </button>
                         </div>
+                    </div>
 
-                        <div className={styles.articleList}>
-                            {loading ? (
-                                <p className="text-center py-8 text-gray-400">Загрузка контента...</p>
-                            ) : activeTab === 'publications' ? (
-                                articles.length === 0 && posts.length === 0 ? (
-                                    <p className="text-center py-8 text-gray-400 italic">Пока нет публикаций.</p>
-                                ) : (
-                                    <>
-                                        {articles.map(article => (
-                                            <article key={article.id} className={styles.articleMiniCard}>
-                                                <div className={styles.articleHeader}>
-                                                    <span className={styles.articleTag}>Статья • {currentDir ? t(currentDir.name) : 'Backend'}</span>
-                                                    <span className={styles.articleDate}>
-                                                        {new Date(article.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                    </span>
-                                                </div>
-                                                <h4 className={styles.articleTitle}>{article.title}</h4>
-                                                <div className={styles.articleMeta}>
-                                                    <div className={styles.metaLink}>
-                                                        <Heart size={14} /> {article.id > 9000 ? (article.id % 100) * 10 : 0}
-                                                    </div>
-                                                    <div className={`${styles.metaLink} ${styles.aiScore}`}>
-                                                        <Bot size={14} /> AI: {article.aiScore ? article.aiScore.toFixed(1) : '—'}
-                                                    </div>
-                                                </div>
-                                            </article>
-                                        ))}
-                                        {posts.map(post => (
-                                            <article key={post.id} className={styles.articleMiniCard}>
-                                                <div className={styles.articleHeader}>
-                                                    <span className={`${styles.articleTag} ${styles.articleTagAlt}`}>{post.postType}</span>
-                                                    <span className={styles.articleDate}>
-                                                        {new Date(post.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                    </span>
-                                                </div>
-                                                <h4 className={styles.articleTitle}>{post.title || post.content.substring(0, 50) + '...'}</h4>
-                                                <div className={styles.articleMeta}>
-                                                    <div className={styles.metaLink}>
-                                                        <MessageSquare size={14} /> {post.id > 9000 ? (post.id % 10) + 2 : '—'}
-                                                    </div>
-                                                    <div className={`${styles.metaLink} ${styles.statusTag}`}>
-                                                        <Trophy size={14} /> {post.aiStatus === 'APPROVED' ? 'Решен' : 'В обсуждении'}
-                                                    </div>
-                                                </div>
-                                            </article>
-                                        ))}
-                                    </>
-                                )
+                    <div className={styles.articleList}>
+                        {loading ? (
+                            <p className="text-center py-8 text-gray-400">Загрузка контента...</p>
+                        ) : activeTab === 'publications' ? (
+                            articles.length === 0 && posts.length === 0 ? (
+                                <p className="text-center py-8 text-gray-400 italic">Пока нет публикаций.</p>
                             ) : (
-                                <p className="text-center py-8 text-gray-400 italic">
-                                    {activeTab === 'achievements' ? 'Раздел достижений в разработке.' : 'Раздел закладок пуст.'}
-                                </p>
-                            )}
-                        </div>
+                                <>
+                                    {articles.map(article => (
+                                        <article
+                                            key={article.id}
+                                            className={styles.articleMiniCard}
+                                            onClick={() => navigate(`/rooms/${article.roomId}/articles/${article.id}`)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <div className={styles.articleHeader}>
+                                                <span className={styles.articleTag}>Статья • {currentDir ? t(`directions.${currentDir.name.toLowerCase()}`, currentDir.name) : 'SkillHub'}</span>
+                                                <span className={styles.articleDate}>
+                                                    {new Date(article.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <h4 className={styles.articleTitle}>{article.title}</h4>
+                                            <div className={styles.articleMeta}>
+                                                <div className={styles.metaLink}>
+                                                    <Heart size={14} /> {article.id % 20 + 2}
+                                                </div>
+                                                <div className={`${styles.metaLink} ${styles.aiScore}`}>
+                                                    <Bot size={14} /> AI: {article.aiScore ? article.aiScore.toFixed(1) : '9.0'}
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                    {posts.map(post => (
+                                        <article
+                                            key={post.id}
+                                            className={styles.articleMiniCard}
+                                            onClick={() => navigate(`/rooms/${(post as any).roomId || 1}/posts/${post.id}`)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <div className={styles.articleHeader}>
+                                                <span className={`${styles.articleTag} ${styles.articleTagAlt}`}>{post.postType}</span>
+                                                <span className={styles.articleDate}>
+                                                    {new Date(post.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <h4 className={styles.articleTitle}>{post.title || createExcerpt(post.content, 50)}</h4>
+                                            <div className={styles.articleMeta}>
+                                                <div className={styles.metaLink}>
+                                                    <MessageSquare size={14} /> {post.id % 6}
+                                                </div>
+                                                <div className={`${styles.metaLink} ${styles.statusTag}`}>
+                                                    <Trophy size={14} /> {post.aiStatus === 'APPROVED' ? 'Решен' : 'В обсуждении'}
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </>
+                            )
+                        ) : (
+                            <p className="text-center py-8 text-gray-400 italic">Список закладок пуст.</p>
+                        )}
                     </div>
                 </main>
             </div>
