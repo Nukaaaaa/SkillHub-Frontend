@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-hot-toast';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Bookmark,
     Heart,
@@ -9,9 +8,12 @@ import {
     Code as CodeIcon,
     Database,
     Layout as LayoutIcon,
-    Cpu
+    Cpu,
+    Plus
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
+import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import type { Article, User } from '../types';
@@ -22,6 +24,7 @@ import styles from './RoomArticlesPage.module.css';
 
 const RoomArticlesPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const { isMember } = useAuth();
     const [articles, setArticles] = useState<Article[]>([]);
@@ -38,7 +41,6 @@ const RoomArticlesPage: React.FC = () => {
             const data = await contentService.getArticlesByRoom(Number(roomId));
             setArticles(data);
 
-            // Fetch profiles for all authors (unique IDs only)
             const authorIds = Array.from(new Set(data.map(a => a.userId)));
             const profilePromises = authorIds.map(id => userService.getUserById(id));
             const profiles = await Promise.all(profilePromises);
@@ -89,8 +91,6 @@ const RoomArticlesPage: React.FC = () => {
         return true;
     }).sort((a, b) => {
         if (filter === 'new') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        // Mock popular sorting by ID or something for now
-        if (filter === 'popular') return (b as any).likesCount - (a as any).likesCount;
         return 0;
     });
 
@@ -115,8 +115,8 @@ const RoomArticlesPage: React.FC = () => {
                             }
                             setIsCreateModalOpen(true);
                         }}
-                        style={{ opacity: isMember(Number(roomId)) ? 1 : 0.6 }}
                     >
+                        <Plus size={20} style={{ marginRight: '0.5rem' }} />
                         Написать статью
                     </button>
                 </div>
@@ -187,13 +187,18 @@ const RoomArticlesPage: React.FC = () => {
                                     <span className={styles.authorName}>
                                         {authorProfiles[article.userId]
                                             ? `${authorProfiles[article.userId].firstname} ${authorProfiles[article.userId].lastname}`
-                                            : `User #${article.userId}`}
+                                            : `Пользователь #${article.userId}`}
                                     </span>
                                     <span className={styles.separator}>•</span>
                                     <span className={styles.readTime}>12 мин чтения</span>
                                 </div>
-                                <h3 className={styles.articleTitle}>{article.title}</h3>
-                                <p className={styles.articlePreview}>{article.content}</p>
+                                <h3
+                                    className={styles.articleTitle}
+                                    onClick={() => navigate(`/rooms/${roomId}/articles/${article.id}`)}
+                                >
+                                    {article.title}
+                                </h3>
+                                <p className={styles.articlePreview}>{createExcerpt(article.content, 120)}</p>
                                 <div className={styles.cardFooter}>
                                     <div className={styles.actionsGroup}>
                                         <button className={`${styles.actionBtn} ${styles.bookmarkBtn}`}>

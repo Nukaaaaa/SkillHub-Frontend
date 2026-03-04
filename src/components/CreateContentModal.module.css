@@ -141,8 +141,43 @@
 .editorSection {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
 }
+
+.editorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.tabSelector {
+    display: flex;
+    background-color: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+.tabBtn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.tabActive {
+    background-color: white;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 
 .typeSelector {
     background-color: white;
@@ -237,11 +272,59 @@
     background: transparent;
     border: none;
     outline: none;
-    font-size: 1.25rem;
-    line-height: 1.75;
-    color: #334155;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #1e293b;
     resize: none;
+    padding: 1rem 0;
 }
+
+.previewArea {
+    width: 100%;
+    min-height: 500px;
+    padding: 1rem 0;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #1e293b;
+    overflow-y: auto;
+}
+
+.previewArea h1,
+.previewArea h2,
+.previewArea h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.previewArea p {
+    margin-bottom: 1rem;
+}
+
+.previewArea ul,
+.previewArea ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.previewArea code {
+    background-color: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.4rem;
+    font-size: 0.9em;
+    font-family: 'JetBrains Mono', monospace;
+    color: #4f46e5;
+}
+
+.previewArea blockquote {
+    border-left: 4px solid #e2e8f0;
+    padding-left: 1rem;
+    color: #64748b;
+    font-style: italic;
+    margin: 1.5rem 0;
+}
+
 
 .contentArea::placeholder {
     color: #cbd5e1;

@@ -41,6 +41,10 @@ export const contentService = {
         const response = await apiClient.get<Post[]>(`/posts/room/${roomId}`);
         return response.data;
     },
+    getPost: async (id: number): Promise<Post> => {
+        const response = await apiClient.get<Post>(`/posts/${id}`);
+        return response.data;
+    },
     getPostsByUser: async (userId: number): Promise<Post[]> => {
         const response = await apiClient.get<Post[]>(`/posts/user/${userId}`);
         return response.data;

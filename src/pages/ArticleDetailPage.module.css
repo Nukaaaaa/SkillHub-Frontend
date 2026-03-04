@@ -1,0 +1,375 @@
+.pageWrapper {
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr 340px;
+    }
+}
+
+.header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.backBtn {
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.backBtn:hover {
+    color: #1e293b;
+    transform: translateX(-4px);
+}
+
+.headerActions {
+    display: flex;
+    gap: 1rem;
+}
+
+.actionBtn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.actionBtn:hover {
+    color: #4f46e5;
+    border-color: #4f46e5;
+    transform: translateY(-2px);
+}
+
+.likeBtn {
+    width: auto;
+    padding: 0 1rem;
+    gap: 0.5rem;
+}
+
+.likeBtn span {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.mainContent {
+    background: white;
+    padding: 3rem;
+    border-radius: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.articleMeta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.difficultyBadge {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.aiBadge {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: #4f46e5;
+    font-weight: 800;
+    font-size: 0.75rem;
+    background: #eef2ff;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.75rem;
+}
+
+.metaInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-bottom: 2rem;
+    letter-spacing: -0.025em;
+}
+
+.authorSection {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 2rem 0;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 2.5rem;
+}
+
+.authorAvatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1.25rem;
+    object-fit: cover;
+}
+
+.authorInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.authorName {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.authorBio {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.followBtn {
+    height: 2.5rem;
+    padding: 0 1.25rem;
+    font-size: 0.8125rem;
+}
+
+.content {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    color: #334155;
+}
+
+.content h1,
+.content h2,
+.content h3 {
+    color: #0f172a;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+}
+
+.content p {
+    margin-bottom: 1.5rem;
+}
+
+.content code {
+    background-color: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.4rem;
+    font-size: 0.9em;
+    color: #4f46e5;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.content pre {
+    background: #0f172a;
+    color: #f8fafc;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+}
+
+.content pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: 0.9rem;
+}
+
+.content blockquote {
+    border-left: 4px solid #e2e8f0;
+    padding-left: 1.5rem;
+    margin-left: 0;
+    font-style: italic;
+    color: #64748b;
+}
+
+.articleFooter {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.tags {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.sidebarWidget {
+    background: white;
+    padding: 2rem;
+    border-radius: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.sidebarWidget h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 1.25rem;
+}
+
+.sidebarWidget p {
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.sidebarWidget hr {
+    border: 0;
+    border-top: 1px solid #f1f5f9;
+    margin: 1.5rem 0;
+}
+
+.authorStats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.authorStats div {
+    display: flex;
+    flex-direction: column;
+}
+
+.authorStats strong {
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.authorStats span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.toc {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.toc a {
+    font-size: 0.875rem;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.toc a:hover {
+    color: #4f46e5;
+}
+
+.commentsSection {
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    padding: 4rem 0;
+}
+
+.commentsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.commentsHeader h2 {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.commentsFilters {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.commentsFilters button {
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.commentsFilters .activeFilter {
+    color: #4f46e5;
+}
+
+.commentInputWrapper {
+    background: #f8fafc;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.commentArea {
+    width: 100%;
+    min-height: 100px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    resize: none;
+}
+
+.commentActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
