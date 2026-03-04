@@ -1,81 +1,67 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useOutletContext } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
     MessageSquare,
     Heart,
-    HelpCircle,
+    MoreVertical,
     Image as ImageIcon,
-    Flame,
+    HelpCircle,
+    Bot,
+    ChevronRight,
+    Search,
+    Flame
 } from 'lucide-react';
-
+import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
-import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
-import type { Room, Article, Post, User } from '../types';
 import { useAuth } from '../context/AuthContext';
-
+import type { Room, User, Article, Post } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
-import Modal from '../components/Modal';
-import Button from '../components/Button';
 import styles from './RoomDetailPage.module.css';
 
 const RoomDetailPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
+    const navigate = useNavigate();
     const { t } = useTranslation();
-    const { user: currentUser, isMember } = useAuth();
-
-    const { room: roomFromContext } = useOutletContext<{ room: Room }>() || {};
-
-    const [room, setRoom] = useState<Room | null>(roomFromContext || null);
-    const [loading, setLoading] = useState(!roomFromContext);
+    const { isMember, user } = useAuth();
 
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
-
+    const [loading, setLoading] = useState(true);
     const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [createType, setCreateType] = useState<'POST' | 'QUESTION'>('POST');
-
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-    const [postData, setPostData] = useState<{ content: string; postType: Post['postType'] }>({
-        content: '',
-        postType: 'DISCUSSION'
-    });
 
     const fetchData = async () => {
         if (!roomId) return;
         setLoading(true);
         try {
-            const [roomData, articlesData, postsData] = await Promise.all([
-                !room ? roomService.getRoom(Number(roomId)) : Promise.resolve(room),
+            const [artData, postData] = await Promise.all([
                 contentService.getArticlesByRoom(Number(roomId)),
                 contentService.getPostsByRoom(Number(roomId))
             ]);
-            if (!room) setRoom(roomData);
-            setArticles(articlesData);
-            setPosts(postsData);
 
-            // Fetch profiles for all authors (unique IDs only)
+            setArticles(artData);
+            setPosts(postData);
+
             const authorIds = Array.from(new Set([
-                ...articlesData.map(a => a.userId),
-                ...postsData.map(p => p.userId)
-            ])).filter(id => id !== undefined && id !== null);
+                ...artData.map(a => a.userId),
+                ...postData.map(p => p.userId)
+            ]));
 
             const profilePromises = authorIds.map(id => userService.getUserById(id));
             const profiles = await Promise.all(profilePromises);
 
             const profileMap: Record<number, User> = {};
-            profiles.forEach(p => {
-                profileMap[p.id] = p;
-            });
+            profiles.forEach(p => { profileMap[p.id] = p; });
             setAuthorProfiles(profileMap);
+
         } catch (error) {
-            console.error('Failed to fetch data or authors:', error);
+            console.error('Failed to fetch room detail data', error);
             toast.error(t('common.error'));
         } finally {
             setLoading(false);
@@ -86,44 +72,20 @@ const RoomDetailPage: React.FC = () => {
         fetchData();
     }, [roomId]);
 
-    const handleCreatePost = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await contentService.createPost({
-                ...postData,
-                roomId: Number(roomId),
-                userId: currentUser?.id
-            });
-            toast.success(t('post.created'));
-            setIsPostModalOpen(false);
-            setPostData({ content: '', postType: 'DISCUSSION' });
-            fetchData();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    if (loading && !room) return <Loader />;
-    if (!room) return <div>Room not found</div>;
-
     const feedItems = [
-        ...posts.map(p => ({ ...p, feedType: 'post' as const })),
-        ...articles.map(a => ({ ...a, feedType: 'article' as const }))
-    ].filter(item => {
-        if (activeCategory === 'all') return true;
-        if (item.feedType === 'article') return false;
-        if (activeCategory === 'posts') return (item as any).postType === 'DISCUSSION' || (item as any).postType === 'ANNOUNCEMENT';
-        if (activeCategory === 'questions') return (item as any).postType === 'QUESTION';
-        return true;
-    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        ...articles.map(a => ({ ...a, feedType: 'article' as const })),
+        ...posts.map(p => ({ ...p, feedType: 'post' as const }))
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    if (loading) return <Loader />;
 
     return (
-        <div className={`${styles.contentContainer} ${styles.animate}`}>
+        <div className={styles.contentContainer}>
             <div className={styles.leftColumn}>
                 <div className={styles.creationBox}>
                     <div className={styles.creationInputRow}>
                         <img
-                            src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${currentUser?.name}&background=random`}
+                            src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || 'User'}&background=random`}
                             className={styles.userAvatarMini}
                             alt="avatar"
                         />
@@ -131,14 +93,13 @@ const RoomDetailPage: React.FC = () => {
                             className={styles.fakeInput}
                             onClick={() => {
                                 if (!isMember(Number(roomId))) {
-                                    toast.error('Вступите в комнату, чтобы написать пост');
+                                    toast.error('Вступите в комнату, чтобы создавать посты');
                                     return;
                                 }
-                                setCreateType('POST');
-                                setIsCreateModalOpen(true);
+                                setIsPostModalOpen(true);
                             }}
                         >
-                            {isMember(Number(roomId)) ? t('rooms.writeSomething') : 'Вступите в комнату, чтобы написать пост'}
+                            {t('rooms.whatsOnMind') || 'Что нового? Поделитесь своими мыслями...'}
                         </button>
                     </div>
                     <div className={styles.creationActions}>
@@ -146,12 +107,8 @@ const RoomDetailPage: React.FC = () => {
                             <button
                                 className={styles.quickActionBtn}
                                 onClick={() => {
-                                    if (!isMember(Number(roomId))) {
-                                        toast.error('Вступите в комнату, чтобы задать вопрос');
-                                        return;
-                                    }
-                                    setCreateType('QUESTION');
-                                    setIsCreateModalOpen(true);
+                                    if (!isMember(Number(roomId))) return;
+                                    setIsPostModalOpen(true);
                                 }}
                             >
                                 <HelpCircle size={16} color="#f59e0b" />
@@ -227,17 +184,29 @@ const RoomDetailPage: React.FC = () => {
                                     <h4>
                                         {authorProfiles[item.userId]
                                             ? `${authorProfiles[item.userId].firstname} ${authorProfiles[item.userId].lastname}`
-                                            : `User #${item.userId}`}
+                                            : `Пользователь #${item.userId}`}
                                     </h4>
-                                    <span className={styles.authorRole}>{authorProfiles[item.userId]?.role || 'Member'}</span>
+                                    <span className={styles.authorRole}>{authorProfiles[item.userId]?.role || 'Участник'}</span>
                                 </div>
-                                <span className={`${styles.postTypeBadge} ${item.feedType === 'article' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'}`}>
-                                    {item.feedType === 'article' ? 'Статья' : ((item as any).postType === 'QUESTION' ? 'Вопрос' : 'Пост')}
+                                <span className={`${styles.postTypeBadge} ${(item as any).postType === 'QUESTION' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                                    {(item as any).postType === 'QUESTION' ? 'Вопрос' : 'Пост'}
                                 </span>
                             </div>
 
-                            <h3 className={styles.postTitle}>{(item as any).title || t('post.discussion')}</h3>
-                            <p className={styles.postPreview}>{item.content}</p>
+                            <h3
+                                className={styles.postTitle}
+                                onClick={() => {
+                                    if (item.feedType === 'article') {
+                                        navigate(`/rooms/${roomId}/articles/${item.id}`);
+                                    } else {
+                                        navigate(`/rooms/${roomId}/posts/${item.id}`);
+                                    }
+                                }}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {(item as any).title || t('post.discussion')}
+                            </h3>
+                            <p className={styles.postPreview}>{createExcerpt(item.content, 150)}</p>
 
                             <div className={styles.cardFooter}>
                                 <div className={styles.statsLeft}>
@@ -261,69 +230,37 @@ const RoomDetailPage: React.FC = () => {
 
             <aside className={styles.rightSidebar}>
                 <div className={styles.sidebarWidget}>
-                    <h4 className={styles.widgetTitle}>
+                    <h3 className={styles.widgetTitle}>
                         <Flame size={18} color="#f97316" />
-                        Нужна помощь
-                    </h4>
+                        Популярное сегодня
+                    </h3>
                     <div className={styles.helpList}>
-                        <a href="#" className={styles.helpItem}>
-                            <p>Как настроить TLS для gRPC в Docker?</p>
-                            <span className={styles.helpMeta}>20 мин назад • 0 ответов</span>
-                        </a>
-                        <a href="#" className={styles.helpItem}>
-                            <p>Ошибка 504 при загрузке файлов через Nginx</p>
-                            <span className={styles.helpMeta}>1 час назад • 0 ответов</span>
-                        </a>
+                        <div className={styles.helpItem}>
+                            <p>Как настроить Docker для Node.js?</p>
+                            <span className={styles.helpMeta}>12 ответов • 45 лайков</span>
+                        </div>
+                        <div className={styles.helpItem}>
+                            <p>Лучшие практики именования в TS</p>
+                            <span className={styles.helpMeta}>8 ответов • 32 лайка</span>
+                        </div>
                     </div>
                 </div>
 
                 <div className={styles.sidebarWidget}>
-                    <h4 className={styles.widgetTitle}>Популярно здесь</h4>
+                    <h3 className={styles.widgetTitle}>Популярные теги</h3>
                     <div className={styles.tagCloud}>
-                        <span className={styles.tag}>#postgresql</span>
-                        <span className={styles.tag}>#microservices</span>
-                        <span className={styles.tag}>#go</span>
-                        <span className={styles.tag}>#highload</span>
-                        <span className={styles.tag}>#kafka</span>
+                        <span className={styles.tag}>#React</span>
+                        <span className={styles.tag}>#NodeJS</span>
+                        <span className={styles.tag}>#Docker</span>
+                        <span className={styles.tag}>#NextJS</span>
                     </div>
                 </div>
             </aside>
 
-            <Modal
-                isOpen={isPostModalOpen}
-                onClose={() => {
-                    setIsPostModalOpen(false);
-                    setPostData({ content: '', postType: 'DISCUSSION' });
-                }}
-                title={t('rooms.newPost')}
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => {
-                            setIsPostModalOpen(false);
-                            setPostData({ content: '', postType: 'DISCUSSION' });
-                        }}>{t('common.cancel')}</Button>
-                        <Button onClick={handleCreatePost}>{t('common.create')}</Button>
-                    </>
-                }
-            >
-                <form className={styles.form} onSubmit={handleCreatePost}>
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>{t('post.content')}</label>
-                        <textarea
-                            className={styles.textarea}
-                            value={postData.content}
-                            onChange={e => setPostData({ ...postData, content: e.target.value })}
-                            required
-                        />
-                    </div>
-                </form>
-            </Modal>
-
             <CreateContentModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                isOpen={isPostModalOpen}
+                onClose={() => setIsPostModalOpen(false)}
                 roomId={Number(roomId)}
-                initialType={createType}
                 onSuccess={fetchData}
             />
         </div>
