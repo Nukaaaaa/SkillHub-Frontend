@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
     X,
-    Pencil,
-    HelpCircle,
-    Bold,
-    Italic,
-    Link as LinkIcon,
-    Code,
-    Image as ImageIcon,
-    List,
     Brain,
-    Bot
+    Bot,
+    Pencil,
+    HelpCircle
 } from 'lucide-react';
+import RichTextEditor from './RichTextEditor';
 
 import { contentService } from '../api/contentService';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +38,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [submitting, setSubmitting] = useState(false);
+    // const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write'); // No longer needed with WYSIWYG
 
     useEffect(() => {
         if (isOpen) {
@@ -126,21 +122,23 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
 
                 <main className={styles.main}>
                     <div className={styles.editorSection}>
-                        <div className={styles.typeSelector}>
-                            <button
-                                className={`${styles.typeBtn} ${type === 'POST' ? styles.active : ''}`}
-                                onClick={() => setType('POST')}
-                            >
-                                <Pencil size={18} />
-                                {t('rooms.post') || 'Пост'}
-                            </button>
-                            <button
-                                className={`${styles.typeBtn} ${type === 'QUESTION' ? styles.active : ''}`}
-                                onClick={() => setType('QUESTION')}
-                            >
-                                <HelpCircle size={18} />
-                                {t('rooms.question') || 'Вопрос'}
-                            </button>
+                        <div className={styles.editorHeader}>
+                            <div className={styles.typeSelector}>
+                                <button
+                                    className={`${styles.typeBtn} ${type === 'POST' ? styles.active : ''}`}
+                                    onClick={() => setType('POST')}
+                                >
+                                    <Pencil size={18} />
+                                    {t('rooms.post') || 'Пост'}
+                                </button>
+                                <button
+                                    className={`${styles.typeBtn} ${type === 'QUESTION' ? styles.active : ''}`}
+                                    onClick={() => setType('QUESTION')}
+                                >
+                                    <HelpCircle size={18} />
+                                    {t('rooms.question') || 'Вопрос'}
+                                </button>
+                            </div>
                         </div>
 
                         <div className={styles.formArea}>
@@ -154,21 +152,10 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
                                 autoFocus
                             />
 
-                            <div className={styles.toolbar}>
-                                <button className={styles.toolBtn}><Bold size={18} /></button>
-                                <button className={styles.toolBtn}><Italic size={18} /></button>
-                                <button className={styles.toolBtn}><LinkIcon size={18} /></button>
-                                <button className={styles.toolBtn}><Code size={18} /></button>
-                                <button className={styles.toolBtn}><ImageIcon size={18} /></button>
-                                <div className={styles.divider} />
-                                <button className={styles.toolBtn}><List size={18} /></button>
-                            </div>
-
-                            <textarea
-                                className={styles.contentArea}
+                            <RichTextEditor
+                                content={content}
+                                onChange={setContent}
                                 placeholder={t('rooms.writeHere') || 'Начните писать здесь...'}
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
                             />
                         </div>
                     </div>
