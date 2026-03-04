@@ -16,6 +16,8 @@ import RoomWikiPage from './pages/RoomWikiPage';
 import SavedArticlesPage from './pages/SavedArticlesPage';
 import AchievementsPage from './pages/AchievementsPage';
 import WikiPage from './pages/WikiPage';
+import ArticleDetailPage from './pages/ArticleDetailPage';
+import PostDetailPage from './pages/PostDetailPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -79,6 +81,8 @@ function App() {
           }>
             <Route index element={<RoomDetailPage />} />
             <Route path="articles" element={<RoomArticlesPage />} />
+            <Route path="articles/:articleId" element={<ArticleDetailPage />} />
+            <Route path="posts/:postId" element={<PostDetailPage />} />
             <Route path="wiki" element={<RoomWikiPage />} />
             <Route path="members" element={<RoomMembersPage />} />
           </Route>
