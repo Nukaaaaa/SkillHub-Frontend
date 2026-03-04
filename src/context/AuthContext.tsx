@@ -196,33 +196,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: string;
         universite: string;
         bio: string;
-    }) => {
+    }): Promise<boolean> => {
         try {
+            // 1. Регистрируем пользователя
             const response = await userClient.post('/auth/register', userData);
             const { token: newToken } = response.data;
 
+            if (!newToken) throw new Error('Token not returned');
+
+            // 2. Сохраняем токен
             localStorage.setItem('token', newToken);
             setToken(newToken);
 
-            let userToSet: User | null = null;
+            // 3. Получаем userId из токена
+            const userId = getUserIdFromToken(newToken);
+            if (!userId) throw new Error('Cannot extract userId from token');
 
-            // Try from response or fetch or fallback
-            if (response.data.user) {
-                userToSet = {
-                    ...response.data.user,
-                    name: `${response.data.user.firstname} ${response.data.user.lastname}`,
-                };
-            }
+            // 4. Делаем запрос профиля
+            const realUser = await userService.getUserById(userId);
 
-            if (!userToSet) {
-                console.error('Could not fetch real user after register');
+            if (!realUser) {
                 throw new Error('Registration succeeded, but profile retrieval failed');
             }
 
+            const userToSet = {
+                ...realUser,
+                name: `${realUser.firstname} ${realUser.lastname}`,
+            };
+
+            // 5. Сохраняем пользователя и комнаты
             setUser(userToSet);
-            if (userToSet) {
-                refreshUserRooms(userToSet.id);
-            }
+            refreshUserRooms(userToSet.id);
+
             return true;
         } catch (error) {
             console.error('Registration failed:', error);
