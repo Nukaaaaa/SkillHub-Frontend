@@ -14,6 +14,7 @@ import { roomService } from '../api/roomService';
 import type { Room } from '../types';
 import styles from './RoomLayout.module.css';
 import Loader from './Loader';
+import LanguageSelector from './LanguageSelector';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -130,6 +131,10 @@ const RoomLayout: React.FC = () => {
                         </NavLink>
                     ))}
                 </nav>
+
+                <div className={styles.sidebarFooter}>
+                    <LanguageSelector variant="sidebar" />
+                </div>
             </aside>
 
             <main className={styles.mainArea}>
