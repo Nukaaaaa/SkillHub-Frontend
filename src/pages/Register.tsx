@@ -41,6 +41,10 @@ const Register: React.FC = () => {
         }
     };
 
+    const handleSocialLogin = (provider: string) => {
+        toast.error(`${t('common.error')}: Social login via ${provider} currently unavailable (Demo)`);
+    };
+
     return (
         <div className={styles.bodyWrapper}>
             <LanguageSelector variant="floating" />
@@ -91,6 +95,24 @@ const Register: React.FC = () => {
                     <p className={styles.formSubtitle}>
                         {t('login.registerFormSubtitle')}
                     </p>
+
+                    <div className={styles.socialGrid}>
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('Google')}>
+                            <i className="fab fa-google" style={{ color: '#ea4335' }}></i> Google
+                        </button>
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('LinkedIn')}>
+                            <i className="fab fa-linkedin" style={{ color: '#0077b5' }}></i> LinkedIn
+                        </button>
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('GitHub')}>
+                            <i className="fab fa-github" style={{ color: '#333' }}></i> GitHub
+                        </button>
+                    </div>
+
+                    <div className={styles.divider}>
+                        <div className={styles.dividerLine}></div>
+                        <span className={styles.dividerText}>{t('login.orWithEmail')}</span>
+                        <div className={styles.dividerLine}></div>
+                    </div>
 
                     <form className={styles.form} onSubmit={handleSubmit}>
                         <div className={styles.formRow}>

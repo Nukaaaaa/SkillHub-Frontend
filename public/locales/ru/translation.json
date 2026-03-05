@@ -232,6 +232,7 @@
         "registerSubmit": "Создать аккаунт",
         "haveAccount": "Уже есть аккаунт?",
         "orWithEmail": "Или через почту",
+        "socialLogin": "Войти через",
         "forgotPassword": "Забыли?",
         "newHere": "Впервые у нас?",
         "createAccount": "Создать аккаунт бесплатно",

@@ -225,6 +225,7 @@
         "registerSubmit": "Register",
         "haveAccount": "Already have an account?",
         "orWithEmail": "Or via Email",
+        "socialLogin": "Sign in with",
         "forgotPassword": "Forgot?",
         "newHere": "New here?",
         "createAccount": "Create account for free",

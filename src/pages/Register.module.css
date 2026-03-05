@@ -138,6 +138,59 @@
     margin-bottom: 2rem;
 }
 
+.socialGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.socialButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    background: transparent;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #334155;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+
+.socialButton:hover {
+    background-color: #f8fafc;
+}
+
+.socialButton i {
+    font-size: 1rem;
+}
+
+.divider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dividerLine {
+    flex: 1;
+    height: 1px;
+    background-color: #f1f5f9;
+}
+
+.dividerText {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
 .form {
     display: flex;
     flex-direction: column;

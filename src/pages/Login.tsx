@@ -25,6 +25,10 @@ const Login: React.FC = () => {
         }
     };
 
+    const handleSocialLogin = (provider: string) => {
+        toast.error(`${t('common.error')}: Social login via ${provider} currently unavailable (Demo)`);
+    };
+
     return (
         <div className={styles.bodyWrapper}>
             <LanguageSelector variant="floating" />
@@ -41,11 +45,14 @@ const Login: React.FC = () => {
 
                 <div className={styles.card}>
                     <div className={styles.socialGrid}>
-                        <button className={styles.socialButton} type="button">
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('Google')}>
                             <i className="fab fa-google" style={{ color: '#ea4335' }}></i> Google
                         </button>
-                        <button className={styles.socialButton} type="button">
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('LinkedIn')}>
                             <i className="fab fa-linkedin" style={{ color: '#0077b5' }}></i> LinkedIn
+                        </button>
+                        <button className={styles.socialButton} type="button" onClick={() => handleSocialLogin('GitHub')}>
+                            <i className="fab fa-github" style={{ color: '#333' }}></i> GitHub
                         </button>
                     </div>
 
