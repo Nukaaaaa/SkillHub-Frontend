@@ -11,6 +11,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import LanguageSelector from '../components/LanguageSelector';
 
 // Mockup styling mapping
 const DIRECTION_STYLES = [
@@ -110,6 +111,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className={styles.container}>
+            <LanguageSelector variant="floating" />
             <div className={styles.pageHeader}>
                 <div className={styles.welcomeBadge}>
                     {t('dashboard.welcomeBadge')}

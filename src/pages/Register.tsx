@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import styles from './Register.module.css';
+import LanguageSelector from '../components/LanguageSelector';
 
 const Register: React.FC = () => {
     const { t } = useTranslation();
@@ -42,6 +43,7 @@ const Register: React.FC = () => {
 
     return (
         <div className={styles.bodyWrapper}>
+            <LanguageSelector variant="floating" />
             <div className={styles.registerContainer}>
                 {/* Left Sidebar */}
                 <div className={styles.sidebar}>

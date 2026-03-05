@@ -10,24 +10,19 @@ import {
     Medal,
     UserCircle,
     Layers,
-    Languages,
     LogOut,
     Search
 } from 'lucide-react';
+import LanguageSelector from './LanguageSelector';
 
 const Layout: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
-    };
-
-    const toggleLanguage = () => {
-        const nextLng = i18n.language === 'ru' ? 'en' : 'ru';
-        i18n.changeLanguage(nextLng);
     };
 
     const navItems = [
@@ -76,15 +71,12 @@ const Layout: React.FC = () => {
 
                 <div className={styles.sidebarFooter}>
                     <div className={styles.reputationCard}>
-                        <p className={styles.repLabel}>Репутация</p>
+                        <p className={styles.repLabel}>{t('profile.reputation')}</p>
                         <p className={styles.repValue}>1,250 pts</p>
                     </div>
 
                     <div className={styles.systemActions}>
-                        <button onClick={toggleLanguage} className={styles.actionBtn}>
-                            <Languages size={16} />
-                            <span>{i18n.language.toUpperCase()}</span>
-                        </button>
+                        <LanguageSelector variant="sidebar" />
                         <button onClick={handleLogout} className={styles.actionBtn}>
                             <LogOut size={16} />
                             <span>{t('common.logout')}</span>
@@ -99,7 +91,7 @@ const Layout: React.FC = () => {
                         <Search size={18} className={styles.searchIcon} />
                         <input
                             type="text"
-                            placeholder="Поиск по комнатам..."
+                            placeholder={t('rooms.searchPlaceholder')}
                         />
                     </div>
                     <div className={styles.headerActions}>

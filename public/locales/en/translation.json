@@ -13,22 +13,36 @@
         "noData": "No data",
         "offline": "Offline Mode: Using demo data",
         "deleteConfirm": "Are you sure? This action cannot be undone.",
-        "deleteSuccess": "Deleted successfully"
+        "deleteSuccess": "Deleted successfully",
+        "back": "Back",
+        "reply": "Reply",
+        "publish": "Publish"
     },
     "nav": {
         "directions": "Directions",
         "profile": "Profile",
         "community": "Community",
         "settings": "Settings",
-        "overview": "Overview"
+        "overview": "Overview",
+        "saved": "Saved Articles",
+        "wiki": "Wiki",
+        "achievements": "Achievements",
+        "rooms": "Rooms"
     },
     "dashboard": {
-        "title": "All Directions",
-        "addDirection": "Add Direction",
-        "searchPlaceholder": "Search directions...",
-        "rooms": "Rooms",
-        "directionName": "Direction Name",
-        "directionDescription": "Direction Description"
+        "welcomeBadge": "Welcome to the ecosystem",
+        "title": "In which area are you an {{highlight}}?",
+        "titleHighlight": "expert",
+        "subtitle": "Choose your primary areas of interest. This will help us tailor your knowledge base and professional communities.",
+        "addDirection": "Add Sphere",
+        "rooms": "To Rooms",
+        "directionName": "Sphere Name",
+        "directionDescription": "Sphere Description",
+        "direction": "Sphere",
+        "pleaseSelect": "Please select a direction",
+        "selectToConfirm": "Select direction",
+        "selectedCount": "selected",
+        "startWorking": "Start Working"
     },
     "profile": {
         "title": "My Profile",
@@ -38,7 +52,7 @@
         "bio": "Bio",
         "lastname": "Last Name",
         "university": "University",
-        "skills": "Skills Radar",
+        "skills": "Competence Radar",
         "achievements": "Badges & Achievements",
         "stats": "Activity Stats",
         "roomsJoined": "Rooms Joined",
@@ -55,7 +69,21 @@
         "architecture": "Architecture",
         "law": "Law",
         "economics": "Economics",
-        "arts": "Arts"
+        "arts": "Arts",
+        "reputation": "Reputation",
+        "activity": "Contribution Activity",
+        "contributionsYear": "contributions in the last year",
+        "articles": "Articles",
+        "comments": "Answers",
+        "awards": "Awards",
+        "edit": "Edit",
+        "currentDirection": "CURRENT DIRECTION",
+        "aiExpertise": "AI EXPERT ANALYSIS",
+        "tabs": {
+            "publications": "Publications",
+            "achievements": "Achievements",
+            "bookmarks": "Bookmarks"
+        }
     },
     "community": {
         "title": "Community",
@@ -81,7 +109,7 @@
         "security": "Security & Management",
         "changePassword": "Change Password",
         "dangerZone": "Danger Zone",
-        "dangerZoneDesc": "This will reset all your directions, rooms, and profile data to the original defaults.",
+        "dangerZoneDesc": "This action will reset all your directions, rooms, and profile data to original defaults.",
         "resetData": "Reset Application Data",
         "resetConfirm": "Are you sure you want to reset all application data to defaults? This will delete all your custom directions, rooms, and profile changes.",
         "profileUpdated": "Profile updated successfully!",
@@ -89,11 +117,18 @@
         "passwordUpdated": "Password changed successfully!",
         "currentPassword": "Current Password",
         "newPassword": "New Password",
-        "confirmPassword": "Confirm New Password"
+        "confirmPassword": "Confirm New Password",
+        "currentDirection": "Current Direction",
+        "changeDirection": "Change Direction",
+        "noDirection": "No direction selected"
     },
     "rooms": {
         "title": "Rooms",
+        "subtitle": "Choose a suitable community for knowledge sharing",
+        "allRooms": "All Rooms",
+        "myRooms": "My Rooms",
         "searchPlaceholder": "Search rooms...",
+        "availableRooms": "Available Rooms",
         "createRoom": "Create Room",
         "editRoom": "Edit Room",
         "roomName": "Room Name",
@@ -119,10 +154,52 @@
         "beginner": "Beginner",
         "intermediate": "Intermediate",
         "advanced": "Advanced",
-        "noRooms": "No rooms found in this direction."
+        "noRooms": "No rooms found in this direction.",
+        "view": "Enter",
+        "articles": "Articles",
+        "discussions": "Discussions",
+        "wiki": "Wiki",
+        "addArticle": "Add Article",
+        "newPost": "New Post",
+        "promoteToWiki": "Promote to Wiki",
+        "updated": "Updated",
+        "comments": "Comments",
+        "welcome": "Welcome to {{direction}} direction, {{name}}!",
+        "online": "Online",
+        "total": "Total",
+        "articlesStats": "Articles",
+        "questions": "Questions",
+        "lastActivity": "Last Activity",
+        "hoursAgo": "h ago",
+        "yourProgress": "Your Progress",
+        "lessonsCompleted": "lessons completed",
+        "createPrompt": "Ask a question or share a thought in this room...",
+        "question": "Question",
+        "photo": "Photo",
+        "writeArticlePrompt": "It's better to write articles in the editor →",
+        "post": "Post",
+        "writeHere": "Write here...",
+        "whatsOnMind": "What's on your mind?"
+    },
+    "tags": {
+        "title": "Tags",
+        "placeholder": "Add tags..."
     },
     "members": {
         "title": "Room Members",
+        "communityTitle": "Community",
+        "countLabel": "members",
+        "expertsLabel": "experts in this room",
+        "searchPlaceholder": "Find expert...",
+        "reputationLeaders": "Reputation Leaders",
+        "reputation": "Reputation",
+        "articles": "Articles",
+        "allMembers": "All Members",
+        "memberCol": "Member",
+        "roleCol": "Role",
+        "activityCol": "Activity",
+        "profileCol": "Profile",
+        "viewProfile": "Profile",
         "leaveRoom": "Leave Room",
         "me": "Me",
         "userPrefix": "User",
@@ -136,7 +213,8 @@
         "guest": "Guest"
     },
     "login": {
-        "title": "SkillHub Login",
+        "title": "Welcome to SkillHub",
+        "subtitle": "Unified space for professionals",
         "email": "Email",
         "password": "Password",
         "submit": "Login",
@@ -146,182 +224,47 @@
         "registerTitle": "Create your account",
         "registerSubmit": "Register",
         "haveAccount": "Already have an account?",
-        "view": "Enter",
-        "articles": "Articles",
-        "discussions": "Discussions",
-        "wiki": "Wiki",
-        "addArticle": "Add Article",
-        "newPost": "New Post",
-        "promoteToWiki": "Promote to Wiki",
-        "updated": "Updated",
-        "comments": "Comments"
+        "orWithEmail": "Or via Email",
+        "forgotPassword": "Forgot?",
+        "newHere": "New here?",
+        "createAccount": "Create account for free",
+        "signInAccount": "Sign in account",
+        "success": "Welcome back!",
+        "error": "Invalid email or password",
+        "registerSuccess": "Registration successful!",
+        "registerError": "Registration failed. This email might be taken.",
+        "registerSidebarTitle": "Your professional growth starts here",
+        "registerSidebarText": "Join thousands of experts from various fields: from IT and medicine to arts and management.",
+        "registerSidebarStats": "Already 10,000+ professionals with us",
+        "registerFormSubtitle": "Fill in the details so we can customize your feed"
     },
-    "data": {
-        "directions": {
-            "1": {
-                "name": "Digital Technologies",
-                "description": "Software development, Artificial Intelligence, and Cybersecurity."
-            },
-            "2": {
-                "name": "Medicine & Health",
-                "description": "Clinical practice, genetics, and modern medical technologies."
-            },
-            "3": {
-                "name": "Jurisprudence",
-                "description": "Civil law, international legal systems, and corporate law theory."
-            },
-            "4": {
-                "name": "Business & Economics",
-                "description": "Global markets, startup management, and financial analysis."
-            },
-            "5": {
-                "name": "Architecture & Design",
-                "description": "Designing eco-friendly urban environments and modern architectural concepts."
-            },
-            "6": {
-                "name": "Engineering & Robotics",
-                "description": "Mechanical design, automation systems, and high-tech electrical engineering."
-            },
-            "7": {
-                "name": "Psychology & Society",
-                "description": "Understanding human behavior, social dynamics, and cognitive sciences."
-            },
-            "8": {
-                "name": "Applied Linguistics",
-                "description": "Language study, translation theory, and intercultural communication."
-            }
-        },
-        "rooms": {
-            "101": {
-                "name": "Advanced React",
-                "description": "Design patterns and performance optimization in React."
-            },
-            "102": {
-                "name": "AI & Neural Networks",
-                "description": "Deep learning and transformer architecture basics."
-            },
-            "103": {
-                "name": "Cybersecurity Lab",
-                "description": "Ethical hacking and network security strategies."
-            },
-            "201": {
-                "name": "Genetics Seminar",
-                "description": "CRISPR-Cas9 and the future of human genome editing."
-            },
-            "202": {
-                "name": "Cardiology 101",
-                "description": "Modern approaches to cardiovascular diagnosis and treatment."
-            },
-            "203": {
-                "name": "Neuroscience Hub",
-                "description": "Brain mapping and neurodegenerative disease research."
-            },
-            "301": {
-                "name": "IP Law in Digital Age",
-                "description": "Copyright and patent protection for software and media."
-            },
-            "302": {
-                "name": "Courtroom Strategy",
-                "description": "Moot court exercises and public speaking for lawyers."
-            },
-            "303": {
-                "name": "International Ethics",
-                "description": "Global human rights and environmental regulations."
-            },
-            "401": {
-                "name": "Venture Capital",
-                "description": "Pitching and raising investment for startups."
-            },
-            "402": {
-                "name": "Crypto Markets",
-                "description": "DeFi, blockchain, and global financial shifts."
-            },
-            "403": {
-                "name": "Lean Startup",
-                "description": "Agile management and MVP development for new business."
-            },
-            "501": {
-                "name": "Eco-Architecture",
-                "description": "Zero-carbon building with sustainable materials."
-            },
-            "502": {
-                "name": "BIM Mastery",
-                "description": "Building Information Modeling for large-scale projects."
-            },
-            "503": {
-                "name": "Urban Planning",
-                "description": "Smart city design and sustainable transport systems."
-            },
-            "601": {
-                "name": "Tesla Coil Engineering",
-                "description": "High voltage electronics and power transmission."
-            },
-            "602": {
-                "name": "Space Robotics",
-                "description": "Designing rovers and satellite service systems."
-            },
-            "603": {
-                "name": "Automated Systems",
-                "description": "PLC programming and industrial robot coordination."
-            },
-            "701": {
-                "name": "Cognitive Science",
-                "description": "Modeling human perception and decision making."
-            },
-            "702": {
-                "name": "Social Dynamics",
-                "description": "The power of digital influence and crowd psychology."
-            },
-            "801": {
-                "name": "NLP Principles",
-                "description": "Teaching machines to understand human language."
-            },
-            "802": {
-                "name": "Translation Tech",
-                "description": "Simultaneous translation tools and global linguistics."
-            }
-        },
-        "users": {
-            "1": {
-                "name": "User",
-                "bio": "Aspiring interdisciplinary student interested in the intersection of tech and medicine.",
-                "role": "Senior Student"
-            },
-            "2": {
-                "name": "Dr. Alice",
-                "bio": "Biomedical researcher specializing in CRISPR and genetic editing.",
-                "role": "Lead Researcher"
-            },
-            "3": {
-                "name": "Elena Lawyer",
-                "bio": "Expert in international law and digital rights management.",
-                "role": "Senior Partner"
-            },
-            "4": {
-                "name": "Charlie Dev",
-                "bio": "Fullstack developer by day, eco-architecture enthusiast by night.",
-                "role": "Junior Architect"
-            },
-            "5": {
-                "name": "Mark Business",
-                "bio": "Venture capitalist interested in disruptive startups and DeFi.",
-                "role": "Investment Director"
-            },
-            "6": {
-                "name": "Sarah Architect",
-                "bio": "Urban designer focused on smart city integration and sustainable materials.",
-                "role": "Chief Architect"
-            },
-            "7": {
-                "name": "Eng. Tom",
-                "bio": "Robotics engineer passionate about space exploration and automated systems.",
-                "role": "Lead Engineer"
-            },
-            "8": {
-                "name": "Dr. Freud",
-                "bio": "Clinical psychologist exploring AI personality modeling boundaries.",
-                "role": "Research Fellow"
-            }
-        }
+    "article": {
+        "created": "Article created!",
+        "updated": "Article updated!",
+        "edit": "Edit article",
+        "title": "Article Title",
+        "content": "Article Content",
+        "difficulty": "Difficulty Level"
+    },
+    "post": {
+        "created": "Post created!",
+        "updated": "Post updated!",
+        "edit": "Edit post",
+        "content": "Post content"
+    },
+    "comment": {
+        "accepted": "Solution accepted!",
+        "created": "Comment added!",
+        "placeholder": "Write an answer...",
+        "accept": "Accept as solution"
+    },
+    "wiki": {
+        "promoted": "Article promoted to Wiki!",
+        "empty": "No wiki articles in this room yet."
+    },
+    "difficulty": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
     }
 }

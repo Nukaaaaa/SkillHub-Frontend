@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import styles from './Login.module.css';
+import LanguageSelector from '../components/LanguageSelector';
 
 const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -26,6 +27,7 @@ const Login: React.FC = () => {
 
     return (
         <div className={styles.bodyWrapper}>
+            <LanguageSelector variant="floating" />
             <div className={styles.loginContainer}>
                 <div className={styles.header}>
                     <div className={styles.logoWrapper}>
