@@ -50,9 +50,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (userId) {
                     try {
                         const realUser = await userService.getUserById(userId);
+
+                        // Load local avatar fallback
+                        const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+
                         userToSet = {
                             ...realUser,
                             name: `${realUser.firstname} ${realUser.lastname}`,
+                            avatar: localAvatar || realUser.avatar
                         };
                     } catch (e) {
                         console.error('Failed to restore user by ID, trying /me');
@@ -161,9 +166,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!userToSet && userId) {
                 try {
                     const realUser = await userService.getUserById(userId);
+
+                    // Load local avatar fallback
+                    const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+
                     userToSet = {
                         ...realUser,
                         name: `${realUser.firstname} ${realUser.lastname}`,
+                        avatar: localAvatar || realUser.avatar
                     };
                 } catch (e) {
                     console.error('Failed to fetch user by ID');
@@ -219,9 +229,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Registration succeeded, but profile retrieval failed');
             }
 
+            // Load local avatar fallback
+            const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+
             const userToSet = {
                 ...realUser,
                 name: `${realUser.firstname} ${realUser.lastname}`,
+                avatar: localAvatar || realUser.avatar
             };
 
             // 5. Сохраняем пользователя и комнаты
@@ -242,10 +256,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setJoinedRoomIds([]);
     };
 
-    const updateUser = (userData: Partial<User>) => {
+    const updateUser = async (userData: Partial<User>) => {
         if (!user) return;
+
+        console.log('Starting profile update with data:', userData);
+
+        // Handle avatar locally
+        if (userData.avatar) {
+            localStorage.setItem(`user_avatar_${user.id}`, userData.avatar);
+        }
+
         const updatedUser = { ...user, ...userData };
+
+        // CRITICAL: Recalculate 'name' since the UI depends on it
+        const newFirstname = userData.firstname || user.firstname;
+        const newLastname = userData.lastname || user.lastname;
+        updatedUser.name = `${newFirstname} ${newLastname}`.trim();
+
+        console.log('Updating local user state to:', updatedUser);
         setUser(updatedUser);
+
+        // Sync non-avatar fields to backend
+        const { avatar, name, ...backendFields } = userData;
+        if (Object.keys(backendFields).length > 0) {
+            try {
+                console.log('Syncing non-avatar fields with backend:', backendFields);
+                const response = await userService.updateUser(user.id, backendFields);
+                console.log('Backend sync successful, response:', response);
+            } catch (error) {
+                console.error('Failed to sync profile with backend:', error);
+            }
+        }
     };
 
     const resetToDefaults = () => {

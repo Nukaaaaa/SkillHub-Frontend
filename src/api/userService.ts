@@ -13,7 +13,7 @@ export const userService = {
         return response.data;
     },
     updateUser: async (id: number, data: Partial<User>): Promise<User> => {
-        const response = await apiClient.put<User>(`/auth/users/${id}`, data);
+        const response = await apiClient.put<User>(`/auth/update/${id}`, data);
         return response.data;
     },
 };

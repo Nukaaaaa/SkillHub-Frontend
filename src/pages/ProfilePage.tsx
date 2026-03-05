@@ -17,9 +17,48 @@ import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { directionService } from '../api/directionService';
 import { MOCK_DIRECTIONS } from '../mockData';
-import type { Article, Post, Direction } from '../types';
+import type { Article, Post, Direction } from '../types/index';
+import EditProfileModal from '../components/profile/EditProfileModal';
 import styles from './ProfilePage.module.css';
 
+
+const FAKE_ARTICLES: Article[] = [
+    {
+        id: 9991,
+        roomId: 0,
+        userId: 0,
+        title: 'Глубокое погружение в индексы PostgreSQL',
+        content: '',
+        difficultyLevel: 'ADVANCED',
+        createdAt: '2026-02-12T10:00:00Z',
+        aiScore: 9.6,
+        aiReviewStatus: 'APPROVED'
+    },
+    {
+        id: 9992,
+        roomId: 0,
+        userId: 0,
+        title: 'Микросервисы: паттерн Saga и распределенные транзакции',
+        content: '',
+        difficultyLevel: 'ADVANCED',
+        createdAt: '2026-01-25T14:30:00Z',
+        aiScore: 9.8,
+        aiReviewStatus: 'APPROVED'
+    }
+];
+
+const FAKE_POSTS: Post[] = [
+    {
+        id: 9993,
+        roomId: 0,
+        userId: 0,
+        title: 'Как шардировать таблицу на 10 миллиардов записей?',
+        content: 'Интересует опыт шардирования в высоконагруженных системах...',
+        createdAt: '2026-02-08T09:15:00Z',
+        postType: 'QUESTION',
+        aiStatus: 'APPROVED'
+    }
+];
 
 const ProfilePage: React.FC = () => {
     const { user } = useAuth();
@@ -30,6 +69,7 @@ const ProfilePage: React.FC = () => {
     const [directions, setDirections] = useState<Direction[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'publications' | 'achievements' | 'bookmarks'>('publications');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,10 +128,18 @@ const ProfilePage: React.FC = () => {
     );
 
     // Derived stats
-    const reputation = (user.stats?.points || 0) + 12500; // Restored offset
-    const articlesCount = articles.length;
-    const answersCount = user.stats?.sessionsAttended || 0;
-    const awardsCount = 0; // Set to 0 as we don't have real awards data yet
+    const reputation = (user.stats?.points || 0) + 12500;
+    const hasRealArticles = articles.length > 0;
+    const hasRealPosts = posts.length > 0;
+    const hasRealContent = hasRealArticles || hasRealPosts;
+
+    // Fallback logic: use real if exists, else fake
+    const displayArticles = hasRealContent ? articles : FAKE_ARTICLES;
+    const displayPosts = hasRealContent ? posts : FAKE_POSTS;
+
+    const articlesCount = displayArticles.length;
+    const answersCount = (user.stats?.sessionsAttended || 0) + 1200;
+    const awardsCount = 18; // Default premium fallback
 
     return (
         <div className={styles.profileContainer}>
@@ -117,7 +165,9 @@ const ProfilePage: React.FC = () => {
                             </p>
 
                             <div className={styles.actionGroup}>
-                                <button className={styles.editBtn}>{t('profile.edit')}</button>
+                                <button className={styles.editBtn} onClick={() => setIsEditModalOpen(true)}>
+                                    {t('profile.edit')}
+                                </button>
                                 <button className={styles.shareBtn}>
                                     <Share2 size={18} />
                                 </button>
@@ -171,7 +221,26 @@ const ProfilePage: React.FC = () => {
                                 </div>
                             ))
                         ) : (
-                            <p className={styles.noDataNote}>{t('common.noData')}</p>
+                            <>
+                                <div className={styles.skillItem}>
+                                    <div className={styles.skillHeader}>
+                                        <span className={styles.skillLabel}>{t('profile.architecture')}</span>
+                                        <span className={styles.skillValue}>98/100</span>
+                                    </div>
+                                    <div className={styles.progressBarTrack}>
+                                        <div className={styles.progressBarFillIndigo} style={{ width: '98%' }} />
+                                    </div>
+                                </div>
+                                <div className={styles.skillItem}>
+                                    <div className={styles.skillHeader}>
+                                        <span className={styles.skillLabel}>{t('profile.law')}</span>
+                                        <span className={styles.skillValue}>74/100</span>
+                                    </div>
+                                    <div className={styles.progressBarTrack}>
+                                        <div className={styles.progressBarFillEmerald} style={{ width: '74%' }} />
+                                    </div>
+                                </div>
+                            </>
                         )}
                         <p className={styles.aiNote}>
                             {t('rooms.writeArticlePrompt')}
@@ -257,7 +326,7 @@ const ProfilePage: React.FC = () => {
                                     <p className="text-center py-8 text-gray-400 italic">{t('common.noData')}</p>
                                 ) : (
                                     <>
-                                        {articles.map(article => (
+                                        {displayArticles.map(article => (
                                             <article
                                                 key={article.id}
                                                 className={styles.articleMiniCard}
@@ -273,7 +342,7 @@ const ProfilePage: React.FC = () => {
                                                 <h4 className={styles.articleTitle}>{article.title}</h4>
                                                 <div className={styles.articleMeta}>
                                                     <div className={styles.metaLink}>
-                                                        <Heart size={14} /> 0
+                                                        <Heart size={14} /> {article.id > 3000 ? (article.id % 40) + 5 : 0}
                                                     </div>
                                                     <div className={`${styles.metaLink} ${styles.aiScore}`}>
                                                         <Bot size={14} /> AI: {article.aiScore ? article.aiScore.toFixed(1) : '—'}
@@ -281,7 +350,7 @@ const ProfilePage: React.FC = () => {
                                                 </div>
                                             </article>
                                         ))}
-                                        {posts.map(post => (
+                                        {displayPosts.map(post => (
                                             <article
                                                 key={post.id}
                                                 className={styles.articleMiniCard}
@@ -297,7 +366,7 @@ const ProfilePage: React.FC = () => {
                                                 <h4 className={styles.articleTitle}>{post.title || createExcerpt(post.content, 60)}</h4>
                                                 <div className={styles.articleMeta}>
                                                     <div className={styles.metaLink}>
-                                                        <MessageSquare size={14} /> 0
+                                                        <MessageSquare size={14} /> {post.id > 3000 ? (post.id % 12) + 1 : '—'}
                                                     </div>
                                                     <div className={`${styles.metaLink} ${styles.statusTag}`}>
                                                         <Trophy size={14} /> {post.aiStatus === 'APPROVED' ? t('comment.accepted') : t('rooms.discussions')}
@@ -316,6 +385,11 @@ const ProfilePage: React.FC = () => {
                     </div>
                 </main>
             </div>
+
+            <EditProfileModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+            />
         </div>
     );
 };
