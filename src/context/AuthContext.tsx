@@ -51,13 +51,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try {
                         const realUser = await userService.getUserById(userId);
 
-                        // Load local avatar fallback
+                        // Load local fallbacks
                         const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+                        const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
 
                         userToSet = {
                             ...realUser,
                             name: `${realUser.firstname} ${realUser.lastname}`,
-                            avatar: localAvatar || realUser.avatar
+                            avatar: localAvatar || realUser.avatar,
+                            githubUrl: localGithub || (realUser as any).githubUrl
                         };
                     } catch (e) {
                         console.error('Failed to restore user by ID, trying /me');
@@ -167,13 +169,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     const realUser = await userService.getUserById(userId);
 
-                    // Load local avatar fallback
+                    // Load local fallbacks
                     const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+                    const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
 
                     userToSet = {
                         ...realUser,
                         name: `${realUser.firstname} ${realUser.lastname}`,
-                        avatar: localAvatar || realUser.avatar
+                        avatar: localAvatar || realUser.avatar,
+                        githubUrl: localGithub || (realUser as any).githubUrl
                     };
                 } catch (e) {
                     console.error('Failed to fetch user by ID');
@@ -229,13 +233,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Registration succeeded, but profile retrieval failed');
             }
 
-            // Load local avatar fallback
+            // Load local fallbacks
             const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
+            const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
 
             const userToSet = {
                 ...realUser,
                 name: `${realUser.firstname} ${realUser.lastname}`,
-                avatar: localAvatar || realUser.avatar
+                avatar: localAvatar || realUser.avatar,
+                githubUrl: localGithub || (realUser as any).githubUrl
             };
 
             // 5. Сохраняем пользователя и комнаты
@@ -261,9 +267,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         console.log('Starting profile update with data:', userData);
 
-        // Handle avatar locally
+        // Handle avatar and github locally
         if (userData.avatar) {
             localStorage.setItem(`user_avatar_${user.id}`, userData.avatar);
+        }
+        if (userData.githubUrl !== undefined) {
+            localStorage.setItem(`user_github_${user.id}`, userData.githubUrl || '');
         }
 
         const updatedUser = { ...user, ...userData };

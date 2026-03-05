@@ -17,7 +17,8 @@
         "back": "Назад",
         "reply": "Ответить",
         "publish": "Опубликовать",
-        "saved": "Сохранено"
+        "saved": "Сохранено",
+        "linkCopied": "Ссылка скопирована!"
     },
     "nav": {
         "directions": "Направления",
@@ -82,6 +83,9 @@
         "edit": "Редактировать",
         "currentDirection": "ТЕКУЩЕЕ НАПРАВЛЕНИЕ",
         "aiExpertise": "AI ЭКСПЕРТ-АНАЛИЗ",
+        "githubUrl": "GitHub Профиль",
+        "githubPlaceholder": "github.com/ваш_логин",
+        "changeAvatar": "Изменить аватар",
         "tabs": {
             "publications": "Публикации",
             "achievements": "Достижения",

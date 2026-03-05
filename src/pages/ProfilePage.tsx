@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -13,6 +13,7 @@ import {
     Trophy
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { directionService } from '../api/directionService';
@@ -61,7 +62,7 @@ const FAKE_POSTS: Post[] = [
 ];
 
 const ProfilePage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const [articles, setArticles] = useState<Article[]>([]);
@@ -70,6 +71,43 @@ const ProfilePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'publications' | 'achievements' | 'bookmarks'>('publications');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+
+    const handleAvatarClick = () => {
+        avatarInputRef.current?.click();
+    };
+
+    const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result as string;
+                updateUser({ avatar: base64String });
+                toast.success(t('settings.profileUpdated'));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: 'SkillHub Profile',
+            text: `Check out ${user?.name}'s profile on SkillHub!`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success(t('common.linkCopied') || 'Link copied to clipboard!');
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -149,9 +187,16 @@ const ProfilePage: React.FC = () => {
                     {/* Profile Card */}
                     <div className={styles.profileCard}>
                         <div className={styles.cardBanner}>
-                            <button className={styles.cameraBtn}>
+                            <button className={styles.cameraBtn} onClick={handleAvatarClick} title={t('profile.changeAvatar') || 'Change Avatar'}>
                                 <Camera size={18} />
                             </button>
+                            <input
+                                type="file"
+                                ref={avatarInputRef}
+                                onChange={handleAvatarFileChange}
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                            />
                         </div>
                         <div className={styles.cardBody}>
                             <img
@@ -172,7 +217,7 @@ const ProfilePage: React.FC = () => {
                                 <button className={styles.editBtn} onClick={() => setIsEditModalOpen(true)}>
                                     {t('profile.edit')}
                                 </button>
-                                <button className={styles.shareBtn}>
+                                <button className={styles.shareBtn} onClick={handleShare}>
                                     <Share2 size={18} />
                                 </button>
                             </div>
@@ -184,7 +229,14 @@ const ProfilePage: React.FC = () => {
                                 </div>
                                 <div className={styles.infoItem}>
                                     <LinkIcon className={styles.infoIcon} size={16} />
-                                    <a href="#" className={styles.infoLink}>github.com/{(user.name || 'user').toLowerCase().split(' ')[0]}</a>
+                                    <a
+                                        href={user.githubUrl ? (user.githubUrl.startsWith('http') ? user.githubUrl : `https://${user.githubUrl}`) : '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.infoLink}
+                                    >
+                                        {user.githubUrl ? user.githubUrl.replace(/^https?:\/\//, '') : 'github.com/user'}
+                                    </a>
                                 </div>
                                 <div className={styles.infoItem}>
                                     <Calendar className={styles.infoIcon} size={16} />

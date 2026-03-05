@@ -16,7 +16,8 @@
         "deleteSuccess": "Сәтті жойылды",
         "back": "Артқа",
         "reply": "Жауап беру",
-        "publish": "Жариялау"
+        "publish": "Жариялау",
+        "linkCopied": "Сілтеме көшірілді!"
     },
     "nav": {
         "directions": "Бағыттар",
@@ -80,6 +81,9 @@
         "edit": "Өңдеу",
         "currentDirection": "АҒЫМДАҒЫ БАҒЫТ",
         "aiExpertise": "AI САРАПШЫЛЫҚ ТАЛДАУЫ",
+        "githubUrl": "GitHub Профилі",
+        "githubPlaceholder": "github.com/сіздің_логиніңіз",
+        "changeAvatar": "Аватарды өзгерту",
         "tabs": {
             "publications": "Жарияланымдар",
             "achievements": "Жетістіктер",

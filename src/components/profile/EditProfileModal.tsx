@@ -20,7 +20,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
         lastname: user?.lastname || '',
         bio: user?.bio || '',
         universite: user?.universite || '',
-        avatar: user?.avatar || ''
+        avatar: user?.avatar || '',
+        githubUrl: user?.githubUrl || ''
     });
 
     const [isSaving, setIsSaving] = useState(false);
@@ -133,6 +134,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
                                 onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                                 placeholder={t('profile.bioPlaceholder') || t('profile.noBio')}
                                 rows={4}
+                            />
+                        </div>
+                        <div className={styles.formGroup + ' ' + styles.fullWidth}>
+                            <label className={styles.label}>{t('profile.githubUrl')}</label>
+                            <input
+                                type="text"
+                                className={styles.input}
+                                value={formData.githubUrl}
+                                onChange={e => setFormData(prev => ({ ...prev, githubUrl: e.target.value }))}
+                                placeholder={t('profile.githubPlaceholder')}
                             />
                         </div>
                     </div>

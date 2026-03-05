@@ -56,6 +56,7 @@ export interface User {
     skillLevels: SkillLevel[];
     avatar: string;
     isMentor: boolean;
+    githubUrl?: string;
     selectedDirectionId?: number;
     stats?: {
         roomsJoined: number;
