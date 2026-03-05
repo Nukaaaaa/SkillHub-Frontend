@@ -117,7 +117,7 @@ const ProfilePage: React.FC = () => {
     if (!user) return <div className={styles.profileContainer}>{t('common.loading')}</div>;
 
     // Find current direction object with loose equality and localStorage fallback
-    const savedDirId = localStorage.getItem(`selected_direction_${user?.id}`);
+    const savedDirId = localStorage.getItem(`selected_direction_${user.id}`);
     const effectiveDirId = user.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
     const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
 
@@ -163,6 +163,10 @@ const ProfilePage: React.FC = () => {
                             <p className={styles.userHandle}>
                                 @{(user.name || 'user').toLowerCase().replace(/\s+/g, '_')} • {user.role || (user.isMentor ? 'Senior Backend Engineer' : 'Student')}
                             </p>
+
+                            {user.bio && (
+                                <p className={styles.userBio}>{user.bio}</p>
+                            )}
 
                             <div className={styles.actionGroup}>
                                 <button className={styles.editBtn} onClick={() => setIsEditModalOpen(true)}>

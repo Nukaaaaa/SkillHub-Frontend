@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import styles from './EditProfileModal.module.css';
 
@@ -45,9 +46,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
         setIsSaving(true);
         try {
             await updateUser(formData);
+            toast.success(t('settings.profileUpdated'));
             onClose();
         } catch (error) {
             console.error('Failed to update profile:', error);
+            toast.error(t('common.error'));
         } finally {
             setIsSaving(false);
         }

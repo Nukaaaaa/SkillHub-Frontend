@@ -154,6 +154,15 @@
     font-size: 0.875rem;
 }
 
+.userBio {
+    color: #475569;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    text-align: center;
+    max-width: 24rem;
+    margin-bottom: 2rem;
+}
+
 .actionGroup {
     display: flex;
     gap: 0.5rem;
