@@ -30,6 +30,7 @@ const RoomsPage: React.FC = () => {
     const [direction, setDirection] = useState<Direction | null>(null);
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState<'all' | 'my'>('all');
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const { joinedRoomIds } = useAuth();
 
     const fetchData = async () => {
@@ -60,6 +61,11 @@ const RoomsPage: React.FC = () => {
 
     const handleRoomClick = (roomId: number) => {
         navigate(`/rooms/${roomId}`);
+    };
+
+    const toggleTag = (e: React.MouseEvent, tag: string) => {
+        e.stopPropagation();
+        setSelectedTag(prev => prev === tag ? null : tag);
     };
 
     if (loading) return <Loader />;
@@ -97,11 +103,19 @@ const RoomsPage: React.FC = () => {
                         {t('rooms.myRooms') || 'Мои комнаты'}
                     </button>
                 </div>
+
+                {selectedTag && (
+                    <div className={styles.tagFilterInfo}>
+                        <span>{t('rooms.filterByTag') || 'Фильтр по тегу'}: <strong>{selectedTag}</strong></span>
+                        <button className={styles.clearTagBtn} onClick={() => setSelectedTag(null)}>{t('common.clear') || 'Очистить'}</button>
+                    </div>
+                )}
             </div>
 
             <div className={styles.grid}>
                 {rooms
                     .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
+                    .filter(room => !selectedTag || room.tags?.includes(selectedTag))
                     .map(room => {
                         const stats = getRoomStats();
 
@@ -127,6 +141,20 @@ const RoomsPage: React.FC = () => {
 
                                 <h3 className={styles.roomTitle}>{t(room.name)}</h3>
                                 <p className={styles.roomDescription}>{t(room.description) || t('rooms.noDescription')}</p>
+
+                                {room.tags && room.tags.length > 0 && (
+                                    <div className={styles.tagList}>
+                                        {room.tags.map(tag => (
+                                            <span
+                                                key={tag}
+                                                className={`${styles.tag} ${selectedTag === tag ? styles.activeTag : ''}`}
+                                                onClick={(e) => toggleTag(e, tag)}
+                                            >
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
 
                                 <div className={styles.cardFooter}>
                                     <div className={styles.statItem}>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -22,6 +23,7 @@ import Button from '../components/Button';
 import styles from './PostDetailPage.module.css';
 
 const PostDetailPage: React.FC = () => {
+    const { user: currentUser } = useAuth();
     const { postId } = useParams<{ roomId: string; postId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -29,6 +31,7 @@ const PostDetailPage: React.FC = () => {
     const [post, setPost] = useState<Post | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
+    const [commentAuthors, setCommentAuthors] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [commentText, setCommentText] = useState('');
 
@@ -46,6 +49,18 @@ const PostDetailPage: React.FC = () => {
 
             setAuthor(userProfile);
             setComments(postComments);
+
+            // Fetch comment authors
+            const commentUserIds = Array.from(new Set(postComments.map(c => c.userId)));
+            const profilePromises = commentUserIds.map(id => userService.getUserById(id).catch(() => null));
+            const profiles = await Promise.all(profilePromises);
+
+            const profileMap: Record<number, User> = {};
+            profiles.forEach(p => {
+                if (p) profileMap[p.id] = p;
+            });
+            setCommentAuthors(profileMap);
+
         } catch (error) {
             console.error('Failed to fetch post details:', error);
             toast.error(t('common.error'));
@@ -65,7 +80,7 @@ const PostDetailPage: React.FC = () => {
             await contentService.createComment({
                 postId: post.id,
                 content: commentText,
-                userId: 1 // TODO: Use real user ID from context
+                userId: currentUser?.id || 0
             });
             setCommentText('');
             toast.success('Комментарий добавлен');
@@ -114,13 +129,17 @@ const PostDetailPage: React.FC = () => {
                     <h1 className={styles.title}>{post.title || 'Тема обсуждения'}</h1>
 
                     <div className={styles.authorSection}>
-                        <img
-                            src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
-                            alt="avatar"
-                            className={styles.authorAvatar}
-                        />
+                        <Link to={`/profile/${author?.id}`}>
+                            <img
+                                src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
+                                alt="avatar"
+                                className={styles.authorAvatar}
+                            />
+                        </Link>
                         <div className={styles.authorInfo}>
-                            <span className={styles.authorName}>{author?.firstname} {author?.lastname}</span>
+                            <Link to={`/profile/${author?.id}`} className={styles.authorNameLink}>
+                                <span className={styles.authorName}>{author?.firstname} {author?.lastname}</span>
+                            </Link>
                             <span className={styles.authorBio}>{author?.role || ''}</span>
                         </div>
                     </div>
@@ -157,10 +176,16 @@ const PostDetailPage: React.FC = () => {
                             comments.map(comment => (
                                 <div key={comment.id} className={`${styles.commentCard} ${comment.isAccepted ? styles.acceptedComment : ''}`}>
                                     <div className={styles.commentHeader}>
-                                        <div className={styles.commentAuthor}>
-                                            <span className={styles.commentAuthorName}>Пользователь #{comment.userId}</span>
-                                            <span className={styles.commentDate}>{new Date(comment.createdAt).toLocaleDateString()}</span>
-                                        </div>
+                                        <Link to={`/profile/${comment.userId}`} className={styles.commentAuthorLink}>
+                                            <div className={styles.commentAuthor}>
+                                                <span className={styles.commentAuthorName}>
+                                                    {commentAuthors[comment.userId]
+                                                        ? `${commentAuthors[comment.userId].firstname} ${commentAuthors[comment.userId].lastname}`
+                                                        : `Пользователь #${comment.userId}`}
+                                                </span>
+                                                <span className={styles.commentDate}>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </Link>
                                         {comment.isAccepted && (
                                             <span className={styles.acceptedBadge}>
                                                 <CheckCircle2 size={14} /> Решение

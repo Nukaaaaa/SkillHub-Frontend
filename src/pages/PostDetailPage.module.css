@@ -143,10 +143,20 @@
     flex-direction: column;
 }
 
+.authorNameLink {
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
 .authorName {
     font-size: 1rem;
     font-weight: 700;
     color: #1e293b;
+    transition: color 0.2s;
+}
+
+.authorNameLink:hover .authorName {
+    color: #4f46e5;
 }
 
 .authorBio {
@@ -262,10 +272,19 @@
     margin-bottom: 0.75rem;
 }
 
+.commentAuthorLink {
+    text-decoration: none;
+}
+
 .commentAuthorName {
     font-weight: 700;
     color: #1e293b;
     margin-right: 1rem;
+    transition: color 0.2s;
+}
+
+.commentAuthorLink:hover .commentAuthorName {
+    color: #4f46e5;
 }
 
 .commentDate {

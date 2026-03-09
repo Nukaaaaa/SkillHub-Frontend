@@ -14,6 +14,7 @@ export interface Room {
     participantsCount?: number;
     postsCount?: number;
     onlineCount?: number;
+    tags?: string[];
 }
 
 export type RoomRole = 'OWNER' | 'ADMIN' | 'MEMBER';
