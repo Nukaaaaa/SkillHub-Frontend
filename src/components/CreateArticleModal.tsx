@@ -117,15 +117,18 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                 <main className={styles.main}>
                     <div className={styles.editorSection}>
                         <div className={styles.formArea}>
-                            <input
-                                type="text"
-                                className={styles.titleInput}
-                                placeholder="Заголовок вашей статьи..."
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                maxLength={120}
-                                autoFocus
-                            />
+                            <div className={styles.titleFieldGroup}>
+                                <label className={styles.fieldLabel}>Заголовок статьи</label>
+                                <input
+                                    type="text"
+                                    className={styles.titleInput}
+                                    placeholder="Например: Архитектура микросервисов на Spring Boot..."
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    maxLength={120}
+                                    autoFocus
+                                />
+                            </div>
 
                             <RichTextEditor
                                 content={content}

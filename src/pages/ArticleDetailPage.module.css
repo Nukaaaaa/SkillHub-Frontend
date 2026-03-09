@@ -15,6 +15,7 @@
 @media (min-width: 1024px) {
     .container {
         grid-template-columns: 1fr 340px;
+        align-items: start;
     }
 }
 
@@ -226,6 +227,12 @@
     color: #64748b;
 }
 
+.content :global(h1),
+.content :global(h2),
+.content :global(h3) {
+    scroll-margin-top: 120px;
+}
+
 .articleFooter {
     margin-top: 4rem;
     padding-top: 2rem;
@@ -248,6 +255,9 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    position: sticky;
+    top: 100px;
+    height: fit-content;
 }
 
 .sidebarWidget {
@@ -259,42 +269,74 @@
 }
 
 .sidebarWidget h3 {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 800;
     color: #1e293b;
     margin-bottom: 1.25rem;
 }
 
-.sidebarWidget p {
-    font-size: 0.875rem;
-    color: #64748b;
-    line-height: 1.6;
+.tocTitle {
+    color: #4f46e5 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem !important;
 }
 
-.sidebarWidget hr {
+.authorWidgetHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.sidebarAvatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    object-fit: cover;
+}
+
+.sidebarAuthorName {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.125rem !important;
+}
+
+.authorBadge {
+    font-size: 0.75rem !important;
+    color: #94a3b8 !important;
+    margin: 0 !important;
+}
+
+.sidebarBio {
+    font-size: 0.8125rem !important;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.sidebarDivider {
     border: 0;
     border-top: 1px solid #f1f5f9;
-    margin: 1.5rem 0;
+    margin: 1.25rem 0;
 }
 
 .authorStats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    display: flex;
+    gap: 1.5rem;
 }
 
-.authorStats div {
+.statItem {
     display: flex;
     flex-direction: column;
 }
 
-.authorStats strong {
-    font-size: 1.25rem;
+.statValue {
+    font-size: 1rem;
+    font-weight: 800;
     color: #1e293b;
 }
 
-.authorStats span {
-    font-size: 0.75rem;
+.statLabel {
+    font-size: 0.625rem;
     color: #94a3b8;
     text-transform: uppercase;
     font-weight: 700;
@@ -314,6 +356,17 @@
 
 .toc a:hover {
     color: #4f46e5;
+}
+
+.activeTocItem {
+    color: #4f46e5 !important;
+    font-weight: 700;
+}
+
+.tocSubitem {
+    padding-left: 1rem;
+    font-size: 0.8125rem !important;
+    opacity: 0.8;
 }
 
 .commentsSection {

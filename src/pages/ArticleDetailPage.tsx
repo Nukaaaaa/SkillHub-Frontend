@@ -28,6 +28,9 @@ const ArticleDetailPage: React.FC = () => {
     const [article, setArticle] = useState<Article | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [parsedContent, setParsedContent] = useState<string>('');
+    const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
+    const [activeId, setActiveId] = useState<string>('');
 
     const fetchData = async () => {
         if (!articleId) return;
@@ -55,6 +58,64 @@ const ArticleDetailPage: React.FC = () => {
     useEffect(() => {
         fetchData();
     }, [articleId]);
+
+    useEffect(() => {
+        if (!article) return;
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(article.content, 'text/html');
+        const headingElements = doc.querySelectorAll('h1, h2, h3');
+        const newHeadings: { id: string; text: string; level: number }[] = [];
+
+        headingElements.forEach((el, index) => {
+            const id = `heading-${index}`;
+            el.id = id;
+            newHeadings.push({
+                id,
+                text: el.textContent || '',
+                level: parseInt(el.tagName.replace('H', ''), 10)
+            });
+        });
+
+        setParsedContent(doc.body.innerHTML);
+        setHeadings(newHeadings);
+    }, [article]);
+
+    useEffect(() => {
+        if (headings.length === 0) return;
+
+        const visibleHeadings = new Map<string, number>();
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        visibleHeadings.set(entry.target.id, entry.target.getBoundingClientRect().top);
+                    } else {
+                        visibleHeadings.delete(entry.target.id);
+                    }
+                });
+
+                if (visibleHeadings.size > 0) {
+                    // Find the heading that is physically FIRST in the document among visible ones
+                    const visibleIds = Array.from(visibleHeadings.keys());
+                    const bestId = headings
+                        .map(h => h.id)
+                        .find(id => visibleIds.includes(id));
+
+                    if (bestId) setActiveId(bestId || '');
+                }
+            },
+            { rootMargin: '-100px 0px -80% 0px' }
+        );
+
+        headings.forEach((h) => {
+            const el = document.getElementById(h.id);
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
+    }, [headings, parsedContent]);
 
     if (loading) return <Loader />;
     if (!article) return null;
@@ -112,7 +173,7 @@ const ArticleDetailPage: React.FC = () => {
 
                     <div
                         className={styles.content}
-                        dangerouslySetInnerHTML={{ __html: article.content }}
+                        dangerouslySetInnerHTML={{ __html: parsedContent || article.content }}
                     />
 
                     <footer className={styles.articleFooter}>
@@ -122,26 +183,59 @@ const ArticleDetailPage: React.FC = () => {
                 </main>
 
                 <aside className={styles.sidebar}>
-                    <div className={styles.sidebarWidget}>
-                        <h3>{t('article.aboutAuthor') || 'Об авторе'}</h3>
-                        <p>{author?.bio || ''}</p>
-                        <hr />
-                        <div className={styles.authorStats}>
-                            <div>
-                                <strong>{author?.stats?.points || 0}</strong>
-                                <span>{t('profile.reputation') || 'Баллы'}</span>
-                            </div>
+                    {headings.length > 0 && (
+                        <div className={styles.sidebarWidget}>
+                            <h3 className={styles.tocTitle}>Содержание</h3>
+                            <nav className={styles.toc}>
+                                {headings.map(h => (
+                                    <a
+                                        key={h.id}
+                                        href={`#${h.id}`}
+                                        className={`
+                                            ${h.level === 3 ? styles.tocSubitem : ''} 
+                                            ${activeId === h.id ? styles.activeTocItem : ''}
+                                        `}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setActiveId(h.id);
+                                            const el = document.getElementById(h.id);
+                                            if (el) {
+                                                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            }
+                                        }}
+                                        style={{ marginLeft: h.level === 3 ? '1rem' : '0' }}
+                                    >
+                                        {h.text}
+                                    </a>
+                                ))}
+                            </nav>
                         </div>
-                    </div>
+                    )}
 
                     <div className={styles.sidebarWidget}>
-                        <h3>Содержание</h3>
-                        <nav className={styles.toc}>
-                            <a href="#">Введение</a>
-                            <a href="#">Основные принципы</a>
-                            <a href="#">Практические примеры</a>
-                            <a href="#">Заключение</a>
-                        </nav>
+                        <div className={styles.authorWidgetHeader}>
+                            <img
+                                src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
+                                alt="avatar"
+                                className={styles.sidebarAvatar}
+                            />
+                            <div>
+                                <h3 className={styles.sidebarAuthorName}>{author?.firstname} {author?.lastname}</h3>
+                                <p className={styles.authorBadge}>{author?.role || 'Автор'}</p>
+                            </div>
+                        </div>
+                        <p className={styles.sidebarBio}>{author?.bio || ''}</p>
+                        <hr className={styles.sidebarDivider} />
+                        <div className={styles.authorStats}>
+                            <div className={styles.statItem}>
+                                <span className={styles.statValue}>{author?.stats?.points || 0}</span>
+                                <span className={styles.statLabel}>{t('profile.reputation') || 'Баллы'}</span>
+                            </div>
+                            <div className={styles.statItem}>
+                                <span className={styles.statValue}>{author?.stats?.roomsJoined || 0}</span>
+                                <span className={styles.statLabel}>Комнаты</span>
+                            </div>
+                        </div>
                     </div>
                 </aside>
             </div>

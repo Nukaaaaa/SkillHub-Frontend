@@ -79,11 +79,26 @@
     height: 0;
 }
 
-.content :global(.tiptap h1),
-.content :global(.tiptap h2),
-.content :global(.tiptap h3) {
-    margin-top: 1.5rem;
+.content :global(.tiptap h1) {
+    font-size: 2rem;
+    margin-top: 2rem;
     margin-bottom: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.content :global(.tiptap h2) {
+    font-size: 1.5rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.875rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.content :global(.tiptap h3) {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 800;
     color: #0f172a;
 }

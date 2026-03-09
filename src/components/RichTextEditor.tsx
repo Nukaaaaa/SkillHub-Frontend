@@ -15,7 +15,10 @@ import {
     Quote,
     Code2,
     Undo,
-    Redo
+    Redo,
+    Heading1,
+    Heading2,
+    Heading3
 } from 'lucide-react';
 import styles from './RichTextEditor.module.css';
 
@@ -32,7 +35,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
-                codeBlock: false, // Disable default code block to use lowlight instead
+                codeBlock: false,
+                heading: {
+                    levels: [1, 2, 3],
+                },
             }),
             Link.configure({
                 openOnClick: false,
@@ -44,6 +50,27 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
                 lowlight,
             }),
         ],
+        editorProps: {
+            handlePaste: (view, event) => {
+                const text = event.clipboardData?.getData('text/plain');
+                if (text && (text.includes('# ') || text.includes('## ') || text.includes('### '))) {
+                    // Very simple markdown-to-html conversion for headers on paste
+                    const html = text
+                        .split('\n')
+                        .map(line => {
+                            if (line.startsWith('### ')) return `<h3>${line.slice(4)}</h3>`;
+                            if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
+                            if (line.startsWith('# ')) return `<h1>${line.slice(2)}</h1>`;
+                            return `<p>${line}</p>`;
+                        })
+                        .join('');
+
+                    editor?.commands.insertContent(html);
+                    return true;
+                }
+                return false;
+            }
+        },
         content: content,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
@@ -104,6 +131,32 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
                         title="Inline Code"
                     >
                         <Code size={18} />
+                    </button>
+                </div>
+
+                <div className={styles.divider} />
+
+                <div className={styles.toolGroup}>
+                    <button
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                        className={`${styles.toolBtn} ${editor.isActive('heading', { level: 1 }) ? styles.active : ''}`}
+                        title="Heading 1"
+                    >
+                        <Heading1 size={18} />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                        className={`${styles.toolBtn} ${editor.isActive('heading', { level: 2 }) ? styles.active : ''}`}
+                        title="Heading 2"
+                    >
+                        <Heading2 size={18} />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                        className={`${styles.toolBtn} ${editor.isActive('heading', { level: 3 }) ? styles.active : ''}`}
+                        title="Heading 3"
+                    >
+                        <Heading3 size={18} />
                     </button>
                 </div>
 
