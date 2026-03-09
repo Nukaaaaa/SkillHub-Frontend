@@ -87,7 +87,7 @@ const RoomLayout: React.FC = () => {
         setJoining(true);
         try {
             await joinRoom(Number(roomId));
-            toast.success(t('rooms.joinedSuccess') || 'Вы вступили в комнату!');
+            toast.success(t('rooms.joined') || 'Вы вступили в комнату!');
         } catch (error) {
             toast.error(t('common.error'));
         } finally {
@@ -102,7 +102,7 @@ const RoomLayout: React.FC = () => {
         setLeaving(true);
         try {
             await leaveRoom(Number(roomId));
-            toast.success(t('rooms.leftSuccess') || 'Вы покинули комнату');
+            toast.success(t('rooms.leaveSuccess') || 'Вы покинули комнату');
         } catch (error) {
             toast.error(t('common.error'));
         } finally {

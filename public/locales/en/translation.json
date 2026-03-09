@@ -16,7 +16,8 @@
         "deleteSuccess": "Deleted successfully",
         "back": "Back",
         "reply": "Reply",
-        "publish": "Publish"
+        "publish": "Publish",
+        "clear": "Clear"
     },
     "nav": {
         "directions": "Directions",
@@ -140,11 +141,14 @@
         "isPrivate": "Private Room",
         "members": "Members",
         "join": "Join",
-        "joined": "Joined",
+        "joined": "You have joined the room!",
         "member": "Member",
         "leave": "Leave",
         "leaveConfirm": "Are you sure you want to leave this room?",
-        "leaveSuccess": "You have successfully left the room",
+        "leaveSuccess": "You have left the room",
+        "joinRequiredToPost": "Join the room to create posts",
+        "joinRequiredToArticle": "Join the room to write articles",
+        "useArticleTab": "Use the \"Articles\" tab to write",
         "roomCreated": "Room created!",
         "roomUpdated": "Room updated!",
         "roomDeleted": "Room deleted",
@@ -179,7 +183,8 @@
         "writeArticlePrompt": "It's better to write articles in the editor →",
         "post": "Post",
         "writeHere": "Write here...",
-        "whatsOnMind": "What's on your mind?"
+        "whatsOnMind": "What's on your mind?",
+        "filterByTag": "Filter by tag"
     },
     "tags": {
         "title": "Tags",

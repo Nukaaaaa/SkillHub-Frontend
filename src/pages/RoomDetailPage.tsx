@@ -91,7 +91,7 @@ const RoomDetailPage: React.FC = () => {
                             className={styles.fakeInput}
                             onClick={() => {
                                 if (!isMember(Number(roomId))) {
-                                    toast.error('Вступите в комнату, чтобы создавать посты');
+                                    toast.error(t('rooms.joinRequiredToPost'));
                                     return;
                                 }
                                 setIsPostModalOpen(true);
@@ -121,10 +121,10 @@ const RoomDetailPage: React.FC = () => {
                             className={styles.editorLink}
                             onClick={() => {
                                 if (!isMember(Number(roomId))) {
-                                    toast.error('Вступите в комнату, чтобы писать статьи');
+                                    toast.error(t('rooms.joinRequiredToArticle'));
                                     return;
                                 }
-                                toast('Используйте вкладку "Статьи" для написания', { icon: '📝' });
+                                toast(t('rooms.useArticleTab'), { icon: '📝' });
                             }}
                         >
                             {t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}

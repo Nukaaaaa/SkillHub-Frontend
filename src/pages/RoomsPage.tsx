@@ -5,21 +5,17 @@ import { roomService } from '../api/roomService';
 import { directionService } from '../api/directionService';
 import type { Room, Direction } from '../types';
 import Loader from '../components/Loader';
-import { MessageSquare, Users } from 'lucide-react';
+import { MessageSquare, Users, SearchX, PlusCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
-// Room stats will be populated from the backend in future updates
-const getRoomStats = () => {
-    return {
-        category: 'Backend', // Default placeholder
-        posts: 0,
-        participants: 0,
-        members: [],
-        extraMembers: 0
-    };
-};
+// Helper to get random avatars for demo purposes
+const getDemoAvatars = (count: number) => [
+    'https://i.pravatar.cc/150?u=1',
+    'https://i.pravatar.cc/150?u=2',
+    'https://i.pravatar.cc/150?u=3'
+].slice(0, count);
 
 const RoomsPage: React.FC = () => {
     const { directionId } = useParams<{ directionId: string }>();
@@ -70,14 +66,7 @@ const RoomsPage: React.FC = () => {
 
     if (loading) return <Loader />;
 
-    const getBadgeClass = (category: string) => {
-        switch (category) {
-            case 'Backend': return styles.badgeBackend;
-            case 'Frontend': return styles.badgeFrontend;
-            case 'DevOps': return styles.badgeDevOps;
-            default: return styles.badgeGeneral;
-        }
-    };
+
 
     return (
         <div className={styles.pageWrapper}>
@@ -117,7 +106,8 @@ const RoomsPage: React.FC = () => {
                     .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
                     .filter(room => !selectedTag || room.tags?.includes(selectedTag))
                     .map(room => {
-                        const stats = getRoomStats();
+                        const demoAvatars = getDemoAvatars(Math.min(3, room.participantsCount || 0));
+                        const extraMembers = (room.participantsCount || 0) - demoAvatars.length;
 
                         return (
                             <div
@@ -126,27 +116,26 @@ const RoomsPage: React.FC = () => {
                                 onClick={() => handleRoomClick(room.id)}
                             >
                                 <div className={styles.cardTop}>
-                                    <span className={`${styles.categoryBadge} ${getBadgeClass(stats.category)}`}>
-                                        {stats.category}
-                                    </span>
                                     <div className={styles.memberStack}>
-                                        {stats.members.map((m, i) => (
+                                        {demoAvatars.map((url, i) => (
                                             <div key={i} className={styles.memberAvatar}>
-                                                <img src={m} alt="member" />
+                                                <img src={url} alt="member" />
                                             </div>
                                         ))}
-                                        <div className={styles.moreMembers}>+{stats.extraMembers}</div>
+                                        {extraMembers > 0 && (
+                                            <div className={styles.moreMembers}>+{extraMembers}</div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <h3 className={styles.roomTitle}>{t(room.name)}</h3>
-                                <p className={styles.roomDescription}>{t(room.description) || t('rooms.noDescription')}</p>
+                                <p className={styles.roomDescription}>{room.description || t('rooms.noDescription')}</p>
 
                                 {room.tags && room.tags.length > 0 && (
                                     <div className={styles.tagList}>
                                         {room.tags.map(tag => (
-                                            <span
-                                                key={tag}
+                                            <span 
+                                                key={tag} 
                                                 className={`${styles.tag} ${selectedTag === tag ? styles.activeTag : ''}`}
                                                 onClick={(e) => toggleTag(e, tag)}
                                             >
@@ -171,8 +160,28 @@ const RoomsPage: React.FC = () => {
                     })}
 
                 {rooms.length === 0 && (
-                    <div className={styles.empty}>
-                        <p>{t('rooms.noRooms')}</p>
+                    <div className={styles.emptyState}>
+                        <div className={styles.emptyIcon}>
+                            <SearchX size={32} />
+                        </div>
+                        <h3 className={styles.emptyTitle}>
+                            {selectedTag ? t('rooms.noRoomsWithTag') || 'По этому тегу ничего нет' : t('rooms.noRooms') || 'В этом направлении пока нет комнат'}
+                        </h3>
+                        <p className={styles.emptyText}>
+                            {selectedTag 
+                                ? t('rooms.tryOtherTag') || 'Попробуйте сбросить фильтры или поискать другой тег'
+                                : t('rooms.createFirstPrompt') || 'Станьте первым, кто создаст пространство для общения в этом направлении!'}
+                        </p>
+                        {selectedTag ? (
+                            <button className={styles.emptyCta} onClick={() => setSelectedTag(null)}>
+                                {t('common.clear') || 'Сбросить фильтры'}
+                            </button>
+                        ) : (
+                            <button className={styles.emptyCta}>
+                                <PlusCircle size={18} />
+                                {t('rooms.createRoom') || 'Создать комнату'}
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

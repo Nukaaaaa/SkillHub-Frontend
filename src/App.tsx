@@ -47,7 +47,13 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Toaster position="top-right" reverseOrder={false} />
+        <Toaster 
+          position="top-right" 
+          reverseOrder={false} 
+          toastOptions={{
+            duration: 2000,
+          }}
+        />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
