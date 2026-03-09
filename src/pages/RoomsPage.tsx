@@ -131,11 +131,11 @@ const RoomsPage: React.FC = () => {
                                 <div className={styles.cardFooter}>
                                     <div className={styles.statItem}>
                                         <MessageSquare size={14} />
-                                        <span>{stats.posts} постов</span>
+                                        <span>{room.postsCount || 0} постов</span>
                                     </div>
                                     <div className={styles.statItem}>
                                         <Users size={14} />
-                                        <span>{stats.participants} участников</span>
+                                        <span>{room.participantsCount || 0} участников</span>
                                     </div>
                                 </div>
                             </div>

@@ -5,19 +5,15 @@ import { toast } from 'react-hot-toast';
 import {
     MessageSquare,
     Heart,
-    MoreVertical,
     Image as ImageIcon,
     HelpCircle,
-    Bot,
-    ChevronRight,
-    Search,
     Flame
 } from 'lucide-react';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { useAuth } from '../context/AuthContext';
-import type { Room, User, Article, Post } from '../types';
+import type { User, Post } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
 import styles from './RoomDetailPage.module.css';
@@ -28,7 +24,7 @@ const RoomDetailPage: React.FC = () => {
     const { t } = useTranslation();
     const { isMember, user } = useAuth();
 
-    const [articles, setArticles] = useState<Article[]>([]);
+
     const [posts, setPosts] = useState<Post[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
@@ -40,16 +36,13 @@ const RoomDetailPage: React.FC = () => {
         if (!roomId) return;
         setLoading(true);
         try {
-            const [artData, postData] = await Promise.all([
-                contentService.getArticlesByRoom(Number(roomId)),
+            const [postData] = await Promise.all([
                 contentService.getPostsByRoom(Number(roomId))
             ]);
 
-            setArticles(artData);
             setPosts(postData);
 
             const authorIds = Array.from(new Set([
-                ...artData.map(a => a.userId),
                 ...postData.map(p => p.userId)
             ]));
 
@@ -75,9 +68,12 @@ const RoomDetailPage: React.FC = () => {
     }, [roomId]);
 
     const feedItems = [
-        ...articles.map(a => ({ ...a, feedType: 'article' as const })),
         ...posts.map(p => ({ ...p, feedType: 'post' as const }))
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    ].filter(item => {
+        if (activeCategory === 'posts') return item.postType !== 'QUESTION';
+        if (activeCategory === 'questions') return item.postType === 'QUESTION';
+        return true;
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     if (loading) return <Loader />;
 
@@ -198,11 +194,7 @@ const RoomDetailPage: React.FC = () => {
                             <h3
                                 className={styles.postTitle}
                                 onClick={() => {
-                                    if (item.feedType === 'article') {
-                                        navigate(`/rooms/${roomId}/articles/${item.id}`);
-                                    } else {
-                                        navigate(`/rooms/${roomId}/posts/${item.id}`);
-                                    }
+                                    navigate(`/rooms/${roomId}/posts/${item.id}`);
                                 }}
                                 style={{ cursor: 'pointer' }}
                             >
@@ -221,9 +213,6 @@ const RoomDetailPage: React.FC = () => {
                                         <span>128</span>
                                     </div>
                                 </div>
-                                <button className={styles.replyBtn}>
-                                    {t('common.reply') || 'Ответить'}
-                                </button>
                             </div>
                         </article>
                     ))}

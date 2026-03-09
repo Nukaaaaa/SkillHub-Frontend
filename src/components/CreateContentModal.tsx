@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
     X,
-    Brain,
-    Bot,
     Pencil,
     HelpCircle
 } from 'lucide-react';
@@ -189,29 +187,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
                             </div>
                         </div>
 
-                        <div className={styles.aiWidget}>
-                            <div className={styles.aiHeader}>
-                                <div className={styles.aiIcon}>
-                                    <Bot size={20} />
-                                </div>
-                                <span className={styles.aiTitle}>AI Инспектор</span>
-                            </div>
-                            <p className={styles.aiText}>
-                                ИИ анализирует ваш текст на профессионализм и точность в реальном времени.
-                            </p>
-                            <div className={styles.aiProgress}>
-                                <div className={styles.progressLabel}>
-                                    <span>Профессионализм</span>
-                                    <span>85%</span>
-                                </div>
-                                <div className={styles.progressBar}>
-                                    <div className={styles.progressFill} style={{ width: '85%' }}></div>
-                                </div>
-                            </div>
-                            <div className={styles.aiBgIcon}>
-                                <Brain />
-                            </div>
-                        </div>
+
                     </aside>
                 </main>
             </div>

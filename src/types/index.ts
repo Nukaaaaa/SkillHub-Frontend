@@ -11,6 +11,8 @@ export interface Room {
     description: string;
     isPrivate: boolean;
     createdAt?: string;
+    participantsCount?: number;
+    postsCount?: number;
 }
 
 export type RoomRole = 'OWNER' | 'ADMIN' | 'MEMBER';
