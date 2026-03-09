@@ -299,6 +299,15 @@
 .sidebarAuthorName {
     font-size: 0.875rem !important;
     margin-bottom: 0.125rem !important;
+    transition: color 0.2s;
+}
+
+.authorNameLink {
+    text-decoration: none;
+}
+
+.authorNameLink:hover .sidebarAuthorName {
+    color: #4f46e5;
 }
 
 .authorBadge {

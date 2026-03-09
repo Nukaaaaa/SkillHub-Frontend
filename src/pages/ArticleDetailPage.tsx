@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -214,13 +214,17 @@ const ArticleDetailPage: React.FC = () => {
 
                     <div className={styles.sidebarWidget}>
                         <div className={styles.authorWidgetHeader}>
-                            <img
-                                src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
-                                alt="avatar"
-                                className={styles.sidebarAvatar}
-                            />
+                            <Link to={`/profile/${author?.id}`}>
+                                <img
+                                    src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
+                                    alt="avatar"
+                                    className={styles.sidebarAvatar}
+                                />
+                            </Link>
                             <div>
-                                <h3 className={styles.sidebarAuthorName}>{author?.firstname} {author?.lastname}</h3>
+                                <Link to={`/profile/${author?.id}`} className={styles.authorNameLink}>
+                                    <h3 className={styles.sidebarAuthorName}>{author?.firstname} {author?.lastname}</h3>
+                                </Link>
                                 <p className={styles.authorBadge}>{author?.role || 'Автор'}</p>
                             </div>
                         </div>

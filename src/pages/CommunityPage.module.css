@@ -75,3 +75,13 @@
     border: 1px solid var(--border-color);
     margin-top: 1rem;
 }
+
+.userNameLink {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+}
+
+.userNameLink:hover {
+    color: #6366f1;
+}

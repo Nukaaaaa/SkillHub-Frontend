@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     Camera,
@@ -16,15 +16,20 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
+import { userService } from '../api/userService';
 import { directionService } from '../api/directionService';
-import type { Article, Post, Direction } from '../types/index';
+import Loader from '../components/Loader';
+import type { Article, Post, Direction, User } from '../types/index';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import styles from './ProfilePage.module.css';
 
 const ProfilePage: React.FC = () => {
-    const { user, updateUser } = useAuth();
+    const { user: currentUser, updateUser } = useAuth();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+
+    const [profileUser, setProfileUser] = useState<User | null>(null);
     const [articles, setArticles] = useState<Article[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [directions, setDirections] = useState<Direction[]>([]);
@@ -39,7 +44,7 @@ const ProfilePage: React.FC = () => {
 
     const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
+        if (file && isOwnProfile) {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result as string;
@@ -53,7 +58,7 @@ const ProfilePage: React.FC = () => {
     const handleShare = async () => {
         const shareData = {
             title: 'SkillHub Profile',
-            text: `Check out ${user?.name}'s profile on SkillHub!`,
+            text: `Check out ${profileUser?.name}'s profile on SkillHub!`,
             url: window.location.href
         };
 
@@ -71,25 +76,36 @@ const ProfilePage: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!user?.id) {
+            const targetId = id ? Number(id) : currentUser?.id;
+            if (!targetId) {
                 setLoading(false);
                 return;
             }
+
             try {
                 setLoading(true);
-                const [userArticles, userPosts, allDirections] = await Promise.all([
-                    contentService.getArticlesByUser(user.id).catch(() => []),
-                    contentService.getPostsByUser(user.id).catch(() => []),
-                    directionService.getDirections().catch(() => [])
-                ]);
 
+                // Always fetch from API to get full data (bio, stats, etc.)
+                const userData = await userService.getUserById(targetId);
+                setProfileUser(userData);
 
-                // Set real data from API
-                setArticles(Array.isArray(userArticles) ? userArticles : []);
-                setPosts(Array.isArray(userPosts) ? userPosts : []);
-                setDirections(Array.isArray(allDirections) ? allDirections : []);
+                if (userData) {
+                    const [userArticles, userPosts, allDirections] = await Promise.all([
+                        contentService.getArticlesByUser(userData.id).catch(() => []),
+                        contentService.getPostsByUser(userData.id).catch(() => []),
+                        directionService.getDirections().catch(() => [])
+                    ]);
+
+                    setArticles(Array.isArray(userArticles) ? userArticles : []);
+                    setPosts(Array.isArray(userPosts) ? userPosts : []);
+                    setDirections(Array.isArray(allDirections) ? allDirections : []);
+                }
             } catch (error) {
                 console.error('Failed to fetch user context:', error);
+                // Fallback to currentUser if fetch fails and it's own profile
+                if (!id && currentUser) {
+                    setProfileUser(currentUser);
+                }
                 setArticles([]);
                 setPosts([]);
                 setDirections([]);
@@ -98,29 +114,41 @@ const ProfilePage: React.FC = () => {
             }
         };
         fetchData();
-    }, [user?.id, user?.selectedDirectionId]);
+    }, [id, currentUser?.id]);
+
+    const isOwnProfile = !id || Number(id) === currentUser?.id;
+
+    // Helper for displaying user name
+    const getDisplayName = (u: User | null) => {
+        if (!u) return 'User';
+        if (u.firstname || u.lastname) {
+            return `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim();
+        }
+        return u.name || 'User';
+    };
 
     const handleDirectionChange = () => {
         navigate('/dashboard?from=profile');
     };
 
-    if (!user) return <div className={styles.profileContainer}>{t('common.loading')}</div>;
+    if (!profileUser && !loading) return <div className={styles.profileContainer}>{t('common.noData')}</div>;
+    if (loading) return <div className={styles.profileContainer}><Loader /></div>;
 
     // Find current direction object with loose equality and localStorage fallback
-    const savedDirId = localStorage.getItem(`selected_direction_${user.id}`);
-    const effectiveDirId = user.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
+    const savedDirId = localStorage.getItem(`selected_direction_${profileUser?.id}`);
+    const effectiveDirId = profileUser?.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
     const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
 
     // Mock contribution data restored for premium look
-    const seed = user.id || 1;
+    const seed = profileUser?.id || 1;
     const contributionData = Array.from({ length: 52 }, (_, i) =>
         Array.from({ length: 7 }, (_, j) => ((seed + i + j) % 5 === 0 ? Math.floor(((seed + i * j) % 3) + 1) : 0))
     );
 
     // Derived stats
-    const reputation = (user.stats?.points || 0);
+    const reputation = (profileUser?.stats?.points || 0);
     const articlesCount = articles.length;
-    const answersCount = (user.stats?.sessionsAttended || 0);
+    const answersCount = (profileUser?.stats?.sessionsAttended || 0);
     const awardsCount = 0; // Set to actual when implemented
 
     return (
@@ -131,9 +159,11 @@ const ProfilePage: React.FC = () => {
                     {/* Profile Card */}
                     <div className={styles.profileCard}>
                         <div className={styles.cardBanner}>
-                            <button className={styles.cameraBtn} onClick={handleAvatarClick} title={t('profile.changeAvatar') || 'Change Avatar'}>
-                                <Camera size={18} />
-                            </button>
+                            {isOwnProfile && (
+                                <button className={styles.cameraBtn} onClick={handleAvatarClick} title={t('profile.changeAvatar') || 'Change Avatar'}>
+                                    <Camera size={18} />
+                                </button>
+                            )}
                             <input
                                 type="file"
                                 ref={avatarInputRef}
@@ -144,23 +174,29 @@ const ProfilePage: React.FC = () => {
                         </div>
                         <div className={styles.cardBody}>
                             <img
-                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=4f46e5&color=fff&size=256`}
+                                src={profileUser?.avatar || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
                                 className={styles.profileAvatar}
                                 alt="avatar"
                             />
-                            <h2 className={styles.userName}>{user.name || 'User'}</h2>
+                            <h2 className={styles.userName}>{getDisplayName(profileUser)}</h2>
                             <p className={styles.userHandle}>
-                                @{(user.name || 'user').toLowerCase().replace(/\s+/g, '_')} • {user.role || (user.isMentor ? 'Senior Backend Engineer' : 'Student')}
+                                @{(profileUser?.name || 'user').toLowerCase().replace(/\s+/g, '_')} • {profileUser?.role || (profileUser?.isMentor ? 'Senior Backend Engineer' : 'Student')}
                             </p>
 
-                            {user.bio && (
-                                <p className={styles.userBio}>{user.bio}</p>
+                            {profileUser?.bio && (
+                                <p className={styles.userBio}>{profileUser.bio}</p>
                             )}
 
                             <div className={styles.actionGroup}>
-                                <button className={styles.editBtn} onClick={() => setIsEditModalOpen(true)}>
-                                    {t('profile.edit')}
-                                </button>
+                                {isOwnProfile ? (
+                                    <button className={styles.editBtn} onClick={() => setIsEditModalOpen(true)}>
+                                        {t('profile.edit')}
+                                    </button>
+                                ) : (
+                                    <button className={styles.editBtn}>
+                                        {t('community.message')}
+                                    </button>
+                                )}
                                 <button className={styles.shareBtn} onClick={handleShare}>
                                     <Share2 size={18} />
                                 </button>
@@ -169,17 +205,17 @@ const ProfilePage: React.FC = () => {
                             <div className={styles.infoSection}>
                                 <div className={styles.infoItem}>
                                     <MapPin className={styles.infoIcon} size={16} />
-                                    <span>{user.universite || '—'}</span>
+                                    <span>{profileUser?.universite || '—'}</span>
                                 </div>
                                 <div className={styles.infoItem}>
                                     <LinkIcon className={styles.infoIcon} size={16} />
                                     <a
-                                        href={user.githubUrl ? (user.githubUrl.startsWith('http') ? user.githubUrl : `https://${user.githubUrl}`) : '#'}
+                                        href={profileUser?.githubUrl ? (profileUser.githubUrl.startsWith('http') ? profileUser.githubUrl : `https://${profileUser.githubUrl}`) : '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={styles.infoLink}
                                     >
-                                        {user.githubUrl ? user.githubUrl.replace(/^https?:\/\//, '') : '—'}
+                                        {profileUser?.githubUrl ? profileUser.githubUrl.replace(/^https?:\/\//, '') : '—'}
                                     </a>
                                 </div>
                                 <div className={styles.infoItem}>
@@ -196,7 +232,7 @@ const ProfilePage: React.FC = () => {
                             <span className={styles.directionName}>
                                 {loading ? t('common.loading') : (currentDir ? t(currentDir.name) : t('settings.noDirection'))}
                             </span>
-                            <button className={styles.changeDirBtn} onClick={handleDirectionChange} disabled={loading}>
+                            <button className={styles.changeDirBtn} onClick={handleDirectionChange} disabled={loading || !isOwnProfile}>
                                 <Share2 size={14} style={{ transform: 'rotate(-90deg)' }} /> {t('settings.changeDirection')}
                             </button>
                         </div>
@@ -205,8 +241,8 @@ const ProfilePage: React.FC = () => {
                     {/* AI Analysis Card */}
                     <div className={styles.aiAnalysisCard}>
                         <h3 className={styles.aiTitle}>{t('profile.aiExpertise')}</h3>
-                        {user.skillLevels && user.skillLevels.length > 0 ? (
-                            user.skillLevels.slice(0, 3).map((skill, idx) => (
+                        {profileUser?.skillLevels && profileUser.skillLevels.length > 0 ? (
+                            profileUser.skillLevels.slice(0, 3).map((skill, idx) => (
                                 <div key={idx} className={styles.skillItem}>
                                     <div className={styles.skillHeader}>
                                         <span className={styles.skillLabel}>{t(skill.subject)}</span>

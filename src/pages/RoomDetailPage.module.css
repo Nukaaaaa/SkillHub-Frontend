@@ -227,6 +227,15 @@
     margin: 0;
 }
 
+.authorNameLink {
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.authorNameLink:hover h4 {
+    color: #6366f1;
+}
+
 .authorRole {
     font-size: 0.75rem;
     color: #94a3b8;

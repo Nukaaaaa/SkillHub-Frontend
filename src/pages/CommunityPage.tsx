@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Search, Star, UserPlus, MessageSquare, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Button from '../components/Button';
@@ -133,10 +134,12 @@ const CommunityPage: React.FC = () => {
             <div className={styles.grid}>
                 {filteredUsers.map(u => (
                     <Card key={u.id} title={
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {u.name ?? `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim()}
-                            {u.isMentor && <Star size={16} fill="#FFD700" color="#FFD700" />}
-                        </div>
+                        <Link to={`/profile/${u.id}`} className={styles.userNameLink}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {u.name ?? `${u.firstname ?? ''} ${u.lastname ?? ''}`.trim()}
+                                {u.isMentor && <Star size={16} fill="#FFD700" color="#FFD700" />}
+                            </div>
+                        </Link>
                     }>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div>

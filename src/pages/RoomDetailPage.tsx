@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -173,17 +173,21 @@ const RoomDetailPage: React.FC = () => {
                     {feedItems.map((item) => (
                         <article key={`${item.feedType}-${item.id}`} className={styles.articleCard}>
                             <div className={styles.cardTop}>
-                                <img
-                                    src={authorProfiles[item.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[item.userId]?.firstname || 'User'}&background=random`}
-                                    className={styles.userAvatarMini}
-                                    alt="avatar"
-                                />
+                                <Link to={`/profile/${item.userId}`}>
+                                    <img
+                                        src={authorProfiles[item.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[item.userId]?.firstname || 'User'}&background=random`}
+                                        className={styles.userAvatarMini}
+                                        alt="avatar"
+                                    />
+                                </Link>
                                 <div className={styles.authorInfo}>
-                                    <h4>
-                                        {authorProfiles[item.userId]
-                                            ? `${authorProfiles[item.userId].firstname} ${authorProfiles[item.userId].lastname}`
-                                            : `Пользователь #${item.userId}`}
-                                    </h4>
+                                    <Link to={`/profile/${item.userId}`} className={styles.authorNameLink}>
+                                        <h4>
+                                            {authorProfiles[item.userId]
+                                                ? `${authorProfiles[item.userId].firstname} ${authorProfiles[item.userId].lastname}`
+                                                : `Пользователь #${item.userId}`}
+                                        </h4>
+                                    </Link>
                                     <span className={styles.authorRole}>{authorProfiles[item.userId]?.role || 'Участник'}</span>
                                 </div>
                                 <span className={`${styles.postTypeBadge} ${(item as any).postType === 'QUESTION' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>

@@ -67,6 +67,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="/:directionId/rooms" element={<RoomsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/:id" element={<ProfilePage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/saved" element={<SavedArticlesPage />} />
