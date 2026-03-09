@@ -10,19 +10,14 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
-// Mock helper to generate card stats based on room ID
-const getRoomStats = (roomId: number) => {
-    const seed = roomId * 13;
-    const categories = ['Backend', 'Frontend', 'DevOps', 'Mobile', 'Design'];
+// Room stats will be populated from the backend in future updates
+const getRoomStats = () => {
     return {
-        category: categories[seed % categories.length],
-        posts: (seed % 200) + 10,
-        participants: (seed % 500) + 50,
-        members: [
-            `https://ui-avatars.com/api/?name=User${seed % 10}&background=random`,
-            `https://ui-avatars.com/api/?name=User${(seed + 1) % 10}&background=random`,
-        ],
-        extraMembers: (seed % 15) + 3
+        category: 'Backend', // Default placeholder
+        posts: 0,
+        participants: 0,
+        members: [],
+        extraMembers: 0
     };
 };
 
@@ -108,7 +103,7 @@ const RoomsPage: React.FC = () => {
                 {rooms
                     .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
                     .map(room => {
-                        const stats = getRoomStats(room.id);
+                        const stats = getRoomStats();
 
                         return (
                             <div

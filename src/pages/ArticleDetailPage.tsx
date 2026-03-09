@@ -73,7 +73,7 @@ const ArticleDetailPage: React.FC = () => {
                         <button className={styles.actionBtn}><Bookmark size={18} /></button>
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
                             <Heart size={18} />
-                            <span>1.2k</span>
+                            <span>0</span>
                         </button>
                     </div>
                 </header>
@@ -83,11 +83,11 @@ const ArticleDetailPage: React.FC = () => {
                         <div className={styles.difficultyBadge}>{article.difficultyLevel || 'INTERMEDIATE'}</div>
                         <div className={styles.aiBadge}>
                             <Bot size={14} />
-                            AI Score: {article.aiScore?.toFixed(1) || '9.4'}
+                            AI Score: {article.aiScore?.toFixed(1) || '—'}
                         </div>
                         <div className={styles.metaInfo}>
                             <Clock size={14} />
-                            12 мин чтения
+                            {Math.ceil(article.content.length / 1000)} {t('common.minRead') || 'мин чтения'}
                         </div>
                         <div className={styles.metaInfo}>
                             <Calendar size={14} />
@@ -105,7 +105,7 @@ const ArticleDetailPage: React.FC = () => {
                         />
                         <div className={styles.authorInfo}>
                             <span className={styles.authorName}>{author?.firstname} {author?.lastname}</span>
-                            <span className={styles.authorBio}>{author?.role || 'Senior Software Engineer'}</span>
+                            <span className={styles.authorBio}>{author?.role || ''}</span>
                         </div>
                         <Button variant="secondary" className={styles.followBtn}>Подписаться</Button>
                     </div>
@@ -117,26 +117,19 @@ const ArticleDetailPage: React.FC = () => {
 
                     <footer className={styles.articleFooter}>
                         <div className={styles.tags}>
-                            <span className={styles.tag}>#Architecture</span>
-                            <span className={styles.tag}>#Highload</span>
-                            <span className={styles.tag}>#SystemDesign</span>
                         </div>
                     </footer>
                 </main>
 
                 <aside className={styles.sidebar}>
                     <div className={styles.sidebarWidget}>
-                        <h3>Об авторе</h3>
-                        <p>{author?.bio || 'Страстный разработчик, делюсь опытом проектирования масштабируемых систем.'}</p>
+                        <h3>{t('article.aboutAuthor') || 'Об авторе'}</h3>
+                        <p>{author?.bio || ''}</p>
                         <hr />
                         <div className={styles.authorStats}>
                             <div>
-                                <strong>24</strong>
-                                <span>Статьи</span>
-                            </div>
-                            <div>
-                                <strong>1.5k</strong>
-                                <span>Читателей</span>
+                                <strong>{author?.stats?.points || 0}</strong>
+                                <span>{t('profile.reputation') || 'Баллы'}</span>
                             </div>
                         </div>
                     </div>
@@ -156,10 +149,8 @@ const ArticleDetailPage: React.FC = () => {
             <section className={styles.commentsSection}>
                 <div className={styles.container}>
                     <div className={styles.commentsHeader}>
-                        <h2>Комментарии (12)</h2>
+                        <h2>{t('article.comments') || 'Комментарии'} (0)</h2>
                         <div className={styles.commentsFilters}>
-                            <button className={styles.activeFilter}>Лучшие</button>
-                            <button>Новые</button>
                         </div>
                     </div>
 

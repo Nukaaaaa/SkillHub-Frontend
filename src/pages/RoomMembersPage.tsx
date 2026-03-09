@@ -7,7 +7,8 @@ import {
     Medal,
     MessageSquare,
     Heart,
-    ChevronRight
+    ChevronRight,
+    Trophy
 } from 'lucide-react';
 
 import { roomService } from '../api/roomService';
@@ -59,8 +60,13 @@ const RoomMembersPage: React.FC = () => {
         const name = profile ? `${profile.firstname} ${profile.lastname}` : (m.name || '');
         return name.toLowerCase().includes(searchTerm.toLowerCase());
     }).sort((a, b) => {
+        const profileA = memberProfiles[a.userId];
+        const profileB = memberProfiles[b.userId];
+        const pointsA = profileA?.stats?.points || 0;
+        const pointsB = profileB?.stats?.points || 0;
+
         if (sortBy === 'reputation') {
-            return (b.userId % 500) - (a.userId % 500);
+            return pointsB - pointsA;
         }
         return 0;
     });
@@ -87,7 +93,7 @@ const RoomMembersPage: React.FC = () => {
                     <div>
                         <h1>{t('members.communityTitle') || 'Комьюнити'}</h1>
                         <p className={styles.pageSubtitle}>
-                            {members.length} {t('members.countLabel') || 'участников'} • {Math.round(members.length * 0.03)} {t('members.expertsLabel') || 'экспертов в этой комнате'}
+                            {members.length} {t('members.countLabel') || 'участников'}
                         </p>
                     </div>
                     <div className={styles.searchArea}>
@@ -125,27 +131,21 @@ const RoomMembersPage: React.FC = () => {
                                     <span className={styles.rankBadge}>{index + 1}</span>
                                 </div>
                                 <h4 className={styles.leaderName}>{getMemberName(leader)}</h4>
-                                <p className={styles.leaderHandle}>@{getMemberName(leader).toLowerCase().replace(/\s+/g, '_')}</p>
 
                                 <div className={styles.badgeStack}>
                                     <span className={`${styles.badge} ${leader.role === 'OWNER' ? styles.roleAdmin : styles.roleExpert}`}>
                                         {leader.role === 'OWNER' ? 'Admin' : 'Expert'}
                                     </span>
-                                    {index === 0 && (
-                                        <span className={`${styles.badge} ${styles.topContributor}`}>
-                                            TOP CONTRIBUTOR
-                                        </span>
-                                    )}
                                 </div>
 
                                 <div className={styles.cardStats}>
                                     <div className={styles.statItem}>
-                                        <p className={styles.statNum}>{(leader.userId % 500) * 10}k</p>
+                                        <p className={styles.statNum}>{memberProfiles[leader.userId]?.stats?.points || 0}</p>
                                         <p className={styles.statLabel}>{t('members.reputation') || 'Репутация'}</p>
                                     </div>
                                     <div className={styles.statItem}>
-                                        <p className={styles.statNum}>{leader.userId % 50}</p>
-                                        <p className={styles.statLabel}>{t('members.articles') || 'Статьи'}</p>
+                                        <p className={styles.statNum}>{memberProfiles[leader.userId]?.stats?.sessionsAttended || 0}</p>
+                                        <p className={styles.statLabel}>{t('members.articles') || 'Сессии'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -197,7 +197,6 @@ const RoomMembersPage: React.FC = () => {
                                                 />
                                                 <div>
                                                     <p className={styles.userName}>{getMemberName(member)}</p>
-                                                    <p className={styles.userHandle}>@{getMemberName(member).toLowerCase().replace(/\s+/g, '_')}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -211,11 +210,8 @@ const RoomMembersPage: React.FC = () => {
                                         </td>
                                         <td className={styles.memberCell}>
                                             <div className={styles.activityGroup}>
-                                                <div className={styles.activityItem} title="Посты">
-                                                    <MessageSquare size={14} /> {member.userId % 20}
-                                                </div>
-                                                <div className={styles.activityItem} title="Лайки">
-                                                    <Heart size={14} /> {member.userId % 100}
+                                                <div className={styles.activityItem} title="Баллы">
+                                                    <Trophy size={14} /> {memberProfiles[member.userId]?.stats?.points || 0}
                                                 </div>
                                             </div>
                                         </td>

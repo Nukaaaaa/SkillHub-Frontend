@@ -50,11 +50,13 @@ const CommunityPage: React.FC = () => {
     };
 
     const handleInvite = (name: string) => {
-        toast.success(t('community.inviteSent', { name }));
+        console.log(`Invite sent to ${name}`);
+        // Real invite logic will be here
     };
 
     const handleMessage = (name: string) => {
-        toast.success(t('community.messageOpened', { name }));
+        console.log(`Message opened for ${name}`);
+        // Real messaging logic will be here
     };
 
     if (loading) return <Loader />;

@@ -94,7 +94,7 @@ const PostDetailPage: React.FC = () => {
                         <button className={styles.actionBtn}><Bookmark size={18} /></button>
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
                             <Heart size={18} />
-                            <span>128</span>
+                            <span>0</span>
                         </button>
                     </div>
                 </header>
@@ -121,7 +121,7 @@ const PostDetailPage: React.FC = () => {
                         />
                         <div className={styles.authorInfo}>
                             <span className={styles.authorName}>{author?.firstname} {author?.lastname}</span>
-                            <span className={styles.authorBio}>{author?.role || 'Member'}</span>
+                            <span className={styles.authorBio}>{author?.role || ''}</span>
                         </div>
                     </div>
 

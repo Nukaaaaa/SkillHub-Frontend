@@ -42,7 +42,8 @@ const Register: React.FC = () => {
     };
 
     const handleSocialLogin = (provider: string) => {
-        toast.error(`${t('common.error')}: Social login via ${provider} currently unavailable (Demo)`);
+        // Social login will be implemented with full OAuth flow
+        console.log(`Social login initiated for ${provider}`);
     };
 
     return (

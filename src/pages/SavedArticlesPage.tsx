@@ -4,8 +4,6 @@ import {
     Bookmark,
     Search,
     Clock,
-    ChevronRight,
-    MoreVertical,
     Trash2,
     Share2,
     ExternalLink
@@ -22,46 +20,19 @@ interface SavedArticle {
     category: string;
 }
 
-const MOCK_SAVED: SavedArticle[] = [
-    {
-        id: 1,
-        title: "Оптимизация производительности в React: Полное руководство",
-        preview: "Разбираем useMemo, useCallback и профилирование компонентов для достижения 60fps в сложных интерфейсах...",
-        author: "Александр Иванов",
-        savedAt: "2 часа назад",
-        readTime: "12 мин",
-        category: "Frontend"
-    },
-    {
-        id: 2,
-        title: "Архитектура микросервисов на Go",
-        preview: "Как проектировать отказоустойчивые системы, используя gRPC, Kafka и чистую архитектуру...",
-        author: "Мария Петрова",
-        savedAt: "Вчера",
-        readTime: "18 мин",
-        category: "Backend"
-    },
-    {
-        id: 3,
-        title: "Deep Learning для начинающих",
-        preview: "Введение в нейронные сети: от линейной регрессии до современных трансформеров на PyTorch...",
-        author: "Дмитрий Соколов",
-        savedAt: "3 дня назад",
-        readTime: "25 мин",
-        category: "AI/ML"
-    }
-];
-
 const SavedArticlesPage: React.FC = () => {
     const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState('');
+    const savedArticles: SavedArticle[] = []; // To be populated from API
+
+
 
     return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div className={styles.headerTitle}>
                     <h1>{t('nav.saved') || 'Сохраненные статьи'}</h1>
-                    <p>{MOCK_SAVED.length} материалов отложено на потом</p>
+                    <p>{savedArticles.length} материалов отложено на потом</p>
                 </div>
                 <div className={styles.searchBox}>
                     <Search size={18} className={styles.searchIcon} />
@@ -75,7 +46,7 @@ const SavedArticlesPage: React.FC = () => {
             </header>
 
             <div className={styles.articlesList}>
-                {MOCK_SAVED.map(article => (
+                {savedArticles.map(article => (
                     <div key={article.id} className={styles.articleCard}>
                         <div className={styles.cardMain}>
                             <div className={styles.cardHeader}>
@@ -108,7 +79,7 @@ const SavedArticlesPage: React.FC = () => {
                 ))}
             </div>
 
-            {MOCK_SAVED.length === 0 && (
+            {savedArticles.length === 0 && (
                 <div className={styles.emptyState}>
                     <Bookmark size={48} className={styles.emptyIcon} />
                     <h3>У вас нет сохраненных статей</h3>

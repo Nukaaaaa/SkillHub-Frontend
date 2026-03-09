@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
     Medal,
     Trophy,
-    Star,
-    Target,
     Zap,
-    ShieldCheck,
-    Users,
-    MessageCircle,
     Hexagon
 } from 'lucide-react';
 import styles from './AchievementsPage.module.css';
@@ -26,63 +21,12 @@ interface Achievement {
 const AchievementsPage: React.FC = () => {
     const { t } = useTranslation();
 
-    const achievements: Achievement[] = [
-        {
-            id: 1,
-            title: "Первые шаги",
-            description: "Вы вступили в свою первую профессиональную комнату",
-            icon: <Zap size={24} />,
-            color: "#6366f1",
-            progress: 100,
-            unlockedAt: "12 Фев 2026"
-        },
-        {
-            id: 2,
-            title: "Активный участник",
-            description: "Оставьте 50 комментариев в обсуждениях",
-            icon: <MessageCircle size={24} />,
-            color: "#f59e0b",
-            progress: 65
-        },
-        {
-            id: 3,
-            title: "Хранитель знаний",
-            description: "Добавьте 5 статей в базу знаний (Wiki)",
-            icon: <ShieldCheck size={24} />,
-            color: "#10b981",
-            progress: 40
-        },
-        {
-            id: 4,
-            title: "Лидер мнений",
-            description: "Получите 100 лайков на свои посты",
-            icon: <Star size={24} />,
-            color: "#ef4444",
-            progress: 82
-        },
-        {
-            id: 5,
-            title: "Сетевик",
-            description: "Подпишитесь на 10 экспертов",
-            icon: <Users size={24} />,
-            color: "#8b5cf6",
-            progress: 100,
-            unlockedAt: "24 Фев 2026"
-        },
-        {
-            id: 6,
-            title: "Марафонец",
-            description: "ПосещайтеSkillHub 7 дней подряд",
-            icon: <Target size={24} />,
-            color: "#ec4899",
-            progress: 42
-        }
-    ];
+    const achievements: Achievement[] = [];
 
     const stats = [
-        { label: "Всего очков", value: "2,450", icon: <Trophy size={20} color="#f59e0b" /> },
-        { label: "Разблокировано", value: "12/48", icon: <Medal size={20} color="#6366f1" /> },
-        { label: "Уровень", value: "8", icon: <Zap size={20} color="#10b981" /> }
+        { label: t('profile.reputation'), value: "0", icon: <Trophy size={20} color="#f59e0b" /> },
+        { label: t('profile.tabs.achievements'), value: "0/0", icon: <Medal size={20} color="#6366f1" /> },
+        { label: "Уровень", value: "1", icon: <Zap size={20} color="#10b981" /> }
     ];
 
     return (
@@ -106,42 +50,49 @@ const AchievementsPage: React.FC = () => {
             </header>
 
             <div className={styles.grid}>
-                {achievements.map((achievement) => (
-                    <div key={achievement.id} className={`${styles.card} ${achievement.unlockedAt ? styles.unlocked : ''}`}>
-                        <div className={styles.cardHeader}>
-                            <div
-                                className={styles.iconWrapper}
-                                style={{ background: achievement.unlockedAt ? achievement.color : '#f1f5f9', color: achievement.unlockedAt ? 'white' : '#94a3b8' }}
-                            >
-                                {achievement.icon}
+                {achievements.length > 0 ? (
+                    achievements.map((achievement) => (
+                        <div key={achievement.id} className={`${styles.card} ${achievement.unlockedAt ? styles.unlocked : ''}`}>
+                            <div className={styles.cardHeader}>
+                                <div
+                                    className={styles.iconWrapper}
+                                    style={{ background: achievement.unlockedAt ? achievement.color : '#f1f5f9', color: achievement.unlockedAt ? 'white' : '#94a3b8' }}
+                                >
+                                    {achievement.icon}
+                                </div>
+                                {achievement.unlockedAt && (
+                                    <span className={styles.dateBadge}>{achievement.unlockedAt}</span>
+                                )}
                             </div>
-                            {achievement.unlockedAt && (
-                                <span className={styles.dateBadge}>{achievement.unlockedAt}</span>
+                            <h3 className={styles.cardTitle}>{achievement.title}</h3>
+                            <p className={styles.cardDesc}>{achievement.description}</p>
+
+                            <div className={styles.progressContainer}>
+                                <div className={styles.progressHeader}>
+                                    <span>Прогресс</span>
+                                    <span>{achievement.progress}%</span>
+                                </div>
+                                <div className={styles.progressBar}>
+                                    <div
+                                        className={styles.progressFill}
+                                        style={{ width: `${achievement.progress}%`, background: achievement.color }}
+                                    />
+                                </div>
+                            </div>
+
+                            {!achievement.unlockedAt && (
+                                <div className={styles.lockOverlay}>
+                                    <Hexagon size={20} />
+                                </div>
                             )}
                         </div>
-                        <h3 className={styles.cardTitle}>{achievement.title}</h3>
-                        <p className={styles.cardDesc}>{achievement.description}</p>
-
-                        <div className={styles.progressContainer}>
-                            <div className={styles.progressHeader}>
-                                <span>Прогресс</span>
-                                <span>{achievement.progress}%</span>
-                            </div>
-                            <div className={styles.progressBar}>
-                                <div
-                                    className={styles.progressFill}
-                                    style={{ width: `${achievement.progress}%`, background: achievement.color }}
-                                />
-                            </div>
-                        </div>
-
-                        {!achievement.unlockedAt && (
-                            <div className={styles.lockOverlay}>
-                                <Hexagon size={20} />
-                            </div>
-                        )}
+                    ))
+                ) : (
+                    <div className={styles.empty} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
+                        <p>{t('common.noData')}</p>
+                        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>Этот раздел будет наполняться по мере ваших успехов</p>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );
