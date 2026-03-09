@@ -40,7 +40,7 @@ const PostDetailPage: React.FC = () => {
             setPost(postData);
 
             const [userProfile, postComments] = await Promise.all([
-                userService.getUserById(postData.userId),
+                userService.getUserById(postData.userId).catch(() => null),
                 contentService.getCommentsByPost(Number(postId))
             ]);
 

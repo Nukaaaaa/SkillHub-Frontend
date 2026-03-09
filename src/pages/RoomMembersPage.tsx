@@ -35,13 +35,19 @@ const RoomMembersPage: React.FC = () => {
             const data = await roomService.getMembers(Number(roomId));
             setMembers(data);
 
-            // Fetch profiles for all members
-            const profilePromises = data.map(m => userService.getUserById(m.userId));
+            const profilePromises = data.map(m =>
+                userService.getUserById(m.userId).catch(err => {
+                    console.warn(`Failed to fetch profile for user ${m.userId}`, err);
+                    return null;
+                })
+            );
             const profiles = await Promise.all(profilePromises);
 
             const profileMap: Record<number, User> = {};
             profiles.forEach(p => {
-                profileMap[p.id] = p;
+                if (p) {
+                    profileMap[p.id] = p;
+                }
             });
             setMemberProfiles(profileMap);
         } catch (error) {
@@ -57,8 +63,10 @@ const RoomMembersPage: React.FC = () => {
 
     const filteredMembers = members.filter(m => {
         const profile = memberProfiles[m.userId];
-        const name = profile ? `${profile.firstname} ${profile.lastname}` : (m.name || '');
-        return name.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!profile) return false;
+
+        const fullName = [profile.firstname, profile.lastname].filter(Boolean).join(' ') || profile.name || '';
+        return fullName.toLowerCase().includes(searchTerm.toLowerCase());
     }).sort((a, b) => {
         const profileA = memberProfiles[a.userId];
         const profileB = memberProfiles[b.userId];
@@ -73,7 +81,11 @@ const RoomMembersPage: React.FC = () => {
 
     const getMemberName = (m: UserRoom) => {
         const profile = memberProfiles[m.userId];
-        return profile ? `${profile.firstname} ${profile.lastname}` : `User #${m.userId}`;
+        if (profile) {
+            const fullName = [profile.firstname, profile.lastname].filter(Boolean).join(' ');
+            return fullName || profile.name || `User #${m.userId}`;
+        }
+        return m.name || `User #${m.userId}`;
     };
 
     const getMemberAvatar = (m: UserRoom) => {
@@ -93,7 +105,7 @@ const RoomMembersPage: React.FC = () => {
                     <div>
                         <h1>{t('members.communityTitle') || 'Комьюнити'}</h1>
                         <p className={styles.pageSubtitle}>
-                            {members.length} {t('members.countLabel') || 'участников'}
+                            {filteredMembers.length} {t('members.countLabel') || 'участников'}
                         </p>
                     </div>
                     <div className={styles.searchArea}>
@@ -133,8 +145,9 @@ const RoomMembersPage: React.FC = () => {
                                 <h4 className={styles.leaderName}>{getMemberName(leader)}</h4>
 
                                 <div className={styles.badgeStack}>
-                                    <span className={`${styles.badge} ${leader.role === 'OWNER' ? styles.roleAdmin : styles.roleExpert}`}>
-                                        {leader.role === 'OWNER' ? 'Admin' : 'Expert'}
+                                    <span className={`${styles.badge} ${leader.role === 'OWNER' ? styles.roleAdmin :
+                                        leader.role === 'ADMIN' ? styles.roleExpert : styles.roleMember}`}>
+                                        {(leader.role || 'MEMBER').toLowerCase()}
                                     </span>
                                 </div>
 
@@ -205,7 +218,7 @@ const RoomMembersPage: React.FC = () => {
                                                 member.role === 'ADMIN' ? styles.roleExpert :
                                                     styles.roleMember
                                                 }`}>
-                                                {member.role}
+                                                {(member.role || 'MEMBER').toLowerCase()}
                                             </span>
                                         </td>
                                         <td className={styles.memberCell}>

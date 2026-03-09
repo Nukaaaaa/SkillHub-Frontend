@@ -53,11 +53,13 @@ const RoomDetailPage: React.FC = () => {
                 ...postData.map(p => p.userId)
             ]));
 
-            const profilePromises = authorIds.map(id => userService.getUserById(id));
+            const profilePromises = authorIds.map(id => userService.getUserById(id).catch(() => null));
             const profiles = await Promise.all(profilePromises);
 
             const profileMap: Record<number, User> = {};
-            profiles.forEach(p => { profileMap[p.id] = p; });
+            profiles.forEach(p => {
+                if (p) profileMap[p.id] = p;
+            });
             setAuthorProfiles(profileMap);
 
         } catch (error) {

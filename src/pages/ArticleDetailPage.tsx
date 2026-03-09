@@ -38,7 +38,7 @@ const ArticleDetailPage: React.FC = () => {
 
             if (found) {
                 setArticle(found);
-                const userProfile = await userService.getUserById(found.userId);
+                const userProfile = await userService.getUserById(found.userId).catch(() => null);
                 setAuthor(userProfile);
             } else {
                 toast.error('Статья не найдена');

@@ -127,13 +127,6 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className={styles.topActions}>
-                <Button
-                    icon={<Plus size={18} />}
-                    onClick={(e) => handleOpenModal(e as React.MouseEvent)}
-                    variant="secondary"
-                >
-                    {t('dashboard.addDirection')}
-                </Button>
             </div>
 
             <div className={styles.grid}>
@@ -157,22 +150,7 @@ const Dashboard: React.FC = () => {
                             <h3 className={styles.cardTitle}>{t(dir.name)}</h3>
                             <p className={styles.cardDescription}>{t(dir.description)}</p>
 
-                            <div className={styles.cardAdminActions}>
-                                <button
-                                    className={styles.adminBtn}
-                                    onClick={(e) => handleOpenModal(e, dir)}
-                                    title={t('common.edit')}
-                                >
-                                    <Edit2 size={14} />
-                                </button>
-                                <button
-                                    className={`${styles.adminBtn} ${styles.danger}`}
-                                    onClick={(e) => handleDelete(e, dir.id)}
-                                    title={t('common.delete')}
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            </div>
+                            {/* Admin actions removed for users */}
                         </div>
                     );
                 })}
@@ -185,14 +163,6 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className={styles.stickyFooter}>
-                <div className={styles.counterSection}>
-                    <span className={styles.counterValue}>
-                        {selectedId ? 1 : 0}
-                    </span>
-                    <span className={styles.counterLabel}>
-                        {t('dashboard.selectedCount')}
-                    </span>
-                </div>
                 <button
                     onClick={handleConfirm}
                     disabled={!selectedId}

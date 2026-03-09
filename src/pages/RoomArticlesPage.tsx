@@ -42,12 +42,14 @@ const RoomArticlesPage: React.FC = () => {
             setArticles(data);
 
             const authorIds = Array.from(new Set(data.map(a => a.userId)));
-            const profilePromises = authorIds.map(id => userService.getUserById(id));
+            const profilePromises = authorIds.map(id => userService.getUserById(id).catch(() => null));
             const profiles = await Promise.all(profilePromises);
 
             const profileMap: Record<number, User> = {};
             profiles.forEach(p => {
-                profileMap[p.id] = p;
+                if (p) {
+                    profileMap[p.id] = p;
+                }
             });
             setAuthorProfiles(profileMap);
         } catch (error) {
@@ -174,7 +176,7 @@ const RoomArticlesPage: React.FC = () => {
                                 </div>
                                 <div className={styles.aiScore}>
                                     <Bot size={12} className={styles.aiScoreIcon} />
-                                    <span className={styles.aiScoreText}>AI Score: 9.{article.id % 10}</span>
+                                    <span className={styles.aiScoreText}>AI Score: {article.aiScore?.toFixed(1) || '—'}</span>
                                 </div>
                             </div>
                             <div className={styles.cardBody}>
@@ -186,11 +188,11 @@ const RoomArticlesPage: React.FC = () => {
                                     />
                                     <span className={styles.authorName}>
                                         {authorProfiles[article.userId]
-                                            ? `${authorProfiles[article.userId].firstname} ${authorProfiles[article.userId].lastname}`
+                                            ? [authorProfiles[article.userId].firstname, authorProfiles[article.userId].lastname].filter(Boolean).join(' ') || authorProfiles[article.userId].name
                                             : `Пользователь #${article.userId}`}
                                     </span>
                                     <span className={styles.separator}>•</span>
-                                    <span className={styles.readTime}>12 мин чтения</span>
+                                    <span className={styles.readTime}>{Math.ceil(article.content.length / 1000)} {t('common.minRead') || 'мин чтения'}</span>
                                 </div>
                                 <h3
                                     className={styles.articleTitle}
@@ -210,14 +212,18 @@ const RoomArticlesPage: React.FC = () => {
                                         </button>
                                     </div>
                                     <div className={styles.tagsGroup}>
-                                        <span className={styles.tag}>#Highload</span>
-                                        <span className={styles.tag}>#Architecture</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {filteredArticles.length === 0 && !loading && (
+                    <div className={styles.empty}>
+                        <p>{t('article.noArticles') || 'В этой комнате еще нет статей. Будьте первым!'}</p>
+                    </div>
+                )}
 
                 <CreateArticleModal
                     isOpen={isCreateModalOpen}
