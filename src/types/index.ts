@@ -13,6 +13,7 @@ export interface Room {
     createdAt?: string;
     participantsCount?: number;
     postsCount?: number;
+    onlineCount?: number;
 }
 
 export type RoomRole = 'OWNER' | 'ADMIN' | 'MEMBER';

@@ -24,9 +24,10 @@ const RoomLayout: React.FC = () => {
     const navigate = useNavigate();
     const [room, setRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [onlineCount, setOnlineCount] = useState<number>(0);
     const [joining, setJoining] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    const { isMember, joinRoom, leaveRoom } = useAuth();
+    const { isMember, joinRoom, leaveRoom, token } = useAuth();
 
     useEffect(() => {
         const fetchRoom = async () => {
@@ -34,6 +35,7 @@ const RoomLayout: React.FC = () => {
             try {
                 const data = await roomService.getRoom(Number(roomId));
                 setRoom(data);
+                setOnlineCount(data.onlineCount || 0);
             } catch (error) {
                 console.error('Failed to fetch room', error);
             } finally {
@@ -42,6 +44,43 @@ const RoomLayout: React.FC = () => {
         };
         fetchRoom();
     }, [roomId]);
+
+    // Manage WebSocket connection for presence
+    useEffect(() => {
+        if (!roomId || !token) return;
+
+        const ws = new WebSocket(`ws://localhost:8081/api/presence/ws?token=${token}`);
+
+        ws.onopen = () => {
+            console.log('Presence WebSocket connected for room', roomId);
+            // Optional: If backend expects a join message
+            // ws.send(JSON.stringify({ type: 'join_room', roomId: Number(roomId) }));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data && typeof data.onlineCount === 'number') {
+                    setOnlineCount(data.onlineCount);
+                }
+            } catch (e) {
+                console.error('Failed to parse presence update', e);
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('Presence WebSocket error:', error);
+        };
+
+        ws.onclose = () => {
+            console.log('Presence WebSocket disconnected for room', roomId);
+        };
+
+        // Cleanup: close connection when leaving room component
+        return () => {
+            ws.close();
+        };
+    }, [roomId, token]);
 
     const handleJoin = async () => {
         if (!roomId) return;
@@ -147,9 +186,9 @@ const RoomLayout: React.FC = () => {
                             <div className={styles.roomText}>
                                 <h1>{room.name}</h1>
                                 <div className={styles.roomStats}>
-                                    <span><Users size={12} /> 2.4k</span>
+                                    <span><Users size={12} /> {room.participantsCount || 0}</span>
                                     <span>•</span>
-                                    <span className={styles.onlineBadge}>18 в сети</span>
+                                    <span className={styles.onlineBadge}>{onlineCount} в сети</span>
                                 </div>
                             </div>
                         </div>
