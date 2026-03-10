@@ -5,9 +5,9 @@ import { toast } from 'react-hot-toast';
 import {
     MessageSquare,
     Heart,
-    Image as ImageIcon,
     HelpCircle,
-    Flame
+    Flame,
+    Pencil
 } from 'lucide-react';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
@@ -31,6 +31,7 @@ const RoomDetailPage: React.FC = () => {
     const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [postModalType, setPostModalType] = useState<'POST' | 'QUESTION'>('POST');
 
     const fetchData = async () => {
         if (!roomId) return;
@@ -81,53 +82,68 @@ const RoomDetailPage: React.FC = () => {
         <div className={styles.contentContainer}>
             <div className={styles.leftColumn}>
                 <div className={styles.creationBox}>
-                    <div className={styles.creationInputRow}>
+                    <div className={styles.creationHeader}>
                         <img
                             src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || 'User'}&background=random`}
-                            className={styles.userAvatarMini}
+                            className={styles.userAvatarMain}
                             alt="avatar"
                         />
-                        <button
-                            className={styles.fakeInput}
+                        <div className={styles.creationGreeting}>
+                            <h3>{t('rooms.createSomething') || `Что создадим, ${user?.firstname}?`}</h3>
+                            <p>{t('rooms.shareExpertise') || 'Поделитесь своим опытом или задайте вопрос сообществу'}</p>
+                        </div>
+                    </div>
+
+                    <div className={styles.creationGrid}>
+                        <div
+                            className={styles.creationCard}
                             onClick={() => {
                                 if (!isMember(Number(roomId))) {
                                     toast.error(t('rooms.joinRequiredToPost'));
                                     return;
                                 }
+                                setPostModalType('POST');
                                 setIsPostModalOpen(true);
                             }}
                         >
-                            {t('rooms.whatsOnMind') || 'Что нового? Поделитесь своими мыслями...'}
-                        </button>
-                    </div>
-                    <div className={styles.creationActions}>
-                        <div className={styles.actionButtonGroup}>
-                            <button
-                                className={styles.quickActionBtn}
-                                onClick={() => {
-                                    if (!isMember(Number(roomId))) return;
-                                    setIsPostModalOpen(true);
-                                }}
-                            >
-                                <HelpCircle size={16} color="#f59e0b" />
-                                {t('rooms.question') || 'Вопрос'}
-                            </button>
-                            <button className={styles.quickActionBtn}>
-                                <ImageIcon size={16} color="#10b981" />
-                                {t('rooms.photo') || 'Фото'}
-                            </button>
+                            <div className={`${styles.cardIcon} ${styles.iconPost}`}>
+                                <Pencil size={24} />
+                            </div>
+                            <span className={styles.cardTitle}>{t('rooms.post') || 'Пост'}</span>
+                            <span className={styles.cardDesc}>{t('rooms.postDesc') || 'Короткая мысль или новость'}</span>
                         </div>
+
+                        <div
+                            className={styles.creationCard}
+                            onClick={() => {
+                                if (!isMember(Number(roomId))) {
+                                    toast.error(t('rooms.joinRequiredToPost'));
+                                    return;
+                                }
+                                setPostModalType('QUESTION');
+                                setIsPostModalOpen(true);
+                            }}
+                        >
+                            <div className={`${styles.cardIcon} ${styles.iconQuestion}`}>
+                                <HelpCircle size={24} />
+                            </div>
+                            <span className={styles.cardTitle}>{t('rooms.question') || 'Вопрос'}</span>
+                            <span className={styles.cardDesc}>{t('rooms.questionDesc') || 'Помощь экспертов'}</span>
+                        </div>
+                    </div>
+
+                    <div className={styles.creationFooter}>
                         <button
-                            className={styles.editorLink}
+                            className={styles.editorLinkPremium}
                             onClick={() => {
                                 if (!isMember(Number(roomId))) {
                                     toast.error(t('rooms.joinRequiredToArticle'));
                                     return;
                                 }
-                                toast(t('rooms.useArticleTab'), { icon: '📝' });
+                                navigate(`/rooms/${roomId}/articles/create`);
                             }}
                         >
-                            {t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}
+                            <span className={styles.editorLinkText}>{t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}</span>
                         </button>
                     </div>
                 </div>
@@ -256,6 +272,7 @@ const RoomDetailPage: React.FC = () => {
                 isOpen={isPostModalOpen}
                 onClose={() => setIsPostModalOpen(false)}
                 roomId={Number(roomId)}
+                initialType={postModalType}
                 onSuccess={fetchData}
             />
         </div>

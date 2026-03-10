@@ -84,6 +84,7 @@ export interface Article {
     updatedAt?: string;
     aiScore?: number;
     aiReviewStatus?: AIStatus;
+    tags?: string[];
 }
 
 export interface Post {

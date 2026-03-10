@@ -102,7 +102,11 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
                         <button className={styles.closeBtn} onClick={onClose}>
                             <X size={24} />
                         </button>
-                        <h1 className={styles.title}>{t('rooms.newPost') || 'Новая публикация'}</h1>
+                        <h1 className={styles.title}>
+                            {type === 'QUESTION'
+                                ? (t('rooms.newQuestion') || 'Новый вопрос')
+                                : (t('rooms.newPost') || 'Новый пост')}
+                        </h1>
                     </div>
                     <div className={styles.navRight}>
                         <span className={styles.autoSaveInfo}>
@@ -143,7 +147,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
                             <input
                                 type="text"
                                 className={styles.titleInput}
-                                placeholder={t('article.title') || 'Заголовок публикации'}
+                                placeholder={type === 'QUESTION'
+                                    ? (t('rooms.questionTitlePlaceholder') || 'Что вы хотите спросить?')
+                                    : (t('rooms.postTitlePlaceholder') || 'О чем вы хотите рассказать?')}
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 maxLength={120}

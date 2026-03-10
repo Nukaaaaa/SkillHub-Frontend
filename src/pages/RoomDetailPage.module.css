@@ -45,90 +45,136 @@
     gap: 2rem;
 }
 
-/* Creation Box */
+/* Creation Box Redesign */
 .creationBox {
     background: white;
-    border-radius: 1.25rem;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     border: 1px solid #f1f5f9;
-}
-
-.creationInputRow {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.userAvatarMini {
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 50%;
+.creationHeader {
+    display: flex;
+    align-items: center;
+    gap: 1.125rem;
+}
+
+.userAvatarMain {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1.125rem;
     object-fit: cover;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
     border: 2px solid white;
-    box-shadow: 0 0 0 1px #e2e8f0;
 }
 
-.fakeInput {
+.creationGreeting {
     flex: 1;
+}
+
+.creationGreeting h3 {
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.01em;
+}
+
+.creationGreeting p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.creationGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.creationCard {
     background: #f8fafc;
     border: 1px solid #f1f5f9;
-    border-radius: 1rem;
-    padding: 0 1.25rem;
-    text-align: left;
-    color: #94a3b8;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.fakeInput:hover {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
-}
-
-.creationActions {
+    border-radius: 1.25rem;
+    padding: 1.25rem;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    padding-top: 1.25rem;
-    border-top: 1px solid #f8fafc;
-}
-
-.actionButtonGroup {
-    display: flex;
     gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
 }
 
-.quickActionBtn {
+.creationCard:hover {
+    background: white;
+    border-color: #6366f1;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(99, 102, 241, 0.08);
+}
+
+.cardIcon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.iconPost { background: #eef2ff; color: #6366f1; }
+.iconQuestion { background: #fffbeb; color: #f59e0b; }
+
+.creationCard:hover .cardIcon {
+    transform: scale(1.1);
+}
+
+.cardTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.cardDesc {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.creationFooter {
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1.25rem;
+    display: flex;
+    justify-content: center;
+}
+
+.editorLinkPremium {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 1rem;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #64748b;
-    background: #f8fafc;
-    border: 1px solid transparent;
-    transition: all 0.2s;
-}
-
-.quickActionBtn:hover {
-    background: #f1f5f9;
-    border-color: #e2e8f0;
-}
-
-.editorLink {
     font-size: 0.875rem;
     color: #6366f1;
-    background: transparent;
     font-weight: 600;
-    transition: color 0.2s;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+    background: transparent;
 }
 
-.editorLink:hover {
+.editorLinkPremium:hover {
+    background: #f5f3ff;
     color: #4f46e5;
+}
+
+@media (max-width: 640px) {
+    .creationGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Filters */

@@ -95,14 +95,27 @@
 }
 
 .difficultyBadge {
-    background-color: #f1f5f9;
-    color: #475569;
     padding: 0.375rem 0.875rem;
     border-radius: 0.75rem;
     font-size: 0.75rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+.badgeJunior {
+    color: #10b981;
+    background: #ecfdf5;
+}
+
+.badgeMiddle {
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.badgeSenior {
+    color: #8b5cf6;
+    background: #f5f3ff;
 }
 
 .aiBadge {
@@ -420,6 +433,15 @@
     border: 1px solid #e2e8f0;
 }
 
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .commentArea {
     width: 100%;
     min-height: 100px;
@@ -434,4 +456,4 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 1rem;
-}
+}

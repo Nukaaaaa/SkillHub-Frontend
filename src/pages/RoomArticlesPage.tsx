@@ -18,7 +18,6 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import type { Article, User } from '../types';
 import Loader from '../components/Loader';
-import CreateArticleModal from '../components/CreateArticleModal';
 import { useAuth } from '../context/AuthContext';
 import styles from './RoomArticlesPage.module.css';
 
@@ -32,7 +31,6 @@ const RoomArticlesPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'new' | 'popular'>('all');
     const [difficulty, setDifficulty] = useState<string>('Любая');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const fetchArticles = async () => {
         if (!roomId) return;
@@ -65,10 +63,10 @@ const RoomArticlesPage: React.FC = () => {
     }, [roomId]);
 
     const getDifficultyClass = (diff: string) => {
-        switch (diff?.toLowerCase()) {
-            case 'senior': return styles.badgeSenior;
-            case 'middle': return styles.badgeMiddle;
-            case 'junior':
+        switch (diff?.toUpperCase()) {
+            case 'ADVANCED': return styles.badgeSenior;
+            case 'INTERMEDIATE': return styles.badgeMiddle;
+            case 'BEGINNER':
             default: return styles.badgeJunior;
         }
     };
@@ -89,7 +87,7 @@ const RoomArticlesPage: React.FC = () => {
     };
 
     const filteredArticles = articles.filter(article => {
-        if (difficulty !== 'Любая' && article.difficultyLevel !== difficulty.toUpperCase()) return false;
+        if (difficulty !== 'Любая' && article.difficultyLevel !== difficulty) return false;
         return true;
     }).sort((a, b) => {
         if (filter === 'new') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -115,7 +113,7 @@ const RoomArticlesPage: React.FC = () => {
                                 toast.error('Вступите в комнату, чтобы написать статью');
                                 return;
                             }
-                            setIsCreateModalOpen(true);
+                            navigate(`/rooms/${roomId}/articles/create`);
                         }}
                     >
                         <Plus size={20} style={{ marginRight: '0.5rem' }} />
@@ -153,10 +151,10 @@ const RoomArticlesPage: React.FC = () => {
                             value={difficulty}
                             onChange={(e) => setDifficulty(e.target.value)}
                         >
-                            <option>Любая</option>
-                            <option>Junior</option>
-                            <option>Middle</option>
-                            <option>Senior</option>
+                            <option value="Любая">Любая</option>
+                            <option value="BEGINNER">{t('difficulty.beginner')}</option>
+                            <option value="INTERMEDIATE">{t('difficulty.intermediate')}</option>
+                            <option value="ADVANCED">{t('difficulty.advanced')}</option>
                         </select>
                     </div>
                 </div>
@@ -172,7 +170,7 @@ const RoomArticlesPage: React.FC = () => {
                                     {getBannerIcon(article.id)}
                                 </div>
                                 <div className={`${styles.difficultyBadge} ${getDifficultyClass(article.difficultyLevel || 'BEGINNER')}`}>
-                                    {article.difficultyLevel || 'BEGINNER'}
+                                    {t(`difficulty.${(article.difficultyLevel || 'BEGINNER').toLowerCase()}`)}
                                 </div>
                                 <div className={styles.aiScore}>
                                     <Bot size={12} className={styles.aiScoreIcon} />
@@ -192,7 +190,13 @@ const RoomArticlesPage: React.FC = () => {
                                             : `Пользователь #${article.userId}`}
                                     </span>
                                     <span className={styles.separator}>•</span>
-                                    <span className={styles.readTime}>{Math.ceil(article.content.length / 1000)} {t('common.minRead') || 'мин чтения'}</span>
+                                    <span className={styles.readTime}>
+                                        {(() => {
+                                            const text = article.content.replace(/<[^>]*>?/gm, '');
+                                            const words = text.trim().split(/\s+/).length || 1;
+                                            return Math.max(1, Math.ceil(words / 225));
+                                        })()} {t('common.minRead') || 'мин чтения'}
+                                    </span>
                                 </div>
                                 <h3
                                     className={styles.articleTitle}
@@ -212,25 +216,20 @@ const RoomArticlesPage: React.FC = () => {
                                         </button>
                                     </div>
                                     <div className={styles.tagsGroup}>
+                                        {article.tags?.slice(0, 3).map(tag => (
+                                            <span key={tag} className={styles.tagLabel}>#{tag}</span>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
-
                 {filteredArticles.length === 0 && !loading && (
                     <div className={styles.empty}>
                         <p>{t('article.noArticles') || 'В этой комнате еще нет статей. Будьте первым!'}</p>
                     </div>
                 )}
-
-                <CreateArticleModal
-                    isOpen={isCreateModalOpen}
-                    onClose={() => setIsCreateModalOpen(false)}
-                    roomId={Number(roomId)}
-                    onSuccess={fetchArticles}
-                />
             </div>
         </div>
     );

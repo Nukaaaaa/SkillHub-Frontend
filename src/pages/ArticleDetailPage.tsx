@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
-    ChevronLeft,
     Heart,
     Bookmark,
     Share2,
     Bot,
     Clock,
-    Calendar
+    Calendar,
+    FileText,
+    ArrowLeft,
+    Loader
 } from 'lucide-react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 import 'highlight.js/styles/atom-one-dark.css';
 
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import type { Article, User } from '../types';
-import Loader from '../components/Loader';
 import Button from '../components/Button';
 import styles from './ArticleDetailPage.module.css';
 
@@ -24,10 +27,12 @@ const ArticleDetailPage: React.FC = () => {
     const { roomId, articleId } = useParams<{ roomId: string; articleId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const articleRef = useRef<HTMLDivElement>(null);
 
     const [article, setArticle] = useState<Article | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
     const [parsedContent, setParsedContent] = useState<string>('');
     const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
     const [activeId, setActiveId] = useState<string>('');
@@ -115,23 +120,68 @@ const ArticleDetailPage: React.FC = () => {
         });
 
         return () => observer.disconnect();
-    }, [headings, parsedContent]);
+    }, [headings]);
 
-    if (loading) return <Loader />;
-    if (!article) return null;
+    const handleDownloadPDF = () => {
+        if (!articleRef.current || !article) return;
+
+        setDownloading(true);
+        const element = articleRef.current;
+        const opt = {
+            margin:       [15, 15] as [number, number],
+            filename:     `${article.title}.pdf`,
+            image:        { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            setDownloading(false);
+        }).catch((err: any) => {
+            console.error('PDF generation error:', err);
+            setDownloading(false);
+            toast.error('Ошибка при генерации PDF');
+        });
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>{t('common.loading') || 'Загрузка...'}</p>
+            </div>
+        );
+    }
+
+    if (!article) {
+        return (
+            <div className={styles.errorState}>
+                <p>{t('article.notFound') || 'Статья не найдена'}</p>
+                <button onClick={() => navigate(-1)}>{t('common.back')}</button>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.container}>
                 <header className={styles.header}>
                     <button className={styles.backBtn} onClick={() => navigate(-1)}>
-                        <ChevronLeft size={20} />
-                        Назад к списку
+                        <ArrowLeft size={20} />
+                        {t('common.back')}
                     </button>
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
                         <button className={styles.actionBtn}><Bookmark size={18} /></button>
+                        <button 
+                            className={styles.actionBtn} 
+                            onClick={handleDownloadPDF}
+                            disabled={downloading}
+                            title={t('common.downloadPDF') || 'Скачать PDF'}
+                        >
+                            {downloading ? <Loader size={18} className={styles.spinning} /> : <FileText size={18} />}
+                        </button>
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
                             <Heart size={18} />
                             <span>0</span>
@@ -139,16 +189,28 @@ const ArticleDetailPage: React.FC = () => {
                     </div>
                 </header>
 
-                <main className={styles.mainContent}>
+                <main className={styles.mainContent} ref={articleRef}>
                     <div className={styles.articleMeta}>
-                        <div className={styles.difficultyBadge}>{article.difficultyLevel || 'INTERMEDIATE'}</div>
+                        <div className={`
+                            ${styles.difficultyBadge} 
+                            ${article.difficultyLevel === 'ADVANCED' ? styles.badgeSenior : 
+                              article.difficultyLevel === 'INTERMEDIATE' ? styles.badgeMiddle : 
+                              styles.badgeJunior}
+                        `}>
+                            {t(`difficulty.${(article.difficultyLevel || 'BEGINNER').toLowerCase()}`)}
+                        </div>
                         <div className={styles.aiBadge}>
                             <Bot size={14} />
                             AI Score: {article.aiScore?.toFixed(1) || '—'}
                         </div>
                         <div className={styles.metaInfo}>
                             <Clock size={14} />
-                            {Math.ceil(article.content.length / 1000)} {t('common.minRead') || 'мин чтения'}
+                            {(() => {
+                                const text = article.content.replace(/<[^>]*>?/gm, '');
+                                const words = text.trim().split(/\s+/).length;
+                                const wpm = 225; // Adjusted for technical content
+                                return Math.max(1, Math.ceil(words / wpm));
+                            })()} {t('common.minRead') || 'мин чтения'}
                         </div>
                         <div className={styles.metaInfo}>
                             <Calendar size={14} />
@@ -178,6 +240,9 @@ const ArticleDetailPage: React.FC = () => {
 
                     <footer className={styles.articleFooter}>
                         <div className={styles.tags}>
+                            {article.tags?.map(tag => (
+                                <span key={tag} className={styles.tag}>#{tag}</span>
+                            ))}
                         </div>
                     </footer>
                 </main>
