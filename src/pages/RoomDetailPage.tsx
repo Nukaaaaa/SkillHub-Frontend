@@ -12,6 +12,7 @@ import {
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
 import type { User, Post } from '../types';
 import Loader from '../components/Loader';
@@ -27,6 +28,8 @@ const RoomDetailPage: React.FC = () => {
 
     const [posts, setPosts] = useState<Post[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
+    const [likesData, setLikesData] = useState<Record<number, number>>({});
+    const [answersData, setAnswersData] = useState<Record<number, number>>({});
     const [loading, setLoading] = useState(true);
     const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
@@ -42,6 +45,32 @@ const RoomDetailPage: React.FC = () => {
             ]);
 
             setPosts(postData);
+
+            try {
+                const likeCounts = await Promise.all(
+                    postData.map(p => interactionService.countLikes('post', p.id).catch(() => 0))
+                );
+                const likesMap: Record<number, number> = {};
+                postData.forEach((p, idx) => {
+                    likesMap[p.id] = likeCounts[idx];
+                });
+                setLikesData(likesMap);
+            } catch (e) {
+                console.error("Failed to fetch likes", e);
+            }
+
+            try {
+                const answersCounts = await Promise.all(
+                    postData.map(p => contentService.getCommentsByPost(p.id).then(res => res.length).catch(() => 0))
+                );
+                const answersMap: Record<number, number> = {};
+                postData.forEach((p, idx) => {
+                    answersMap[p.id] = answersCounts[idx];
+                });
+                setAnswersData(answersMap);
+            } catch (e) {
+                console.error("Failed to fetch answers counts", e);
+            }
 
             const authorIds = Array.from(new Set([
                 ...postData.map(p => p.userId)
@@ -226,11 +255,11 @@ const RoomDetailPage: React.FC = () => {
                                 <div className={styles.statsLeft}>
                                     <div className={styles.statItem}>
                                         <MessageSquare size={14} />
-                                        <span>12 ответов</span>
+                                        <span>{answersData[item.id] || 0} ответов</span>
                                     </div>
-                                    <div className={`${styles.statItem} ${styles.liked}`}>
-                                        <Heart size={14} />
-                                        <span>128</span>
+                                    <div className={`${styles.statItem} ${likesData[item.id] > 0 ? styles.liked : ''}`}>
+                                        <Heart size={14} fill={likesData[item.id] > 0 ? "var(--accent-primary)" : "none"} color={likesData[item.id] > 0 ? "var(--accent-primary)" : "currentColor"} />
+                                        <span>{likesData[item.id] || 0}</span>
                                     </div>
                                 </div>
                             </div>

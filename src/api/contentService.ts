@@ -83,8 +83,17 @@ export const contentService = {
         const response = await apiClient.get<WikiEntry[]>(`/wiki/room/${roomId}`);
         return response.data;
     },
-    createWikiFromArticle: async (articleId: number): Promise<WikiEntry> => {
-        const response = await apiClient.post<WikiEntry>(`/wiki/from-article/${articleId}`);
+    getWikiSectionsByRoom: async (roomId: number): Promise<{ id: number; roomId: number; name: string }[]> => {
+        const response = await apiClient.get(`/wiki/room/${roomId}/sections`);
+        return response.data;
+    },
+    createWikiSection: async (roomId: number, name: string): Promise<{ id: number; roomId: number; name: string }> => {
+        const response = await apiClient.post(`/wiki/sections?roomId=${roomId}&name=${encodeURIComponent(name)}`);
+        return response.data;
+    },
+    createWikiFromArticle: async (articleId: number, sectionId?: number): Promise<WikiEntry> => {
+        const params = sectionId ? `?sectionId=${sectionId}` : '';
+        const response = await apiClient.post<WikiEntry>(`/wiki/from-article/${articleId}${params}`);
         return response.data;
     }
 };

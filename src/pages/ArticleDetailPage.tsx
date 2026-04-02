@@ -11,7 +11,8 @@ import {
     Calendar,
     FileText,
     ArrowLeft,
-    Loader
+    Loader,
+    BookOpen
 } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -250,6 +251,25 @@ const ArticleDetailPage: React.FC = () => {
                             title={t('common.downloadPDF') || 'Скачать PDF'}
                         >
                             {downloading ? <Loader size={18} className={styles.spinning} /> : <FileText size={18} />}
+                        </button>
+                        <button
+                            className={styles.actionBtn}
+                            title="Добавить в Базу знаний"
+                            onClick={async () => {
+                                if (!articleId) return;
+                                try {
+                                    await contentService.createWikiFromArticle(Number(articleId));
+                                    toast.success('Статья добавлена в базу знаний!');
+                                } catch(e: any) {
+                                    if (e.response?.status === 403) {
+                                        toast.error('Только модераторы могут добавлять в вики');
+                                    } else {
+                                        toast.error('Ошибка при добавлении в вики');
+                                    }
+                                }
+                            }}
+                        >
+                            <BookOpen size={18} />
                         </button>
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
                             <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />

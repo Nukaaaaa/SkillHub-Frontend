@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { parseJwt } from '../utils/auth';
 
 // Define base URLs for different services
 const SERVICES = {
@@ -35,6 +36,26 @@ export const getServiceClient = (service: keyof typeof SERVICES) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+        
+        // Emulate API Gateway behavior ONLY for ContentService
+        // Other services might reject these headers due to CORS policies
+        if (service === 'CONTENT') {
+            const payload = parseJwt(token);
+            if (payload) {
+                const userId = payload.sub || payload.id || payload.userId || payload.user_id;
+                if (userId) config.headers['X-User-Id'] = userId;
+
+                // Spring Security expects roles to have the 'ROLE_' prefix if checked via hasRole()
+                const rawRole = payload.role || payload.roles || payload.authorities || 'USER';
+                if (rawRole) {
+                    let roleStr = Array.isArray(rawRole) ? rawRole.join(',') : String(rawRole);
+                    if (!roleStr.startsWith('ROLE_')) {
+                        roleStr = roleStr.split(',').map(r => r.trim().startsWith('ROLE_') ? r : `ROLE_${r}`).join(',');
+                    }
+                    config.headers['X-User-Roles'] = roleStr;
+                }
+            }
+        }
       }
       return config;
     },
