@@ -38,7 +38,7 @@ const Layout: React.FC = () => {
                 <div className={styles.sidebarBrand}>
                     <div className={styles.logo}>
                         <Layers size={24} color="#4f46e5" />
-                        <h1>DevHub</h1>
+                        <h1>SkillHub</h1>
                     </div>
                 </div>
 

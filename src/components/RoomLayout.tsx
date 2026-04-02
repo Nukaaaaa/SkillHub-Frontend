@@ -141,8 +141,8 @@ const RoomLayout: React.FC = () => {
         <div className={styles.roomLayout}>
             <aside className={styles.roomSidebar}>
                 <div className={styles.sidebarBrand}>
-                    <span className={styles.brandShort}>D</span>
-                    <span className={styles.brandFull}>DevHub</span>
+                    <span className={styles.brandShort}>S</span>
+                    <span className={styles.brandFull}>SkillHub</span>
                 </div>
 
                 <nav className={styles.sidebarNav}>
