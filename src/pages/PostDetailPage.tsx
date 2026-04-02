@@ -17,6 +17,7 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { interactionService } from '../api/interactionService';
 import type { Post, User, Comment } from '../types';
 import Loader from '../components/Loader';
 import Button from '../components/Button';
@@ -34,6 +35,10 @@ const PostDetailPage: React.FC = () => {
     const [commentAuthors, setCommentAuthors] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [commentText, setCommentText] = useState('');
+
+    const [likes, setLikes] = useState<number>(0);
+    const [isLiked, setIsLiked] = useState<boolean>(false);
+    const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
 
     const fetchData = async () => {
         if (!postId) return;
@@ -67,6 +72,68 @@ const PostDetailPage: React.FC = () => {
             navigate(-1);
         } finally {
             setLoading(false);
+        }
+
+        try {
+            const count = await interactionService.countLikes('post', Number(postId));
+            setLikes(count);
+
+            const bookmarks = await interactionService.getMyBookmarks();
+            const saved = bookmarks.some((b: any) => b.target_type === 'post' && b.target_id === Number(postId));
+            setIsBookmarked(saved);
+
+            const localLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
+            setIsLiked(localLiked);
+        } catch (e) {
+            console.error('Failed to fetch interaction data', e);
+        }
+    };
+
+    const handleLike = async () => {
+        if (!postId) return;
+        try {
+            if (isLiked) {
+                await interactionService.removeLike('post', Number(postId));
+                setLikes(prev => Math.max(0, prev - 1));
+                localStorage.removeItem(`liked_post_${postId}`);
+                setIsLiked(false);
+            } else {
+                await interactionService.addLike('post', Number(postId));
+                setLikes(prev => prev + 1);
+                localStorage.setItem(`liked_post_${postId}`, 'true');
+                setIsLiked(true);
+            }
+        } catch (e: any) {
+            if (e.response?.status === 400 && !isLiked) {
+                localStorage.setItem(`liked_post_${postId}`, 'true');
+                setIsLiked(true);
+            } else if (e.response?.status === 400 && isLiked) {
+                localStorage.removeItem(`liked_post_${postId}`);
+                setIsLiked(false);
+            } else {
+                toast.error(t('common.error') || 'Ошибка при лайке');
+            }
+        }
+    };
+
+    const handleBookmark = async () => {
+        if (!postId) return;
+        try {
+            if (isBookmarked) {
+                await interactionService.removeBookmark('post', Number(postId));
+                toast.success('Удалено из закладок');
+                setIsBookmarked(false);
+            } else {
+                await interactionService.addBookmark('post', Number(postId));
+                toast.success('Добавлено в закладки');
+                setIsBookmarked(true);
+            }
+        } catch (e: any) {
+            if (e.response?.status === 400 && !isBookmarked) {
+                setIsBookmarked(true);
+            } else {
+                toast.error(t('common.error') || 'Ошибка при сохранении');
+            }
         }
     };
 
@@ -106,10 +173,12 @@ const PostDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
-                        <button className={styles.actionBtn}><Bookmark size={18} /></button>
-                        <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
-                            <Heart size={18} />
-                            <span>0</span>
+                        <button className={styles.actionBtn} onClick={handleBookmark}>
+                            <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+                        </button>
+                        <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
+                            <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />
+                            <span>{likes}</span>
                         </button>
                     </div>
                 </header>

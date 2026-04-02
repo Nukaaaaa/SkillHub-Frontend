@@ -19,6 +19,7 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { interactionService } from '../api/interactionService';
 import type { Article, User } from '../types';
 import Button from '../components/Button';
 import styles from './ArticleDetailPage.module.css';
@@ -36,6 +37,10 @@ const ArticleDetailPage: React.FC = () => {
     const [parsedContent, setParsedContent] = useState<string>('');
     const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
     const [activeId, setActiveId] = useState<string>('');
+
+    const [likes, setLikes] = useState<number>(0);
+    const [isLiked, setIsLiked] = useState<boolean>(false);
+    const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
 
     const fetchData = async () => {
         if (!articleId) return;
@@ -57,6 +62,68 @@ const ArticleDetailPage: React.FC = () => {
             toast.error(t('common.error'));
         } finally {
             setLoading(false);
+        }
+
+        try {
+            const count = await interactionService.countLikes('article', Number(articleId));
+            setLikes(count);
+
+            const bookmarks = await interactionService.getMyBookmarks();
+            const saved = bookmarks.some((b: any) => b.target_type === 'article' && b.target_id === Number(articleId));
+            setIsBookmarked(saved);
+
+            const localLiked = localStorage.getItem(`liked_article_${articleId}`) === 'true';
+            setIsLiked(localLiked);
+        } catch (e) {
+            console.error('Failed to fetch interaction data', e);
+        }
+    };
+
+    const handleLike = async () => {
+        if (!articleId) return;
+        try {
+            if (isLiked) {
+                await interactionService.removeLike('article', Number(articleId));
+                setLikes(prev => Math.max(0, prev - 1));
+                localStorage.removeItem(`liked_article_${articleId}`);
+                setIsLiked(false);
+            } else {
+                await interactionService.addLike('article', Number(articleId));
+                setLikes(prev => prev + 1);
+                localStorage.setItem(`liked_article_${articleId}`, 'true');
+                setIsLiked(true);
+            }
+        } catch (e: any) {
+            if (e.response?.status === 400 && !isLiked) {
+                localStorage.setItem(`liked_article_${articleId}`, 'true');
+                setIsLiked(true);
+            } else if (e.response?.status === 400 && isLiked) {
+                localStorage.removeItem(`liked_article_${articleId}`);
+                setIsLiked(false);
+            } else {
+                toast.error(t('common.error') || 'Ошибка при лайке');
+            }
+        }
+    };
+
+    const handleBookmark = async () => {
+        if (!articleId) return;
+        try {
+            if (isBookmarked) {
+                await interactionService.removeBookmark('article', Number(articleId));
+                toast.success('Удалено из закладок');
+                setIsBookmarked(false);
+            } else {
+                await interactionService.addBookmark('article', Number(articleId));
+                toast.success('Добавлено в закладки');
+                setIsBookmarked(true);
+            }
+        } catch (e: any) {
+            if (e.response?.status === 400 && !isBookmarked) {
+                setIsBookmarked(true);
+            } else {
+                toast.error(t('common.error') || 'Ошибка при работе с закладками');
+            }
         }
     };
 
@@ -173,7 +240,9 @@ const ArticleDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
-                        <button className={styles.actionBtn}><Bookmark size={18} /></button>
+                        <button className={styles.actionBtn} onClick={handleBookmark}>
+                            <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+                        </button>
                         <button 
                             className={styles.actionBtn} 
                             onClick={handleDownloadPDF}
@@ -182,9 +251,9 @@ const ArticleDetailPage: React.FC = () => {
                         >
                             {downloading ? <Loader size={18} className={styles.spinning} /> : <FileText size={18} />}
                         </button>
-                        <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
-                            <Heart size={18} />
-                            <span>0</span>
+                        <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
+                            <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />
+                            <span>{likes}</span>
                         </button>
                     </div>
                 </header>

@@ -5,6 +5,7 @@ const SERVICES = {
   USER: import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8081/api',
   ROOM: import.meta.env.VITE_ROOM_SERVICE_URL || 'http://localhost:8082/api',
   CONTENT: import.meta.env.VITE_CONTENT_SERVICE_URL || 'http://localhost:8083/api',
+  INTERACTION: import.meta.env.VITE_INTERACTION_SERVICE_URL || 'http://localhost:8084/api/interactions',
 };
 
 // Default URL for fallback/general use

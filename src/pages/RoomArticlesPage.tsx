@@ -15,6 +15,7 @@ import { toast } from 'react-hot-toast';
 
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
+import { interactionService } from '../api/interactionService';
 import { userService } from '../api/userService';
 import type { Article, User } from '../types';
 import Loader from '../components/Loader';
@@ -37,7 +38,18 @@ const RoomArticlesPage: React.FC = () => {
         setLoading(true);
         try {
             const data = await contentService.getArticlesByRoom(Number(roomId));
-            setArticles(data);
+            
+            // Add likes count to each article
+            const articlesWithLikes = await Promise.all(data.map(async (art) => {
+                try {
+                    const likes = await interactionService.countLikes('article', art.id);
+                    return { ...art, likesCount: likes };
+                } catch {
+                    return { ...art, likesCount: 0 };
+                }
+            }));
+            
+            setArticles(articlesWithLikes as Article[]);
 
             const authorIds = Array.from(new Set(data.map(a => a.userId)));
             const profilePromises = authorIds.map(id => userService.getUserById(id).catch(() => null));
