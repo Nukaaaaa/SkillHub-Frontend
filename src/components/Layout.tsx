@@ -11,7 +11,9 @@ import {
     UserCircle,
     Layers,
     LogOut,
-    Search
+    Search,
+    Shield,
+    Activity
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
 
@@ -67,6 +69,30 @@ const Layout: React.FC = () => {
                         <span className={styles.navIcon}><UserCircle size={20} /></span>
                         <span>{t('nav.profile')}</span>
                     </NavLink>
+
+                    {user?.role === 'ADMIN' && (
+                        <NavLink
+                            to="/admin"
+                            className={({ isActive }) =>
+                                `${styles.navLink} ${isActive ? styles.active : ''}`
+                            }
+                        >
+                            <span className={styles.navIcon}><Shield size={20} /></span>
+                            <span>Админ панель</span>
+                        </NavLink>
+                    )}
+
+                    {(user?.role === 'MODERATOR' || user?.role === 'ADMIN') && (
+                        <NavLink
+                            to="/moderator"
+                            className={({ isActive }) =>
+                                `${styles.navLink} ${isActive ? styles.active : ''}`
+                            }
+                        >
+                            <span className={styles.navIcon}><Activity size={20} /></span>
+                            <span>Модераторская</span>
+                        </NavLink>
+                    )}
                 </nav>
 
                 <div className={styles.sidebarFooter}>

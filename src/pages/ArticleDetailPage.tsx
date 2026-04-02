@@ -21,6 +21,7 @@ import 'highlight.js/styles/atom-one-dark.css';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { interactionService } from '../api/interactionService';
+import { useAuth } from '../context/AuthContext';
 import type { Article, User } from '../types';
 import Button from '../components/Button';
 import styles from './ArticleDetailPage.module.css';
@@ -29,7 +30,10 @@ const ArticleDetailPage: React.FC = () => {
     const { roomId, articleId } = useParams<{ roomId: string; articleId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { user } = useAuth();
     const articleRef = useRef<HTMLDivElement>(null);
+
+    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
 
     const [article, setArticle] = useState<Article | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
@@ -252,25 +256,27 @@ const ArticleDetailPage: React.FC = () => {
                         >
                             {downloading ? <Loader size={18} className={styles.spinning} /> : <FileText size={18} />}
                         </button>
-                        <button
-                            className={styles.actionBtn}
-                            title="Добавить в Базу знаний"
-                            onClick={async () => {
-                                if (!articleId) return;
-                                try {
-                                    await contentService.createWikiFromArticle(Number(articleId));
-                                    toast.success('Статья добавлена в базу знаний!');
-                                } catch(e: any) {
-                                    if (e.response?.status === 403) {
-                                        toast.error('Только модераторы могут добавлять в вики');
-                                    } else {
-                                        toast.error('Ошибка при добавлении в вики');
+                        {isModeratorOrAdmin && (
+                            <button
+                                className={styles.actionBtn}
+                                title="Добавить в Базу знаний"
+                                onClick={async () => {
+                                    if (!articleId) return;
+                                    try {
+                                        await contentService.createWikiFromArticle(Number(articleId));
+                                        toast.success('Статья добавлена в базу знаний!');
+                                    } catch(e: any) {
+                                        if (e.response?.status === 403) {
+                                            toast.error('Только модераторы могут добавлять в вики');
+                                        } else {
+                                            toast.error('Ошибка при добавлении в вики');
+                                        }
                                     }
-                                }
-                            }}
-                        >
-                            <BookOpen size={18} />
-                        </button>
+                                }}
+                            >
+                                <BookOpen size={18} />
+                            </button>
+                        )}
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
                             <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />
                             <span>{likes}</span>
