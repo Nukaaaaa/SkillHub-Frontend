@@ -4,7 +4,13 @@ import {
     Medal,
     Trophy,
     Zap,
-    Hexagon
+    Hexagon,
+    Book,
+    MessageSquare,
+    Star,
+    Award,
+    Bookmark,
+    Target
 } from 'lucide-react';
 import styles from './AchievementsPage.module.css';
 
@@ -21,12 +27,63 @@ interface Achievement {
 const AchievementsPage: React.FC = () => {
     const { t } = useTranslation();
 
-    const achievements: Achievement[] = [];
+    const achievements: Achievement[] = [
+        {
+            id: 1,
+            title: 'Пионер знаний',
+            description: 'Вы начали свой путь, изучив первые 5 профессиональных статей.',
+            icon: <Book size={28} />,
+            color: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            progress: 60,
+        },
+        {
+            id: 2,
+            title: 'Голос сообщества',
+            description: 'За активное участие в обсуждениях и помощь коллегам.',
+            icon: <MessageSquare size={28} />,
+            color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            progress: 100,
+            unlockedAt: '12 Марта 2026'
+        },
+        {
+            id: 3,
+            title: 'Первая публикация',
+            description: 'Вы поделились своим опытом, опубликовав первую статью.',
+            icon: <Award size={28} />,
+            color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            progress: 100,
+            unlockedAt: '28 Февраля 2026'
+        },
+        {
+            id: 4,
+            title: 'Хранитель мудрости',
+            description: 'Добавьте 20 полезных материалов в свои закладки.',
+            icon: <Bookmark size={28} />,
+            color: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+            progress: 45,
+        },
+        {
+            id: 5,
+            title: 'Популярный автор',
+            description: 'Наберите 50 лайков на своих публикациях.',
+            icon: <Star size={28} />,
+            color: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+            progress: 30,
+        },
+        {
+            id: 6,
+            title: 'Архитектор систем',
+            description: 'Изучите все фундаментальные статьи по теме Backend.',
+            icon: <Target size={28} />,
+            color: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            progress: 15,
+        }
+    ];
 
     const stats = [
-        { label: t('profile.reputation'), value: "0", icon: <Trophy size={20} color="#f59e0b" /> },
-        { label: t('profile.tabs.achievements'), value: "0/0", icon: <Medal size={20} color="#6366f1" /> },
-        { label: "Уровень", value: "1", icon: <Zap size={20} color="#10b981" /> }
+        { label: t('profile.reputation'), value: "1,250", icon: <Trophy size={20} color="#f59e0b" /> },
+        { label: t('profile.tabs.achievements'), value: "3/12", icon: <Medal size={20} color="#6366f1" /> },
+        { label: "Уровень", value: "4", icon: <Zap size={20} color="#10b981" /> }
     ];
 
     return (

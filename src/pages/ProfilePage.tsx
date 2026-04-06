@@ -21,7 +21,17 @@ import { directionService } from '../api/directionService';
 import Loader from '../components/Loader';
 import type { Article, Post, Direction, User } from '../types/index';
 import EditProfileModal from '../components/profile/EditProfileModal';
+import SkillRadar from '../components/profile/SkillRadar';
 import styles from './ProfilePage.module.css';
+
+const DEFAULT_SKILLS = [
+    { subject: 'Backend', value: 80, fullMark: 100 },
+    { subject: 'Frontend', value: 45, fullMark: 100 },
+    { subject: 'DevOps', value: 30, fullMark: 100 },
+    { subject: 'Database', value: 65, fullMark: 100 },
+    { subject: 'QA', value: 20, fullMark: 100 },
+    { subject: 'Soft Skills', value: 75, fullMark: 100 },
+];
 
 const ProfilePage: React.FC = () => {
     const { user: currentUser, updateUser } = useAuth();
@@ -36,6 +46,7 @@ const ProfilePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'publications' | 'achievements' | 'bookmarks'>('publications');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [userSkills, setUserSkills] = useState(DEFAULT_SKILLS);
     const avatarInputRef = useRef<HTMLInputElement>(null);
 
     const handleAvatarClick = () => {
@@ -80,6 +91,14 @@ const ProfilePage: React.FC = () => {
             if (!targetId) {
                 setLoading(false);
                 return;
+            }
+
+            // Mock skills logic for interactive demo
+            const savedSkills = localStorage.getItem(`user_skills_${targetId}`);
+            if (savedSkills) {
+                setUserSkills(JSON.parse(savedSkills));
+            } else {
+                setUserSkills(DEFAULT_SKILLS);
             }
 
             try {
@@ -241,26 +260,9 @@ const ProfilePage: React.FC = () => {
                     {/* AI Analysis Card */}
                     <div className={styles.aiAnalysisCard}>
                         <h3 className={styles.aiTitle}>{t('profile.aiExpertise')}</h3>
-                        {profileUser?.skillLevels && profileUser.skillLevels.length > 0 ? (
-                            profileUser.skillLevels.slice(0, 3).map((skill, idx) => (
-                                <div key={idx} className={styles.skillItem}>
-                                    <div className={styles.skillHeader}>
-                                        <span className={styles.skillLabel}>{t(skill.subject)}</span>
-                                        <span className={styles.skillValue}>{skill.value}/100</span>
-                                    </div>
-                                    <div className={styles.progressBarTrack}>
-                                        <div
-                                            className={idx % 2 === 0 ? styles.progressBarFillIndigo : styles.progressBarFillEmerald}
-                                            style={{ width: `${skill.value}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className={styles.aiNote} style={{ padding: '1rem 0', opacity: 0.6 }}>
-                                {t('common.noData')}
-                            </p>
-                        )}
+                        <div className={styles.radarWrapper}>
+                            <SkillRadar data={userSkills} />
+                        </div>
                         <p className={styles.aiNote}>
                             {t('rooms.writeArticlePrompt')}
                         </p>

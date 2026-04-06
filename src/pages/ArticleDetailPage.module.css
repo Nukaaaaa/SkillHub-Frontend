@@ -438,8 +438,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .commentArea {
@@ -456,4 +461,4 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 1rem;
-}
+}

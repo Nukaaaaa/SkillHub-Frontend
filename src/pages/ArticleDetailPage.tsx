@@ -22,8 +22,9 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
-import type { Article, User } from '../types';
+import type { Article, User, WikiEntry } from '../types';
 import Button from '../components/Button';
+import SectionSelectModal from '../components/wiki/SectionSelectModal';
 import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage: React.FC = () => {
@@ -46,6 +47,9 @@ const ArticleDetailPage: React.FC = () => {
     const [likes, setLikes] = useState<number>(0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+    const [isInWiki, setIsInWiki] = useState<boolean>(false);
+    const [sections, setSections] = useState<{ id: number; name: string }[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchData = async () => {
         if (!articleId) return;
@@ -58,6 +62,7 @@ const ArticleDetailPage: React.FC = () => {
                 setArticle(found);
                 const userProfile = await userService.getUserById(found.userId).catch(() => null);
                 setAuthor(userProfile);
+                checkIfInWiki(found.title);
             } else {
                 toast.error('Статья не найдена');
                 navigate(`/rooms/${roomId}/articles`);
@@ -81,6 +86,23 @@ const ArticleDetailPage: React.FC = () => {
             setIsLiked(localLiked);
         } catch (e) {
             console.error('Failed to fetch interaction data', e);
+        }
+
+        try {
+            const secs = await contentService.getWikiSectionsByRoom(Number(roomId));
+            setSections(secs);
+        } catch (e) {
+            console.error('Failed to fetch sections', e);
+        }
+    };
+
+    const checkIfInWiki = async (articleTitle: string) => {
+        try {
+            const wiki = await contentService.getWikiByRoom(Number(roomId)).catch(() => []);
+            const alreadyPresent = wiki.some((e: WikiEntry) => e.title === articleTitle);
+            setIsInWiki(alreadyPresent);
+        } catch (error) {
+            console.error('Failed to check wiki status:', error);
         }
     };
 
@@ -200,11 +222,11 @@ const ArticleDetailPage: React.FC = () => {
         setDownloading(true);
         const element = articleRef.current;
         const opt = {
-            margin:       [15, 15] as [number, number],
-            filename:     `${article.title}.pdf`,
-            image:        { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+            margin: [15, 15] as [number, number],
+            filename: `${article.title}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
@@ -214,6 +236,18 @@ const ArticleDetailPage: React.FC = () => {
             setDownloading(false);
             toast.error('Ошибка при генерации PDF');
         });
+    };
+
+    const handleConfirmWiki = async (sectionId?: number) => {
+        if (!articleId) return;
+        try {
+            await contentService.createWikiFromArticle(Number(articleId), sectionId);
+            setIsInWiki(true);
+            setIsModalOpen(false);
+            toast.success('Статья добавлена в базу знаний!');
+        } catch (e: any) {
+            toast.error('Ошибка при добавлении в вики');
+        }
     };
 
     if (loading) {
@@ -248,8 +282,8 @@ const ArticleDetailPage: React.FC = () => {
                         <button className={styles.actionBtn} onClick={handleBookmark}>
                             <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
                         </button>
-                        <button 
-                            className={styles.actionBtn} 
+                        <button
+                            className={styles.actionBtn}
                             onClick={handleDownloadPDF}
                             disabled={downloading}
                             title={t('common.downloadPDF') || 'Скачать PDF'}
@@ -258,23 +292,12 @@ const ArticleDetailPage: React.FC = () => {
                         </button>
                         {isModeratorOrAdmin && (
                             <button
-                                className={styles.actionBtn}
+                                className={`${styles.actionBtn} ${isInWiki ? styles.activeActionBtn : ''}`}
                                 title="Добавить в Базу знаний"
-                                onClick={async () => {
-                                    if (!articleId) return;
-                                    try {
-                                        await contentService.createWikiFromArticle(Number(articleId));
-                                        toast.success('Статья добавлена в базу знаний!');
-                                    } catch(e: any) {
-                                        if (e.response?.status === 403) {
-                                            toast.error('Только модераторы могут добавлять в вики');
-                                        } else {
-                                            toast.error('Ошибка при добавлении в вики');
-                                        }
-                                    }
-                                }}
+                                onClick={() => !isInWiki && setIsModalOpen(true)}
+                                disabled={isInWiki}
                             >
-                                <BookOpen size={18} />
+                                <BookOpen size={18} fill={isInWiki ? "currentColor" : "none"} />
                             </button>
                         )}
                         <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
@@ -288,9 +311,9 @@ const ArticleDetailPage: React.FC = () => {
                     <div className={styles.articleMeta}>
                         <div className={`
                             ${styles.difficultyBadge} 
-                            ${article.difficultyLevel === 'ADVANCED' ? styles.badgeSenior : 
-                              article.difficultyLevel === 'INTERMEDIATE' ? styles.badgeMiddle : 
-                              styles.badgeJunior}
+                            ${article.difficultyLevel === 'ADVANCED' ? styles.badgeSenior :
+                                article.difficultyLevel === 'INTERMEDIATE' ? styles.badgeMiddle :
+                                    styles.badgeJunior}
                         `}>
                             {t(`difficulty.${(article.difficultyLevel || 'BEGINNER').toLowerCase()}`)}
                         </div>
@@ -420,6 +443,13 @@ const ArticleDetailPage: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            <SectionSelectModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmWiki}
+                sections={sections}
+            />
         </div>
     );
 };

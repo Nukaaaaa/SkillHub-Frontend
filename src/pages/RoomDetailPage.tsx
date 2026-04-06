@@ -257,8 +257,12 @@ const RoomDetailPage: React.FC = () => {
                                         <MessageSquare size={14} />
                                         <span>{answersData[item.id] || 0} ответов</span>
                                     </div>
-                                    <div className={`${styles.statItem} ${likesData[item.id] > 0 ? styles.liked : ''}`}>
-                                        <Heart size={14} fill={likesData[item.id] > 0 ? "var(--accent-primary)" : "none"} color={likesData[item.id] > 0 ? "var(--accent-primary)" : "currentColor"} />
+                                    <div className={`${styles.statItem} ${user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? styles.liked : ''}`}>
+                                        <Heart 
+                                            size={14} 
+                                            fill={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "var(--accent-primary)" : "none"} 
+                                            color={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "var(--accent-primary)" : "currentColor"} 
+                                        />
                                         <span>{likesData[item.id] || 0}</span>
                                     </div>
                                 </div>

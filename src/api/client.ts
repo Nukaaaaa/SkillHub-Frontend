@@ -1,16 +1,8 @@
 import axios from 'axios';
 import { parseJwt } from '../utils/auth';
 
-// Define base URLs for different services
-const SERVICES = {
-  USER: import.meta.env.VITE_USER_SERVICE_URL || 'http://localhost:8081/api',
-  ROOM: import.meta.env.VITE_ROOM_SERVICE_URL || 'http://localhost:8082/api',
-  CONTENT: import.meta.env.VITE_CONTENT_SERVICE_URL || 'http://localhost:8083/api',
-  INTERACTION: import.meta.env.VITE_INTERACTION_SERVICE_URL || 'http://localhost:8084/api/interactions',
-};
-
-// Default URL for fallback/general use
-const API_URL = SERVICES.ROOM;
+// Define the base URL for the API Gateway
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -21,9 +13,9 @@ export const apiClient = axios.create({
 });
 
 // Helper to get client for specific service
-export const getServiceClient = (service: keyof typeof SERVICES) => {
+export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION') => {
   const instance = axios.create({
-    baseURL: SERVICES[service],
+    baseURL: service === 'INTERACTION' ? `${API_URL}/interactions` : API_URL,
     timeout: 5000,
     headers: {
       'Content-Type': 'application/json',
@@ -36,25 +28,25 @@ export const getServiceClient = (service: keyof typeof SERVICES) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        
+
         // Emulate API Gateway behavior ONLY for ContentService
         // Other services might reject these headers due to CORS policies
         if (service === 'CONTENT') {
-            const payload = parseJwt(token);
-            if (payload) {
-                const userId = payload.sub || payload.id || payload.userId || payload.user_id;
-                if (userId) config.headers['X-User-Id'] = userId;
+          const payload = parseJwt(token);
+          if (payload) {
+            const userId = payload.sub || payload.id || payload.userId || payload.user_id;
+            if (userId) config.headers['X-User-Id'] = userId;
 
-                // Spring Security expects roles to have the 'ROLE_' prefix if checked via hasRole()
-                const rawRole = payload.role || payload.roles || payload.authorities || 'USER';
-                if (rawRole) {
-                    let roleStr = Array.isArray(rawRole) ? rawRole.join(',') : String(rawRole);
-                    if (!roleStr.startsWith('ROLE_')) {
-                        roleStr = roleStr.split(',').map(r => r.trim().startsWith('ROLE_') ? r : `ROLE_${r}`).join(',');
-                    }
-                    config.headers['X-User-Roles'] = roleStr;
-                }
+            // Spring Security expects roles to have the 'ROLE_' prefix if checked via hasRole()
+            const rawRole = payload.role || payload.roles || payload.authorities || 'USER';
+            if (rawRole) {
+              let roleStr = Array.isArray(rawRole) ? rawRole.join(',') : String(rawRole);
+              if (!roleStr.startsWith('ROLE_')) {
+                roleStr = roleStr.split(',').map(r => r.trim().startsWith('ROLE_') ? r : `ROLE_${r}`).join(',');
+              }
+              config.headers['X-User-Roles'] = roleStr;
             }
+          }
         }
       }
       return config;

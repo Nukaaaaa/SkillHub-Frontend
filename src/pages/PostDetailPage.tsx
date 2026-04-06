@@ -11,7 +11,8 @@ import {
     MessageSquare,
     Clock,
     HelpCircle,
-    CheckCircle2
+    CheckCircle2,
+    Flag
 } from 'lucide-react';
 import 'highlight.js/styles/atom-one-dark.css';
 
@@ -39,6 +40,7 @@ const PostDetailPage: React.FC = () => {
     const [likes, setLikes] = useState<number>(0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+    const [isReported, setIsReported] = useState<boolean>(false);
 
     const fetchData = async () => {
         if (!postId) return;
@@ -82,7 +84,7 @@ const PostDetailPage: React.FC = () => {
             const saved = bookmarks.some((b: any) => b.target_type === 'post' && b.target_id === Number(postId));
             setIsBookmarked(saved);
 
-            const localLiked = localStorage.getItem(`liked_post_${postId}`) === 'true';
+            const localLiked = currentUser?.id ? localStorage.getItem(`liked_post_${currentUser.id}_${postId}`) === 'true' : false;
             setIsLiked(localLiked);
         } catch (e) {
             console.error('Failed to fetch interaction data', e);
@@ -95,20 +97,20 @@ const PostDetailPage: React.FC = () => {
             if (isLiked) {
                 await interactionService.removeLike('post', Number(postId));
                 setLikes(prev => Math.max(0, prev - 1));
-                localStorage.removeItem(`liked_post_${postId}`);
+                if (currentUser?.id) localStorage.removeItem(`liked_post_${currentUser.id}_${postId}`);
                 setIsLiked(false);
             } else {
                 await interactionService.addLike('post', Number(postId));
                 setLikes(prev => prev + 1);
-                localStorage.setItem(`liked_post_${postId}`, 'true');
+                if (currentUser?.id) localStorage.setItem(`liked_post_${currentUser.id}_${postId}`, 'true');
                 setIsLiked(true);
             }
         } catch (e: any) {
             if (e.response?.status === 400 && !isLiked) {
-                localStorage.setItem(`liked_post_${postId}`, 'true');
+                if (currentUser?.id) localStorage.setItem(`liked_post_${currentUser.id}_${postId}`, 'true');
                 setIsLiked(true);
             } else if (e.response?.status === 400 && isLiked) {
-                localStorage.removeItem(`liked_post_${postId}`);
+                if (currentUser?.id) localStorage.removeItem(`liked_post_${currentUser.id}_${postId}`);
                 setIsLiked(false);
             } else {
                 toast.error(t('common.error') || 'Ошибка при лайке');
@@ -139,7 +141,7 @@ const PostDetailPage: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-    }, [postId]);
+    }, [postId, currentUser?.id]);
 
     const handleCommentSubmit = async () => {
         if (!commentText.trim() || !post) return;
@@ -173,6 +175,16 @@ const PostDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
+                        <button 
+                            className={`${styles.actionBtn} ${isReported ? styles.reported : ''}`} 
+                            onClick={() => {
+                                setIsReported(true);
+                                toast.success('Жалоба на пост отправлена (Mock)');
+                            }}
+                            title="Пожаловаться"
+                        >
+                            <Flag size={18} fill={isReported ? "currentColor" : "none"} />
+                        </button>
                         <button className={styles.actionBtn} onClick={handleBookmark}>
                             <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
                         </button>

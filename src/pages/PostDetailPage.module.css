@@ -99,6 +99,14 @@
     color: #d97706;
 }
 
+.reported {
+    color: #ef4444 !important;
+}
+
+.reported:hover {
+    background-color: #fef2f2 !important;
+}
+
 .discussion {
     background-color: #eff6ff;
     color: #2563eb;

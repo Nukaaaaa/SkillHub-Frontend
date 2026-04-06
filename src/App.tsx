@@ -22,6 +22,7 @@ import CreatePostPage from './pages/CreatePostPage';
 import CreateArticlePage from './pages/CreateArticlePage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ModeratorPanelPage from './pages/ModeratorPanelPage';
+import ChatPage from './pages/ChatPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -85,6 +86,7 @@ function App() {
             <Route path="/achievements" element={<AchievementsPage />} />
             <Route path="/admin" element={<AdminPanelPage />} />
             <Route path="/moderator" element={<ModeratorPanelPage />} />
+            <Route path="/chat" element={<ChatPage />} />
           </Route>
 
           <Route path="/rooms/:roomId" element={

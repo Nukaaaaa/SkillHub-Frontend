@@ -29,7 +29,8 @@
         "saved": "Saved Articles",
         "wiki": "Wiki",
         "achievements": "Achievements",
-        "rooms": "Rooms"
+        "rooms": "Rooms",
+        "messages": "Messages"
     },
     "dashboard": {
         "welcomeBadge": "Welcome to the ecosystem",
@@ -183,6 +184,11 @@
         "writeHere": "Write here...",
         "whatsOnMind": "What's on your mind?",
         "filterByTag": "Filter by tag"
+    },
+    "notifications": {
+        "liked": "Your content was liked",
+        "commented": "New comment in discussion",
+        "approved": "Your post was approved by moderator"
     },
     "tags": {
         "title": "Tags",

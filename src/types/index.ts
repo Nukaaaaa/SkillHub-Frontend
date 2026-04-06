@@ -113,6 +113,7 @@ export interface Comment {
 export interface WikiEntry {
     id: number;
     roomId: number;
+    sectionId?: number;
     title: string;
     content: string;
     updatedAt: string;

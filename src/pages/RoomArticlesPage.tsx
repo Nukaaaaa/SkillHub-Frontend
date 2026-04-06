@@ -26,7 +26,7 @@ const RoomArticlesPage: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { isMember } = useAuth();
+    const { isMember, user } = useAuth();
     const [articles, setArticles] = useState<Article[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
@@ -222,8 +222,12 @@ const RoomArticlesPage: React.FC = () => {
                                         <button className={`${styles.actionBtn} ${styles.bookmarkBtn}`}>
                                             <Bookmark size={16} />
                                         </button>
-                                        <button className={`${styles.actionBtn} ${styles.likeBtn}`}>
-                                            <Heart size={16} />
+                                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? styles.liked : ''}`}>
+                                            <Heart 
+                                                size={16} 
+                                                fill={user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? "var(--accent-primary)" : "none"} 
+                                                color={user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? "var(--accent-primary)" : "currentColor"} 
+                                            />
                                             <span className={styles.statValue}>{(article as any).likesCount || 0}</span>
                                         </button>
                                     </div>
