@@ -17,8 +17,9 @@ import {
 } from 'lucide-react';
 
 import { roomService } from '../api/roomService';
+import { directionService } from '../api/directionService';
 import { contentService } from '../api/contentService';
-import type { Room, DifficultyLevel } from '../types';
+import type { Room } from '../types';
 import { useAuth } from '../context/AuthContext';
 import styles from './CreatePostPage.module.css';
 import Loader from '../components/Loader';
@@ -43,18 +44,22 @@ const CreatePostPage: React.FC = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [roomId, setRoomId] = useState<number | undefined>(initialRoomId);
-    const [difficulty, setDifficulty] = useState<DifficultyLevel>('INTERMEDIATE');
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>(['go', 'sql']);
 
     useEffect(() => {
         const fetchRooms = async () => {
             try {
-                // Fetch all rooms or rooms joined by user
-                const data = await roomService.getRoomsByDirection(user?.selectedDirectionId || 1);
-                setRooms(data);
-                if (!roomId && data.length > 0) {
-                    setRoomId(data[0].id);
+                // Fetch directions to get the slug for selectedDirectionId
+                const directions = await directionService.getDirections();
+                const currentDir = directions.find(d => d.id === user?.selectedDirectionId) || directions[0];
+                
+                if (currentDir) {
+                    const data = await roomService.getRoomsByDirection(currentDir.slug);
+                    setRooms(data);
+                    if (!roomId && data.length > 0) {
+                        setRoomId(data[0].id);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch rooms', error);
@@ -97,7 +102,13 @@ const CreatePostPage: React.FC = () => {
                 postType: type === 'QUESTION' ? 'QUESTION' : 'DISCUSSION'
             });
             toast.success(t('post.created'));
-            navigate(`/rooms/${roomId}`);
+            
+            const selectedRoom = rooms.find(r => r.id === roomId);
+            if (selectedRoom) {
+                navigate(`/rooms/${selectedRoom.slug}`);
+            } else {
+                navigate(-1);
+            }
         } catch (error) {
             console.error('Failed to publish', error);
             toast.error(t('common.error'));

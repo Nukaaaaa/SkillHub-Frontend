@@ -19,7 +19,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
 const RoomLayout: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { roomSlug } = useParams<{ roomSlug: string }>();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [room, setRoom] = useState<Room | null>(null);
@@ -31,9 +31,9 @@ const RoomLayout: React.FC = () => {
 
     useEffect(() => {
         const fetchRoom = async () => {
-            if (!roomId) return;
+            if (!roomSlug) return;
             try {
-                const data = await roomService.getRoom(Number(roomId));
+                const data = await roomService.getRoom(roomSlug);
                 setRoom(data);
                 setOnlineCount(data.onlineCount || 0);
             } catch (error) {
@@ -43,18 +43,18 @@ const RoomLayout: React.FC = () => {
             }
         };
         fetchRoom();
-    }, [roomId]);
+    }, [roomSlug]);
 
     // Manage WebSocket connection for presence
     useEffect(() => {
-        if (!roomId || !token) return;
+        if (!roomSlug || !token) return;
 
         const ws = new WebSocket(`ws://localhost:8081/api/presence/ws?token=${token}`);
 
         ws.onopen = () => {
-            console.log('Presence WebSocket connected for room', roomId);
+            console.log('Presence WebSocket connected for room', roomSlug);
             // Optional: If backend expects a join message
-            // ws.send(JSON.stringify({ type: 'join_room', roomId: Number(roomId) }));
+            // ws.send(JSON.stringify({ type: 'join_room', roomId: room?.id }));
         };
 
         ws.onmessage = (event) => {
@@ -73,20 +73,20 @@ const RoomLayout: React.FC = () => {
         };
 
         ws.onclose = () => {
-            console.log('Presence WebSocket disconnected for room', roomId);
+            console.log('Presence WebSocket disconnected for room', roomSlug);
         };
 
         // Cleanup: close connection when leaving room component
         return () => {
             ws.close();
         };
-    }, [roomId, token]);
+    }, [roomSlug, token]);
 
     const handleJoin = async () => {
-        if (!roomId) return;
+        if (!roomSlug) return;
         setJoining(true);
         try {
-            await joinRoom(Number(roomId));
+            await joinRoom(roomSlug);
             toast.success(t('rooms.joined') || 'Вы вступили в комнату!');
         } catch (error) {
             toast.error(t('common.error'));
@@ -96,12 +96,12 @@ const RoomLayout: React.FC = () => {
     };
 
     const handleLeave = async () => {
-        if (!roomId) return;
+        if (!roomSlug) return;
         if (!window.confirm(t('rooms.leaveConfirm') || 'Вы уверены, что хотите покинуть комнату?')) return;
 
         setLeaving(true);
         try {
-            await leaveRoom(Number(roomId));
+            await leaveRoom(roomSlug);
             toast.success(t('rooms.leaveSuccess') || 'Вы покинули комнату');
         } catch (error) {
             toast.error(t('common.error'));
@@ -115,23 +115,23 @@ const RoomLayout: React.FC = () => {
 
     const navItems = [
         {
-            to: `/rooms/${roomId}`,
+            to: `/rooms/${roomSlug}`,
             icon: <MessageSquare size={20} />,
             label: t('rooms.discussions'),
             end: true
         },
         {
-            to: `/rooms/${roomId}/articles`,
+            to: `/rooms/${roomSlug}/articles`,
             icon: <FileText size={20} />,
             label: t('rooms.articles')
         },
         {
-            to: `/rooms/${roomId}/wiki`,
+            to: `/rooms/${roomSlug}/wiki`,
             icon: <BookOpen size={20} />,
             label: t('rooms.wiki')
         },
         {
-            to: `/rooms/${roomId}/members`,
+            to: `/rooms/${roomSlug}/members`,
             icon: <Users size={20} />,
             label: t('members.title')
         }
@@ -148,7 +148,7 @@ const RoomLayout: React.FC = () => {
                 <nav className={styles.sidebarNav}>
                     <button
                         className={styles.navLink}
-                        onClick={() => navigate(`/${room.directionId}/rooms`)}
+                        onClick={() => navigate(`/${room.directionSlug}/rooms`)}
                     >
                         <ArrowLeft size={20} />
                         <span>{t('common.back')}</span>
@@ -194,7 +194,7 @@ const RoomLayout: React.FC = () => {
                         </div>
 
                         <div className={styles.headerActions}>
-                            {isMember(Number(roomId)) ? (
+                            {isMember(room.id) ? (
                                 <button
                                     className={styles.leaveBtn}
                                     onClick={handleLeave}

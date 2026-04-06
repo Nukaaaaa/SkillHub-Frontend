@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import {
     Search,
     History,
@@ -11,22 +11,18 @@ import {
     BookOpen,
     Heart,
     Bookmark,
-    Share2,
-    Calendar,
-    Clock,
-    Bot,
-    ArrowLeft
+    Share2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { contentService } from '../api/contentService';
 import { useAuth } from '../context/AuthContext';
-import type { WikiEntry } from '../types';
+import type { WikiEntry, Room } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomWikiPage.module.css';
 
 const RoomWikiPage: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
 
     const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>([]);
     const [sections, setSections] = useState<{ id: number; roomId: number; name: string }[]>([]);
@@ -46,12 +42,12 @@ const RoomWikiPage: React.FC = () => {
     const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'ADMIN_ROLE';
 
     const fetchWiki = async () => {
-        if (!roomId) return;
+        if (!room) return;
         try {
             setLoading(true);
             const [data, secs] = await Promise.all([
-                contentService.getWikiByRoom(Number(roomId)),
-                contentService.getWikiSectionsByRoom(Number(roomId)).catch(() => []),
+                contentService.getWikiByRoom(room.id),
+                contentService.getWikiSectionsByRoom(room.id).catch(() => []),
             ]);
             setWikiEntries(data);
             setSections(secs);
@@ -65,7 +61,7 @@ const RoomWikiPage: React.FC = () => {
 
     useEffect(() => {
         fetchWiki();
-    }, [roomId]);
+    }, [room?.id]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -158,9 +154,9 @@ const RoomWikiPage: React.FC = () => {
     };
 
     const handleCreateSection = async () => {
-        if (!newSectionName.trim() || !roomId) return;
+        if (!newSectionName.trim() || !room) return;
         try {
-            const section = await contentService.createWikiSection(Number(roomId), newSectionName.trim());
+            const section = await contentService.createWikiSection(room.id, newSectionName.trim());
             setSections(prev => [...prev, section]);
             setNewSectionName('');
             setIsAddingSection(false);

@@ -1,25 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     Search,
     Crown,
     Medal,
-    MessageSquare,
-    Heart,
     ChevronRight,
     Trophy
 } from 'lucide-react';
 
 import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
-import type { UserRoom, User } from '../types';
-import { useAuth } from '../context/AuthContext';
+import type { UserRoom, User, Room } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
 
 const RoomMembersPage: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
     const { t } = useTranslation();
 
     const [members, setMembers] = useState<UserRoom[]>([]);
@@ -29,10 +26,10 @@ const RoomMembersPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<'reputation' | 'date'>('reputation');
 
     const fetchMembers = async () => {
-        if (!roomId) return;
+        if (!room) return;
         try {
             setLoading(true);
-            const data = await roomService.getMembers(Number(roomId));
+            const data = await roomService.getMembers(room.id);
             setMembers(data);
 
             const profilePromises = data.map(m =>
@@ -59,7 +56,7 @@ const RoomMembersPage: React.FC = () => {
 
     useEffect(() => {
         fetchMembers();
-    }, [roomId]);
+    }, [room?.id]);
 
     const filteredMembers = members.filter(m => {
         const profile = memberProfiles[m.userId];

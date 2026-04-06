@@ -26,7 +26,7 @@ import styles from './PostDetailPage.module.css';
 
 const PostDetailPage: React.FC = () => {
     const { user: currentUser } = useAuth();
-    const { postId } = useParams<{ roomId: string; postId: string }>();
+    const { postId } = useParams<{ roomSlug: string; postId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
 

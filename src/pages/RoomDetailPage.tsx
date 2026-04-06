@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -14,13 +14,13 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
-import type { User, Post } from '../types';
+import type { User, Post, Room } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
 import styles from './RoomDetailPage.module.css';
 
 const RoomDetailPage: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { isMember, user } = useAuth();
@@ -37,11 +37,11 @@ const RoomDetailPage: React.FC = () => {
     const [postModalType, setPostModalType] = useState<'POST' | 'QUESTION'>('POST');
 
     const fetchData = async () => {
-        if (!roomId) return;
+        if (!room) return;
         setLoading(true);
         try {
             const [postData] = await Promise.all([
-                contentService.getPostsByRoom(Number(roomId))
+                contentService.getPostsByRoom(room.id)
             ]);
 
             setPosts(postData);
@@ -95,7 +95,7 @@ const RoomDetailPage: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-    }, [roomId]);
+    }, [room?.id]);
 
     const feedItems = [
         ...posts.map(p => ({ ...p, feedType: 'post' as const }))
@@ -127,7 +127,7 @@ const RoomDetailPage: React.FC = () => {
                         <div
                             className={styles.creationCard}
                             onClick={() => {
-                                if (!isMember(Number(roomId))) {
+                                if (!isMember(room.id)) {
                                     toast.error(t('rooms.joinRequiredToPost'));
                                     return;
                                 }
@@ -145,7 +145,7 @@ const RoomDetailPage: React.FC = () => {
                         <div
                             className={styles.creationCard}
                             onClick={() => {
-                                if (!isMember(Number(roomId))) {
+                                if (!isMember(room.id)) {
                                     toast.error(t('rooms.joinRequiredToPost'));
                                     return;
                                 }
@@ -165,11 +165,11 @@ const RoomDetailPage: React.FC = () => {
                         <button
                             className={styles.editorLinkPremium}
                             onClick={() => {
-                                if (!isMember(Number(roomId))) {
+                                if (!isMember(room.id)) {
                                     toast.error(t('rooms.joinRequiredToArticle'));
                                     return;
                                 }
-                                navigate(`/rooms/${roomId}/articles/create`);
+                                navigate(`/rooms/${room.slug}/articles/create`);
                             }}
                         >
                             <span className={styles.editorLinkText}>{t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}</span>
@@ -243,7 +243,7 @@ const RoomDetailPage: React.FC = () => {
                             <h3
                                 className={styles.postTitle}
                                 onClick={() => {
-                                    navigate(`/rooms/${roomId}/posts/${item.id}`);
+                                    navigate(`/rooms/${room.slug}/posts/${item.id}`);
                                 }}
                                 style={{ cursor: 'pointer' }}
                             >
@@ -304,7 +304,7 @@ const RoomDetailPage: React.FC = () => {
             <CreateContentModal
                 isOpen={isPostModalOpen}
                 onClose={() => setIsPostModalOpen(false)}
-                roomId={Number(roomId)}
+                roomId={room.id}
                 initialType={postModalType}
                 onSuccess={fetchData}
             />

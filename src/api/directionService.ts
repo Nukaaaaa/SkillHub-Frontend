@@ -18,11 +18,11 @@ export const directionService = {
         return response.data;
     },
 
-    deleteDirection: async (id: number): Promise<void> => {
-        await apiClient.delete(`/directions/${id}`);
+    deleteDirection: async (slug: string): Promise<void> => {
+        await apiClient.delete(`/directions/${slug}`);
     },
-    getDirection: async (id: number): Promise<Direction> => {
-        const response = await apiClient.get<Direction>(`/rooms/direction/${id}`);
+    getDirection: async (slug: string): Promise<Direction> => {
+        const response = await apiClient.get<Direction>(`/rooms/direction/${slug}`);
         return response.data;
     },
 };

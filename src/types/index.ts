@@ -2,13 +2,16 @@ export interface Direction {
     id: number;
     name: string;
     description: string;
+    slug: string;
 }
 
 export interface Room {
     id: number;
     directionId: number;
+    directionSlug: string;
     name: string;
     description: string;
+    slug: string;
     isPrivate: boolean;
     createdAt?: string;
     participantsCount?: number;
@@ -28,9 +31,11 @@ export interface UserRoom {
 
 export interface RoomDto {
     id?: number;
-    directionId: number;
+    directionId?: number;
+    directionSlug?: string;
     name: string;
     description: string;
+    slug?: string;
     isPrivate?: boolean;
 }
 
@@ -38,6 +43,7 @@ export interface DirectionDto {
     id?: number;
     name: string;
     description: string;
+    slug?: string;
 }
 
 export interface SkillLevel {
@@ -62,6 +68,7 @@ export interface User {
     isMentor: boolean;
     githubUrl?: string;
     selectedDirectionId?: number;
+    selectedDirectionSlug?: string;
     stats?: {
         roomsJoined: number;
         sessionsAttended: number;
@@ -75,6 +82,7 @@ export type AIStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export interface Article {
     id: number;
     roomId: number;
+    roomSlug?: string;
     userId: number; // Matches Java backend (called authorId in some places, but backend uses userId)
     title: string;
     content: string;
@@ -90,6 +98,7 @@ export interface Article {
 export interface Post {
     id: number;
     roomId: number;
+    roomSlug?: string;
     userId: number;
     title?: string;
     content: string;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -22,13 +22,14 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
-import type { Article, User, WikiEntry } from '../types';
+import type { Article, User, WikiEntry, Room } from '../types';
 import Button from '../components/Button';
 import SectionSelectModal from '../components/wiki/SectionSelectModal';
 import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage: React.FC = () => {
-    const { roomId, articleId } = useParams<{ roomId: string; articleId: string }>();
+    const { articleId } = useParams<{ articleId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { user } = useAuth();
@@ -52,10 +53,10 @@ const ArticleDetailPage: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchData = async () => {
-        if (!articleId) return;
+        if (!articleId || !room) return;
         setLoading(true);
         try {
-            const articles = await contentService.getArticlesByRoom(Number(roomId));
+            const articles = await contentService.getArticlesByRoom(room.id);
             const found = articles.find(a => a.id === Number(articleId));
 
             if (found) {
@@ -65,7 +66,7 @@ const ArticleDetailPage: React.FC = () => {
                 checkIfInWiki(found.title);
             } else {
                 toast.error('Статья не найдена');
-                navigate(`/rooms/${roomId}/articles`);
+                navigate(`/rooms/${room.slug}/articles`);
             }
         } catch (error) {
             console.error('Failed to fetch article details:', error);
@@ -89,7 +90,7 @@ const ArticleDetailPage: React.FC = () => {
         }
 
         try {
-            const secs = await contentService.getWikiSectionsByRoom(Number(roomId));
+            const secs = await contentService.getWikiSectionsByRoom(room.id);
             setSections(secs);
         } catch (e) {
             console.error('Failed to fetch sections', e);
@@ -98,7 +99,7 @@ const ArticleDetailPage: React.FC = () => {
 
     const checkIfInWiki = async (articleTitle: string) => {
         try {
-            const wiki = await contentService.getWikiByRoom(Number(roomId)).catch(() => []);
+            const wiki = await contentService.getWikiByRoom(room.id).catch(() => []);
             const alreadyPresent = wiki.some((e: WikiEntry) => e.title === articleTitle);
             setIsInWiki(alreadyPresent);
         } catch (error) {

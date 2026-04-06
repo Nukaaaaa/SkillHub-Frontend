@@ -42,8 +42,8 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
 
 const Home = () => {
   const { user } = useAuth();
-  if (user?.selectedDirectionId) {
-    return <Navigate to={`/${user.selectedDirectionId}/rooms`} replace />;
+  if (user?.selectedDirectionSlug) {
+    return <Navigate to={`/${user.selectedDirectionSlug}/rooms`} replace />;
   }
   return <Navigate to="/dashboard" replace />;
 };
@@ -76,7 +76,7 @@ function App() {
             </PrivateRoute>
           }>
             <Route index element={<Home />} />
-            <Route path="/:directionId/rooms" element={<RoomsPage />} />
+            <Route path="/:directionSlug/rooms" element={<RoomsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:id" element={<ProfilePage />} />
             <Route path="/community" element={<CommunityPage />} />
@@ -89,7 +89,7 @@ function App() {
             <Route path="/chat" element={<ChatPage />} />
           </Route>
 
-          <Route path="/rooms/:roomId" element={
+          <Route path="/rooms/:roomSlug" element={
             <PrivateRoute>
               <RoomLayout />
             </PrivateRoute>

@@ -339,7 +339,7 @@ const ProfilePage: React.FC = () => {
                                             <article
                                                 key={article.id}
                                                 className={styles.articleMiniCard}
-                                                onClick={() => navigate(`/rooms/${article.roomId}/articles/${article.id}`)}
+                                                onClick={() => navigate(`/rooms/${article.roomSlug}/articles/${article.id}`)}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <div className={styles.articleHeader}>
@@ -363,7 +363,7 @@ const ProfilePage: React.FC = () => {
                                             <article
                                                 key={post.id}
                                                 className={styles.articleMiniCard}
-                                                onClick={() => navigate(`/rooms/${(post as any).roomId || 1}/posts/${post.id}`)}
+                                                onClick={() => navigate(`/rooms/${post.roomSlug}/posts/${post.id}`)}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <div className={styles.articleHeader}>

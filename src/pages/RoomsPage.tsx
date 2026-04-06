@@ -18,7 +18,7 @@ const getDemoAvatars = (count: number) => [
 ].slice(0, count);
 
 const RoomsPage: React.FC = () => {
-    const { directionId } = useParams<{ directionId: string }>();
+    const { directionSlug } = useParams<{ directionSlug: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
 
@@ -30,13 +30,12 @@ const RoomsPage: React.FC = () => {
     const { joinedRoomIds } = useAuth();
 
     const fetchData = async () => {
-        if (!directionId) return;
-        const dirIdNum = Number(directionId);
+        if (!directionSlug) return;
         try {
             setLoading(true);
             const [roomsData, dirData] = await Promise.all([
-                roomService.getRoomsByDirection(dirIdNum),
-                directionService.getDirection(dirIdNum)
+                roomService.getRoomsByDirection(directionSlug),
+                directionService.getDirection(directionSlug)
             ]);
 
             setRooms(roomsData || []);
@@ -53,10 +52,10 @@ const RoomsPage: React.FC = () => {
 
     useEffect(() => {
         fetchData();
-    }, [directionId]);
+    }, [directionSlug]);
 
-    const handleRoomClick = (roomId: number) => {
-        navigate(`/rooms/${roomId}`);
+    const handleRoomClick = (roomSlug: string) => {
+        navigate(`/rooms/${roomSlug}`);
     };
 
     const toggleTag = (e: React.MouseEvent, tag: string) => {
@@ -113,7 +112,7 @@ const RoomsPage: React.FC = () => {
                             <div
                                 key={room.id}
                                 className={styles.roomCard}
-                                onClick={() => handleRoomClick(room.id)}
+                                onClick={() => handleRoomClick(room.slug)}
                             >
                                 <div className={styles.cardTop}>
                                     <div className={styles.memberStack}>

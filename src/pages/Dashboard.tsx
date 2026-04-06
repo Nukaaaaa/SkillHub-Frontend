@@ -3,10 +3,6 @@ import styles from './Dashboard.module.css';
 import { directionService } from '../api/directionService';
 import type { Direction } from '../types';
 import Loader from '../components/Loader';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
-import Button from '../components/Button';
-import Modal from '../components/Modal';
-import Input from '../components/Input';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useTranslation, Trans } from 'react-i18next';
@@ -30,9 +26,6 @@ const Dashboard: React.FC = () => {
     const { selectDirection } = useAuth();
     const [directions, setDirections] = useState<Direction[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingDir, setEditingDir] = useState<Direction | null>(null);
-    const [formData, setFormData] = useState({ name: '', description: '' });
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -55,55 +48,17 @@ const Dashboard: React.FC = () => {
         fetchDirections();
     }, []);
 
-    const handleOpenModal = (e: React.MouseEvent, dir?: Direction) => {
-        e.stopPropagation();
-        if (dir) {
-            setEditingDir(dir);
-            setFormData({ name: t(dir.name), description: t(dir.description) });
-        } else {
-            setEditingDir(null);
-            setFormData({ name: '', description: '' });
-        }
-        setIsModalOpen(true);
-    };
-
-    const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
-        if (e && 'preventDefault' in e) e.preventDefault();
-        try {
-            if (editingDir?.id) {
-                await directionService.updateDirection(editingDir.id, formData);
-            } else {
-                await directionService.createDirection(formData);
-            }
-            toast.success(editingDir ? t('common.save') + '!' : t('common.create') + '!');
-            setIsModalOpen(false);
-            fetchDirections();
-        } catch (error) {
-            toast.error(t('common.error'));
-        }
-    };
-
-    const handleDelete = async (e: React.MouseEvent, id: number) => {
-        e.stopPropagation();
-        if (window.confirm(t('common.delete') + '?')) {
-            try {
-                await directionService.deleteDirection(id);
-                toast.success(t('common.delete'));
-                fetchDirections();
-                if (selectedId === id) setSelectedId(null);
-            } catch (error) {
-                toast.error(t('common.error'));
-            }
-        }
-    };
 
     const handleConfirm = () => {
         if (!selectedId) return;
-        selectDirection(selectedId);
+        const selectedDir = directions.find(d => d.id === selectedId);
+        if (!selectedDir) return;
+
+        selectDirection(selectedId, selectedDir.slug);
         if (from === 'profile') {
             navigate('/profile');
         } else {
-            navigate(`/${selectedId}/rooms`);
+            navigate(`/${selectedDir.slug}/rooms`);
         }
     };
 
@@ -172,32 +127,6 @@ const Dashboard: React.FC = () => {
                 </button>
             </div>
 
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingDir ? t('common.edit') : t('common.create')}
-                footer={
-                    <>
-                        <Button variant="secondary" onClick={() => setIsModalOpen(false)}>{t('common.cancel')}</Button>
-                        <Button onClick={handleSubmit}>{editingDir ? t('common.save') : t('common.create')}</Button>
-                    </>
-                }
-            >
-                <form className={styles.form} onSubmit={handleSubmit}>
-                    <Input
-                        label={t('dashboard.directionName')}
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        required
-                    />
-                    <Input
-                        label={t('dashboard.directionDescription')}
-                        value={formData.description}
-                        onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        required
-                    />
-                </form>
-            </Modal>
         </div>
     );
 };

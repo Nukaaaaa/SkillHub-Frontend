@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
     Bookmark,
     Heart,
@@ -17,13 +17,13 @@ import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { interactionService } from '../api/interactionService';
 import { userService } from '../api/userService';
-import type { Article, User } from '../types';
+import type { Article, User, Room } from '../types';
 import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
 import styles from './RoomArticlesPage.module.css';
 
 const RoomArticlesPage: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { isMember, user } = useAuth();
@@ -34,10 +34,10 @@ const RoomArticlesPage: React.FC = () => {
     const [difficulty, setDifficulty] = useState<string>('Любая');
 
     const fetchArticles = async () => {
-        if (!roomId) return;
+        if (!room) return;
         setLoading(true);
         try {
-            const data = await contentService.getArticlesByRoom(Number(roomId));
+            const data = await contentService.getArticlesByRoom(room.id);
             
             // Add likes count to each article
             const articlesWithLikes = await Promise.all(data.map(async (art) => {
@@ -72,7 +72,7 @@ const RoomArticlesPage: React.FC = () => {
 
     useEffect(() => {
         fetchArticles();
-    }, [roomId]);
+    }, [room?.id]);
 
     const getDifficultyClass = (diff: string) => {
         switch (diff?.toUpperCase()) {
@@ -121,11 +121,11 @@ const RoomArticlesPage: React.FC = () => {
                     <button
                         className={styles.primaryBtn}
                         onClick={() => {
-                            if (!isMember(Number(roomId))) {
+                            if (!isMember(room.id)) {
                                 toast.error('Вступите в комнату, чтобы написать статью');
                                 return;
                             }
-                            navigate(`/rooms/${roomId}/articles/create`);
+                            navigate(`/rooms/${room.slug}/articles/create`);
                         }}
                     >
                         <Plus size={20} style={{ marginRight: '0.5rem' }} />
@@ -212,7 +212,7 @@ const RoomArticlesPage: React.FC = () => {
                                 </div>
                                 <h3
                                     className={styles.articleTitle}
-                                    onClick={() => navigate(`/rooms/${roomId}/articles/${article.id}`)}
+                                    onClick={() => navigate(`/rooms/${room.slug}/articles/${article.id}`)}
                                 >
                                     {article.title}
                                 </h3>

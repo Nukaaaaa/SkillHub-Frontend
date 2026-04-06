@@ -22,13 +22,13 @@ interface AuthContextType {
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
     resetToDefaults: () => void;
-    selectDirection: (id: number) => Promise<void>;
+    selectDirection: (id: number, slug: string) => Promise<void>;
     isAuthenticated: boolean;
     loading: boolean;
     joinedRoomIds: number[];
     isMember: (roomId: number) => boolean;
-    joinRoom: (roomId: number) => Promise<void>;
-    leaveRoom: (roomId: number) => Promise<void>;
+    joinRoom: (roomSlug: string) => Promise<void>;
+    leaveRoom: (roomSlug: string) => Promise<void>;
     refreshUserRooms: () => Promise<void>;
 }
 
@@ -89,9 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                 if (userToSet) {
                     // Load selected direction from localStorage
-                    const savedDirId = localStorage.getItem(`selected_direction_${userToSet.id}`);
+                    const savedDirId = localStorage.getItem(`selected_direction_id_${userToSet.id}`);
+                    const savedDirSlug = localStorage.getItem(`selected_direction_slug_${userToSet.id}`);
                     if (savedDirId) {
                         userToSet.selectedDirectionId = Number(savedDirId);
+                    }
+                    if (savedDirSlug) {
+                        userToSet.selectedDirectionSlug = savedDirSlug;
                     }
                     setUser(userToSet);
                     refreshUserRooms(userToSet.id);
@@ -123,10 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return joinedRoomIds.includes(Number(roomId));
     }, [joinedRoomIds]);
 
-    const joinRoom = async (roomId: number) => {
+    const joinRoom = async (roomSlug: string) => {
         if (!user) return;
         try {
-            await roomService.joinRoom(roomId, user.id);
+            await roomService.joinRoom(roomSlug, user.id);
             await refreshUserRooms();
         } catch (error) {
             console.error('Failed to join room:', error);
@@ -134,10 +138,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const leaveRoom = async (roomId: number) => {
+    const leaveRoom = async (roomSlug: string) => {
         if (!user) return;
         try {
-            await roomService.leaveRoom(roomId, user.id);
+            await roomService.leaveRoom(roomSlug, user.id);
             await refreshUserRooms();
         } catch (error) {
             console.error('Failed to leave room:', error);
@@ -189,9 +193,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Authentication failed: Could not retrieve user profile from backend');
             }
 
-            const savedDirId = localStorage.getItem(`selected_direction_${userToSet.id}`);
+            const savedDirId = localStorage.getItem(`selected_direction_id_${userToSet.id}`);
+            const savedDirSlug = localStorage.getItem(`selected_direction_slug_${userToSet.id}`);
             if (savedDirId) {
                 userToSet.selectedDirectionId = Number(savedDirId);
+            }
+            if (savedDirSlug) {
+                userToSet.selectedDirectionSlug = savedDirSlug;
             }
 
             setUser(userToSet);
@@ -303,11 +311,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.location.reload();
     };
 
-    const selectDirection = async (id: number) => {
+    const selectDirection = async (id: number, slug: string) => {
         if (!user) return;
-        const updatedUser = { ...user, selectedDirectionId: id };
+        const updatedUser = { ...user, selectedDirectionId: id, selectedDirectionSlug: slug };
         setUser(updatedUser);
-        localStorage.setItem(`selected_direction_${user.id}`, id.toString());
+        localStorage.setItem(`selected_direction_id_${user.id}`, id.toString());
+        localStorage.setItem(`selected_direction_slug_${user.id}`, slug);
 
         // Try to persist to backend as well
         try {

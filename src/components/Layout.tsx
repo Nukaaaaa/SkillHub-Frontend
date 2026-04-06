@@ -40,7 +40,7 @@ const Layout: React.FC = () => {
     };
 
     const navItems = [
-        { to: user?.selectedDirectionId ? `/${user.selectedDirectionId}/rooms` : '/', icon: <DoorOpen size={20} />, label: t('nav.rooms') },
+        { to: user?.selectedDirectionSlug ? `/${user.selectedDirectionSlug}/rooms` : '/', icon: <DoorOpen size={20} />, label: t('nav.rooms') },
         { to: '/chat', icon: <MessageSquare size={20} />, label: t('nav.messages') || 'Сообщения' },
         { to: '/saved', icon: <Bookmark size={20} />, label: t('nav.saved') },
         { to: '/wiki', icon: <Book size={20} />, label: t('nav.wiki') },

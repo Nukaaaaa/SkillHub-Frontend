@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
@@ -11,10 +11,11 @@ import RichTextEditor from '../components/RichTextEditor';
 
 import { contentService } from '../api/contentService';
 import { useAuth } from '../context/AuthContext';
+import type { Room } from '../types';
 import styles from './CreatePostPage.module.css';
 
 const CreateArticlePage: React.FC = () => {
-    const { roomId } = useParams<{ roomId: string }>();
+    const { room } = useOutletContext<{ room: Room }>();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -41,7 +42,7 @@ const CreateArticlePage: React.FC = () => {
     };
 
     const handlePublish = async () => {
-        if (!title.trim() || !content.trim() || !roomId) {
+        if (!title.trim() || !content.trim() || !room) {
             toast.error(t('common.error') || 'Заполните заголовок и содержание');
             return;
         }
@@ -51,13 +52,13 @@ const CreateArticlePage: React.FC = () => {
             await contentService.createArticle({
                 title,
                 content,
-                roomId: Number(roomId),
+                roomId: room.id,
                 userId: user?.id,
                 difficultyLevel: difficulty,
                 tags: tags
             });
             toast.success(t('article.published') || 'Статья успешно опубликована!');
-            navigate(`/rooms/${roomId}/articles`);
+            navigate(`/rooms/${room.slug}/articles`);
         } catch (error) {
             console.error('Failed to publish article', error);
             toast.error(t('common.error') || 'Ошибка при публикации статьи');

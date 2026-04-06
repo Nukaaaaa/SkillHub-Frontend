@@ -16,6 +16,7 @@ import styles from './SavedArticlesPage.module.css';
 interface SavedArticle {
     id: number;
     roomId: number;
+    roomSlug: string;
     targetType: string;
     title: string;
     preview: string;
@@ -62,6 +63,7 @@ const SavedArticlesPage: React.FC = () => {
                     return {
                         id: a.id,
                         roomId: a.roomId || 0,
+                        roomSlug: a.roomSlug || (a.roomId ? a.roomId.toString() : '0'),
                         targetType: v.type,
                         title: a.title || 'Без названия',
                         preview: a.content.replace(/<[^>]*>?/gm, '').slice(0, 100) + '...',
@@ -134,9 +136,9 @@ const SavedArticlesPage: React.FC = () => {
                         <div className={styles.cardActions}>
                             <button className={styles.actionBtn} title="Открыть" onClick={() => {
                                 if (article.targetType === 'article') {
-                                    navigate(`/rooms/${article.roomId}/articles/${article.id}`);
+                                    navigate(`/rooms/${article.roomSlug}/articles/${article.id}`);
                                 } else {
-                                    navigate(`/rooms/${article.roomId}/posts/${article.id}`);
+                                    navigate(`/rooms/${article.roomSlug}/posts/${article.id}`);
                                 }
                             }}>
                                 <ExternalLink size={18} />
