@@ -9,7 +9,6 @@ import {
     Shield,
     Cpu,
     Network,
-    Globe,
     BookOpen,
     Flame,
     Bot,
@@ -67,6 +66,13 @@ const WikiPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [roomIds, setRoomIds] = useState<number[] | undefined>(undefined);
 
+    // Состояния для категорий
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [categoryArticles, setCategoryArticles] = useState<ArticlePreview[]>([]);
+    const [viewLoading, setViewLoading] = useState(false);
+    const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
+    const [catSearchTerm, setCatSearchTerm] = useState('');
+
     // Поиск
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<ArticlePreview[]>([]);
@@ -92,7 +98,7 @@ const WikiPage: React.FC = () => {
         loadRoomIds();
     }, [directionSlug]);
 
-    // Шаг 2: Загружаем лендинг (глобальный или локальный)
+    // Шаг 2: Загружаем лендинг
     useEffect(() => {
         const loadLanding = async () => {
             setLoading(true);
@@ -106,10 +112,27 @@ const WikiPage: React.FC = () => {
                 setLoading(false);
             }
         };
-        // Если directionSlug есть, ждём пока roomIds загрузятся
         if (directionSlug && roomIds === undefined) return;
         loadLanding();
     }, [roomIds, directionSlug]);
+
+    // Шаг 3: Загружаем статьи при выборе категории
+    useEffect(() => {
+        const loadCategoryArticles = async () => {
+            if (!selectedCategory) return;
+            setViewLoading(true);
+            try {
+                const results = await wikiService.search(selectedCategory, roomIds);
+                setCategoryArticles(results);
+            } catch (err) {
+                console.error('Failed to load category articles:', err);
+                setCategoryArticles([]);
+            } finally {
+                setViewLoading(false);
+            }
+        };
+        loadCategoryArticles();
+    }, [selectedCategory, roomIds]);
 
     // Поиск с debounce
     useEffect(() => {
@@ -145,15 +168,33 @@ const WikiPage: React.FC = () => {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // Трекинг просмотра с задержкой 2 секунды
     const handleArticleClick = useCallback((article: ArticlePreview) => {
-        // Переходим на страницу статьи
         navigate(`/wiki/articles/${article.id}`);
-        // Отправляем просмотр через 2 секунды
         setTimeout(() => {
             wikiService.trackView(article.id, user?.id).catch(() => null);
         }, 2000);
     }, [navigate, user?.id]);
+
+    const handleCategoryClick = (category: string) => {
+        setSelectedCategory(category);
+        setDifficultyFilter(null);
+        setCatSearchTerm('');
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+    };
+
+    // Локальная фильтрация внутри категории
+    const filteredArticles = categoryArticles.filter(art => {
+        const matchesDiff = !difficultyFilter || 
+            (difficultyFilter === 'ADVANCED' && art.aiScore >= 9) ||
+            (difficultyFilter === 'INTERMEDIATE' && art.aiScore >= 7 && art.aiScore < 9) ||
+            (difficultyFilter === 'BEGINNER' && art.aiScore < 7);
+        
+        const matchesSearch = !catSearchTerm || 
+            art.title.toLowerCase().includes(catSearchTerm.toLowerCase()) || 
+            art.tags.some(t => t.toLowerCase().includes(catSearchTerm.toLowerCase()));
+
+        return matchesDiff && matchesSearch;
+    });
 
 
 
@@ -229,136 +270,226 @@ const WikiPage: React.FC = () => {
             </section>
 
             <main className={styles.mainContent}>
-                {/* Категории */}
-                <section className={styles.categoriesSection}>
-                    <div className={styles.sectionHeader}>
-                        <BookOpen size={18} />
-                        <h2>Категории</h2>
-                    </div>
-                    <div className={styles.categoryGrid}>
-                        {loading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className={`${styles.categoryCard} ${styles.skeletonCat}`}>
-                                    <div className={styles.skeletonIcon} />
-                                    <div style={{ flex: 1 }}>
-                                        <div className={styles.skeletonLine} style={{ width: '60%', height: '14px' }} />
-                                        <div className={styles.skeletonLine} style={{ width: '40%', height: '11px', marginTop: '6px' }} />
-                                    </div>
-                                </div>
-                            ))
-                        ) : landing?.categories.length === 0 ? (
-                            <p className={styles.emptyState}>Категории не найдены</p>
-                        ) : (
-                            landing?.categories.map((cat: CategoryStat) => {
-                                const meta = getCategoryMeta(cat.name);
-                                return (
-                                    <div key={cat.name} className={styles.categoryCard}>
-                                        <div
-                                            className={styles.categoryIcon}
-                                            style={{ background: `${meta.color}18`, color: meta.color }}
-                                        >
-                                            {meta.icon}
+                {!selectedCategory ? (
+                    <>
+                        {/* Категории */}
+                        <section className={styles.categoriesSection}>
+                            <div className={styles.sectionHeader}>
+                                <BookOpen size={18} />
+                                <h2>Категории</h2>
+                            </div>
+                            <div className={styles.categoryGrid}>
+                                {loading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <div key={i} className={`${styles.categoryCard} ${styles.skeletonCat}`}>
+                                            <div className={styles.skeletonIcon} />
+                                            <div style={{ flex: 1 }}>
+                                                <div className={styles.skeletonLine} style={{ width: '60%', height: '14px' }} />
+                                                <div className={styles.skeletonLine} style={{ width: '40%', height: '11px', marginTop: '6px' }} />
+                                            </div>
                                         </div>
-                                        <div className={styles.categoryInfo}>
-                                            <h3>{cat.name}</h3>
-                                            <span>{cat.articleCount} статей</span>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                    </div>
-                </section>
+                                    ))
+                                ) : landing?.categories.length === 0 ? (
+                                    <p className={styles.emptyState}>Категории не найдены</p>
+                                ) : (
+                                    landing?.categories.map((cat: CategoryStat) => {
+                                        const meta = getCategoryMeta(cat.name);
+                                        return (
+                                            <div 
+                                                key={cat.name} 
+                                                className={styles.categoryCard}
+                                                onClick={() => handleCategoryClick(cat.name)}
+                                            >
+                                                <div
+                                                    className={styles.categoryIcon}
+                                                    style={{ background: `${meta.color}18`, color: meta.color }}
+                                                >
+                                                    {meta.icon}
+                                                </div>
+                                                <div className={styles.categoryInfo}>
+                                                    <h3>{cat.name}</h3>
+                                                    <span>{cat.articleCount} статей</span>
+                                                </div>
+                                                <ChevronRight size={16} className={styles.cardArrow} />
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </section>
 
-                {/* Колонки: Популярное + Статья недели */}
-                <div className={styles.cols}>
-                    {/* Популярное за неделю */}
-                    <div className={styles.trendingCol}>
-                        <div className={styles.sectionHeader}>
-                            <Flame size={18} />
-                            <h2>Популярное за неделю</h2>
+                        {/* Колонки: Популярное + Статья недели */}
+                        <div className={styles.cols}>
+                            {/* Популярное за неделю */}
+                            <div className={styles.trendingCol}>
+                                <div className={styles.sectionHeader}>
+                                    <Flame size={18} />
+                                    <h2>Популярное за неделю</h2>
+                                </div>
+                                <div className={styles.trendingList}>
+                                    {loading ? (
+                                        Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+                                    ) : landing?.popular.length === 0 ? (
+                                        <div className={styles.emptyCol}>
+                                            <TrendingUp size={32} opacity={0.2} />
+                                            <p>Пока нет популярных статей</p>
+                                        </div>
+                                    ) : (
+                                        landing?.popular.map((article, idx) => (
+                                            <div
+                                                key={article.id}
+                                                className={styles.trendingItem}
+                                                onClick={() => handleArticleClick(article)}
+                                            >
+                                                <span className={styles.trendingRank}>#{idx + 1}</span>
+                                                <div className={styles.trendingBody}>
+                                                    <div className={styles.trendingTitle}>
+                                                        {article.title}
+                                                        <AiScoreBadge score={article.aiScore} />
+                                                    </div>
+                                                    {article.tags.length > 0 && (
+                                                        <div className={styles.trendingTags}>
+                                                            {article.tags.slice(0, 3).map(tag => (
+                                                                <span key={tag} className={styles.tagChip}>#{tag}</span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <ChevronRight size={16} className={styles.trendingArrow} />
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Статья недели */}
+                            <div className={styles.featuredCol}>
+                                <div className={styles.sectionHeader}>
+                                    <Star size={18} />
+                                    <h2>Рекомендовано для вас</h2>
+                                </div>
+                                {loading ? (
+                                    <div className={`${styles.featuredCard} ${styles.featuredSkeleton}`}>
+                                        <div className={styles.skeletonLine} style={{ width: '30%', height: '12px', marginBottom: '1.5rem' }} />
+                                        <div className={styles.skeletonLine} style={{ width: '85%', height: '24px' }} />
+                                        <div className={styles.skeletonLine} style={{ width: '70%', height: '24px', marginTop: '10px' }} />
+                                        <div className={styles.skeletonLine} style={{ width: '95%', height: '14px', marginTop: '1.5rem' }} />
+                                        <div className={styles.skeletonLine} style={{ width: '80%', height: '14px', marginTop: '8px' }} />
+                                    </div>
+                                ) : landing?.recommended ? (
+                                    <div className={styles.featuredCard}>
+                                        <div className={styles.featuredTopRow}>
+                                            <div className={styles.featuredTag}>Статья недели</div>
+                                            <AiScoreBadge score={landing.recommended.aiScore} />
+                                        </div>
+                                        <h3>{landing.recommended.title}</h3>
+                                        <p>{landing.recommended.previewText}</p>
+                                        {landing.recommended.tags.length > 0 && (
+                                            <div className={styles.featuredTags}>
+                                                {landing.recommended.tags.map(tag => (
+                                                    <span key={tag} className={styles.tagChip}>#{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <button
+                                            className={styles.readBtn}
+                                            onClick={() => landing.recommended && handleArticleClick(landing.recommended)}
+                                        >
+                                            Читать далее
+                                            <ExternalLink size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className={`${styles.featuredCard} ${styles.featuredEmpty}`}>
+                                        <Star size={40} opacity={0.15} />
+                                        <p>AI ещё не выбрал статью недели</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className={styles.trendingList}>
-                            {loading ? (
-                                Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
-                            ) : landing?.popular.length === 0 ? (
-                                <div className={styles.emptyCol}>
-                                    <TrendingUp size={32} opacity={0.2} />
-                                    <p>Пока нет популярных статей</p>
+                    </>
+                ) : (
+                    /* Режим категории (Category View) */
+                    <div className={styles.categoryView}>
+                        <div className={styles.viewHeader}>
+                            <button className={styles.backBtn} onClick={() => setSelectedCategory(null)}>
+                                <ChevronRight size={18} style={{ transform: 'rotate(180deg)', marginRight: '8px' }} />
+                                Назад к обзору
+                            </button>
+                            <nav className={styles.breadcrumbs}>
+                                <span>Вики</span>
+                                <ChevronRight size={14} />
+                                <span className={styles.activeBreadcrumb}>{selectedCategory}</span>
+                            </nav>
+                        </div>
+
+                        <div className={styles.filterBar}>
+                            <div className={styles.filterGroup}>
+                                <span className={styles.filterLabel}>Сложность:</span>
+                                <div className={styles.filterButtons}>
+                                    <button 
+                                        className={`${styles.filterBtn} ${!difficultyFilter ? styles.filterBtnActive : ''}`}
+                                        onClick={() => setDifficultyFilter(null)}
+                                    >Все</button>
+                                    <button 
+                                        className={`${styles.filterBtn} ${difficultyFilter === 'BEGINNER' ? styles.filterBtnActive : ''}`}
+                                        onClick={() => setDifficultyFilter('BEGINNER')}
+                                    >Junior</button>
+                                    <button 
+                                        className={`${styles.filterBtn} ${difficultyFilter === 'INTERMEDIATE' ? styles.filterBtnActive : ''}`}
+                                        onClick={() => setDifficultyFilter('INTERMEDIATE')}
+                                    >Middle</button>
+                                    <button 
+                                        className={`${styles.filterBtn} ${difficultyFilter === 'ADVANCED' ? styles.filterBtnActive : ''}`}
+                                        onClick={() => setDifficultyFilter('ADVANCED')}
+                                    >Senior</button>
+                                </div>
+                            </div>
+                            <div className={styles.catSearch}>
+                                <Search size={16} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Поиск внутри категории..." 
+                                    value={catSearchTerm}
+                                    onChange={e => setCatSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.articleList}>
+                            {viewLoading ? (
+                                Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+                            ) : filteredArticles.length === 0 ? (
+                                <div className={styles.emptyResults}>
+                                    <Search size={40} opacity={0.2} />
+                                    <p>Статьи не найдены по вашим фильтрам</p>
                                 </div>
                             ) : (
-                                landing?.popular.map((article, idx) => (
-                                    <div
-                                        key={article.id}
-                                        className={styles.trendingItem}
+                                filteredArticles.map(article => (
+                                    <div 
+                                        key={article.id} 
+                                        className={styles.articleRow}
                                         onClick={() => handleArticleClick(article)}
                                     >
-                                        <span className={styles.trendingRank}>#{idx + 1}</span>
-                                        <div className={styles.trendingBody}>
-                                            <div className={styles.trendingTitle}>
+                                        <div className={styles.rowInfo}>
+                                            <div className={styles.rowTitle}>
                                                 {article.title}
                                                 <AiScoreBadge score={article.aiScore} />
                                             </div>
+                                            <p className={styles.rowPreview}>{article.previewText}</p>
                                             {article.tags.length > 0 && (
-                                                <div className={styles.trendingTags}>
-                                                    {article.tags.slice(0, 3).map(tag => (
-                                                        <span key={tag} className={styles.tagChip}>#{tag}</span>
-                                                    ))}
+                                                <div className={styles.rowTags}>
+                                                    {article.tags.map(t => <span key={t} className={styles.tagChip}>#{t}</span>)}
                                                 </div>
                                             )}
                                         </div>
-                                        <ChevronRight size={16} className={styles.trendingArrow} />
+                                        <ChevronRight size={18} className={styles.rowArrow} />
                                     </div>
                                 ))
                             )}
                         </div>
                     </div>
-
-                    {/* Статья недели */}
-                    <div className={styles.featuredCol}>
-                        <div className={styles.sectionHeader}>
-                            <Star size={18} />
-                            <h2>Рекомендовано для вас</h2>
-                        </div>
-                        {loading ? (
-                            <div className={`${styles.featuredCard} ${styles.featuredSkeleton}`}>
-                                <div className={styles.skeletonLine} style={{ width: '30%', height: '12px', marginBottom: '1.5rem' }} />
-                                <div className={styles.skeletonLine} style={{ width: '85%', height: '24px' }} />
-                                <div className={styles.skeletonLine} style={{ width: '70%', height: '24px', marginTop: '10px' }} />
-                                <div className={styles.skeletonLine} style={{ width: '95%', height: '14px', marginTop: '1.5rem' }} />
-                                <div className={styles.skeletonLine} style={{ width: '80%', height: '14px', marginTop: '8px' }} />
-                            </div>
-                        ) : landing?.recommended ? (
-                            <div className={styles.featuredCard}>
-                                <div className={styles.featuredTopRow}>
-                                    <div className={styles.featuredTag}>Статья недели</div>
-                                    <AiScoreBadge score={landing.recommended.aiScore} />
-                                </div>
-                                <h3>{landing.recommended.title}</h3>
-                                <p>{landing.recommended.previewText}</p>
-                                {landing.recommended.tags.length > 0 && (
-                                    <div className={styles.featuredTags}>
-                                        {landing.recommended.tags.map(tag => (
-                                            <span key={tag} className={styles.tagChip}>#{tag}</span>
-                                        ))}
-                                    </div>
-                                )}
-                                <button
-                                    className={styles.readBtn}
-                                    onClick={() => landing.recommended && handleArticleClick(landing.recommended)}
-                                >
-                                    Читать далее
-                                    <ExternalLink size={14} />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className={`${styles.featuredCard} ${styles.featuredEmpty}`}>
-                                <Star size={40} opacity={0.15} />
-                                <p>AI ещё не выбрал статью недели</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                )}
             </main>
         </div>
     );
