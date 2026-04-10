@@ -122,7 +122,9 @@ const WikiPage: React.FC = () => {
             if (!selectedCategory) return;
             setViewLoading(true);
             try {
+                console.log(`[Wiki] Fetching articles for category: ${selectedCategory}, rooms:`, roomIds);
                 const results = await wikiService.search(selectedCategory, roomIds);
+                console.log(`[Wiki] Received ${results.length} articles:`, results);
                 setCategoryArticles(results);
             } catch (err) {
                 console.error('Failed to load category articles:', err);
@@ -179,15 +181,16 @@ const WikiPage: React.FC = () => {
         setSelectedCategory(category);
         setDifficultyFilter(null);
         setCatSearchTerm('');
-        window.scrollTo({ top: 400, behavior: 'smooth' });
+        window.scrollTo({ top: 400 });
     };
 
     // Локальная фильтрация внутри категории
     const filteredArticles = categoryArticles.filter(art => {
+        const score = art.aiScore || 0;
         const matchesDiff = !difficultyFilter || 
-            (difficultyFilter === 'ADVANCED' && art.aiScore >= 9) ||
-            (difficultyFilter === 'INTERMEDIATE' && art.aiScore >= 7 && art.aiScore < 9) ||
-            (difficultyFilter === 'BEGINNER' && art.aiScore < 7);
+            (difficultyFilter === 'ADVANCED' && score >= 8) ||
+            (difficultyFilter === 'INTERMEDIATE' && score >= 5 && score < 8) ||
+            (difficultyFilter === 'BEGINNER' && score < 5);
         
         const matchesSearch = !catSearchTerm || 
             art.title.toLowerCase().includes(catSearchTerm.toLowerCase()) || 
