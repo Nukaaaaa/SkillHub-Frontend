@@ -127,3 +127,24 @@ export interface WikiEntry {
     content: string;
     updatedAt: string;
 }
+
+// Wiki Landing Page types (from /api/wiki/landing)
+export interface CategoryStat {
+    name: string;
+    articleCount: number;
+}
+
+export interface ArticlePreview {
+    id: number;
+    title: string;
+    previewText: string;
+    aiScore: number;
+    tags: string[];
+    viewCount: number;
+}
+
+export interface WikiLandingResponse {
+    categories: CategoryStat[];
+    popular: ArticlePreview[];
+    recommended: ArticlePreview | null;
+}
