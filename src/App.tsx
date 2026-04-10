@@ -87,6 +87,7 @@ function App() {
             <Route path="/admin" element={<AdminPanelPage />} />
             <Route path="/moderator" element={<ModeratorPanelPage />} />
             <Route path="/chat" element={<ChatPage />} />
+            <Route path="/wiki/articles/:articleId" element={<ArticleDetailPage />} />
           </Route>
 
           <Route path="/rooms/:roomSlug" element={

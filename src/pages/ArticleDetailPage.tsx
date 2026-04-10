@@ -20,6 +20,7 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
 import type { Article, User, WikiEntry, Room } from '../types';
@@ -29,7 +30,9 @@ import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage: React.FC = () => {
     const { articleId } = useParams<{ articleId: string }>();
-    const { room } = useOutletContext<{ room: Room }>();
+    const context = useOutletContext<{ room: Room } | null>();
+    const roomFromContext = context?.room;
+    
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { user } = useAuth();
@@ -38,6 +41,7 @@ const ArticleDetailPage: React.FC = () => {
     const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
 
     const [article, setArticle] = useState<Article | null>(null);
+    const [room, setRoom] = useState<Room | null>(roomFromContext || null);
     const [author, setAuthor] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
@@ -48,25 +52,49 @@ const ArticleDetailPage: React.FC = () => {
     const [likes, setLikes] = useState<number>(0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+
     const [isInWiki, setIsInWiki] = useState<boolean>(false);
     const [sections, setSections] = useState<{ id: number; name: string }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchData = async () => {
-        if (!articleId || !room) return;
+        if (!articleId) return;
         setLoading(true);
         try {
-            const articles = await contentService.getArticlesByRoom(room.id);
-            const found = articles.find(a => a.id === Number(articleId));
-
+            // First, fetch the article itself
+            const found = await contentService.getArticle(Number(articleId));
+            
             if (found) {
                 setArticle(found);
+                
+                // Then fetch or set room info
+                let currentRoom: Room | null = roomFromContext || null;
+                if (!currentRoom) {
+                    try {
+                        currentRoom = await roomService.getRoom(found.roomId.toString()).catch(() => null);
+                        if (currentRoom) setRoom(currentRoom);
+                    } catch (e) {
+                        console.error("Could not fetch room metadata", e);
+                    }
+                }
+
+                // Metadata depends on room ID
+                const effectiveRoomId = currentRoom?.id || found.roomId;
+
                 const userProfile = await userService.getUserById(found.userId).catch(() => null);
                 setAuthor(userProfile);
-                checkIfInWiki(found.title);
+                
+                // Extra data for wiki/sections
+                checkIfInWiki(found.title, effectiveRoomId);
+                try {
+                    const secs = await contentService.getWikiSectionsByRoom(effectiveRoomId);
+                    setSections(secs);
+                } catch (e) {
+                    console.error('Failed to fetch sections', e);
+                }
             } else {
                 toast.error('Статья не найдена');
-                navigate(`/rooms/${room.slug}/articles`);
+                navigate(-1);
             }
         } catch (error) {
             console.error('Failed to fetch article details:', error);
@@ -88,18 +116,11 @@ const ArticleDetailPage: React.FC = () => {
         } catch (e) {
             console.error('Failed to fetch interaction data', e);
         }
-
-        try {
-            const secs = await contentService.getWikiSectionsByRoom(room.id);
-            setSections(secs);
-        } catch (e) {
-            console.error('Failed to fetch sections', e);
-        }
     };
 
-    const checkIfInWiki = async (articleTitle: string) => {
+    const checkIfInWiki = async (articleTitle: string, roomId: number) => {
         try {
-            const wiki = await contentService.getWikiByRoom(room.id).catch(() => []);
+            const wiki = await contentService.getWikiByRoom(roomId).catch(() => []);
             const alreadyPresent = wiki.some((e: WikiEntry) => e.title === articleTitle);
             setIsInWiki(alreadyPresent);
         } catch (error) {
@@ -197,7 +218,6 @@ const ArticleDetailPage: React.FC = () => {
                 });
 
                 if (visibleHeadings.size > 0) {
-                    // Find the heading that is physically FIRST in the document among visible ones
                     const visibleIds = Array.from(visibleHeadings.keys());
                     const bestId = headings
                         .map(h => h.id)
@@ -327,7 +347,7 @@ const ArticleDetailPage: React.FC = () => {
                             {(() => {
                                 const text = article.content.replace(/<[^>]*>?/gm, '');
                                 const words = text.trim().split(/\s+/).length;
-                                const wpm = 225; // Adjusted for technical content
+                                const wpm = 225;
                                 return Math.max(1, Math.ceil(words / wpm));
                             })()} {t('common.minRead') || 'мин чтения'}
                         </div>
@@ -432,8 +452,6 @@ const ArticleDetailPage: React.FC = () => {
                 <div className={styles.container}>
                     <div className={styles.commentsHeader}>
                         <h2>{t('article.comments') || 'Комментарии'} (0)</h2>
-                        <div className={styles.commentsFilters}>
-                        </div>
                     </div>
 
                     <div className={styles.commentInputWrapper}>
