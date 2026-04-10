@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import styles from './Layout.module.css';
@@ -22,6 +22,7 @@ import LanguageSelector from './LanguageSelector';
 const Layout: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const { directionSlug } = useParams<{ directionSlug?: string }>();
     const { t } = useTranslation();
 
     const [notifOpen, setNotifOpen] = React.useState(false);
@@ -39,11 +40,13 @@ const Layout: React.FC = () => {
         navigate('/login');
     };
 
+    const currentDirection = directionSlug || user?.selectedDirectionSlug;
+
     const navItems = [
-        { to: user?.selectedDirectionSlug ? `/${user.selectedDirectionSlug}/rooms` : '/', icon: <DoorOpen size={20} />, label: t('nav.rooms') },
+        { to: currentDirection ? `/${currentDirection}/rooms` : '/', icon: <DoorOpen size={20} />, label: t('nav.rooms') },
         { to: '/chat', icon: <MessageSquare size={20} />, label: t('nav.messages') || 'Сообщения' },
         { to: '/saved', icon: <Bookmark size={20} />, label: t('nav.saved') },
-        { to: '/wiki', icon: <Book size={20} />, label: t('nav.wiki') },
+        ...(currentDirection ? [{ to: `/${currentDirection}/wiki`, icon: <Book size={20} />, label: t('nav.wiki') }] : []),
         { to: '/achievements', icon: <Medal size={20} />, label: t('nav.achievements') },
     ];
 

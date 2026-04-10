@@ -16,6 +16,7 @@ import {
 import { toast } from 'react-hot-toast';
 
 import { contentService } from '../api/contentService';
+import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
 import type { WikiEntry, Room } from '../types';
 import Loader from '../components/Loader';
@@ -34,12 +35,12 @@ const RoomWikiPage: React.FC = () => {
     const [activeId, setActiveId] = useState<string>('');
     const [parsedContent, setParsedContent] = useState<string>('');
     const [isLiked, setIsLiked] = useState(false);
-    const [likes, setLikes] = useState(12);
+    const [likes, setLikes] = useState(0);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const { user } = useAuth();
     const [isAddingSection, setIsAddingSection] = useState(false);
     const [newSectionName, setNewSectionName] = useState('');
-    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN' || user?.role === 'ADMIN_ROLE';
+    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
 
     const fetchWiki = async () => {
         if (!room) return;
@@ -51,7 +52,7 @@ const RoomWikiPage: React.FC = () => {
             ]);
             setWikiEntries(data);
             setSections(secs);
-            if (data.length > 0) setSelectedEntry(data[0]);
+            if (data.length > 0 && !selectedEntry) setSelectedEntry(data[0]);
         } catch (error) {
             console.error('Failed to fetch wiki:', error);
         } finally {
@@ -59,9 +60,33 @@ const RoomWikiPage: React.FC = () => {
         }
     };
 
+    const fetchInteractions = async () => {
+        if (!selectedEntry) return;
+        try {
+            const [count, bookmarks] = await Promise.all([
+                interactionService.countLikes('article', selectedEntry.id),
+                interactionService.getMyBookmarks()
+            ]);
+            setLikes(count);
+            const saved = bookmarks.some((b: any) => b.target_type === 'article' && b.target_id === selectedEntry.id);
+            setIsBookmarked(saved);
+            
+            const localLiked = localStorage.getItem(`liked_article_${selectedEntry.id}`) === 'true';
+            setIsLiked(localLiked);
+        } catch (e) {
+            console.error('Failed to fetch interactions', e);
+        }
+    };
+
     useEffect(() => {
         fetchWiki();
     }, [room?.id]);
+
+    useEffect(() => {
+        if (selectedEntry) {
+            fetchInteractions();
+        }
+    }, [selectedEntry?.id]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -142,15 +167,40 @@ const RoomWikiPage: React.FC = () => {
         }
     };
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikes(prev => isLiked ? prev - 1 : prev + 1);
-        toast.success(isLiked ? 'Лайк убран' : 'Вам понравилось!');
+    const handleLike = async () => {
+        if (!selectedEntry) return;
+        try {
+            if (isLiked) {
+                await interactionService.removeLike('article', selectedEntry.id);
+                setLikes(prev => Math.max(0, prev - 1));
+                localStorage.removeItem(`liked_article_${selectedEntry.id}`);
+                setIsLiked(false);
+            } else {
+                await interactionService.addLike('article', selectedEntry.id);
+                setLikes(prev => prev + 1);
+                localStorage.setItem(`liked_article_${selectedEntry.id}`, 'true');
+                setIsLiked(true);
+            }
+        } catch (e) {
+            toast.error('Ошибка при лайке');
+        }
     };
 
-    const handleBookmark = () => {
-        setIsBookmarked(!isBookmarked);
-        toast.success(isBookmarked ? 'Удалено из закладок' : 'Добавлено в закладки');
+    const handleBookmark = async () => {
+        if (!selectedEntry) return;
+        try {
+            if (isBookmarked) {
+                await interactionService.removeBookmark('article', selectedEntry.id);
+                setIsBookmarked(false);
+                toast.success('Удалено из закладок');
+            } else {
+                await interactionService.addBookmark('article', selectedEntry.id);
+                setIsBookmarked(true);
+                toast.success('Добавлено в закладки');
+            }
+        } catch (e) {
+            toast.error('Ошибка работы с закладками');
+        }
     };
 
     const handleCreateSection = async () => {

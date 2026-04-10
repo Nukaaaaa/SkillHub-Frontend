@@ -155,7 +155,7 @@ const WikiPage: React.FC = () => {
         }, 2000);
     }, [navigate, user?.id]);
 
-    const isLocal = !!directionSlug;
+
 
     return (
         <div className={styles.container}>
@@ -163,11 +163,7 @@ const WikiPage: React.FC = () => {
             <section className={styles.hero}>
                 <div className={styles.heroContent}>
                     <div className={styles.modeBadge}>
-                        {isLocal ? (
-                            <><Tag size={14} /> Направление: {directionSlug}</>
-                        ) : (
-                            <><Globe size={14} /> Глобальная база знаний</>
-                        )}
+                        <Tag size={14} /> Направление: {directionSlug}
                     </div>
                     <h1>База знаний SkillHub</h1>
                     <p>Коллективная мудрость профессионального сообщества</p>
@@ -178,9 +174,7 @@ const WikiPage: React.FC = () => {
                             <Search size={22} className={styles.searchIcon} />
                             <input
                                 type="text"
-                                placeholder={isLocal
-                                    ? `Поиск в направлении ${directionSlug}...`
-                                    : 'Поиск по всей базе знаний...'}
+                                placeholder={`Поиск знаний в ${directionSlug}...`}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                                 onFocus={() => searchResults.length > 0 && setSearchOpen(true)}

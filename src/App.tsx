@@ -82,7 +82,7 @@ function App() {
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/saved" element={<SavedArticlesPage />} />
-            <Route path="/wiki" element={<WikiPage />} />
+            <Route path="/:directionSlug/wiki" element={<WikiPage />} />
             <Route path="/achievements" element={<AchievementsPage />} />
             <Route path="/admin" element={<AdminPanelPage />} />
             <Route path="/moderator" element={<ModeratorPanelPage />} />
