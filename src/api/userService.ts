@@ -16,4 +16,15 @@ export const userService = {
         const response = await apiClient.put<User>(`/auth/update/${id}`, data);
         return response.data;
     },
+    searchUsers: async (query: string): Promise<User[]> => {
+        const response = await apiClient.get<User[]>(`/users/search?query=${query}`);
+        return response.data;
+    },
+    sendFriendRequest: async (friendId: number): Promise<void> => {
+        await apiClient.post('/users/friends/request', { friend_id: friendId });
+    },
+    getFriends: async (): Promise<User[]> => {
+        const response = await apiClient.get<User[]>('/users/friends');
+        return response.data;
+    },
 };

@@ -1,28 +1,109 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Shield, Users, Activity, Settings, UserPlus, MoreVertical } from 'lucide-react';
+import { 
+    Users, 
+    Shield, 
+    ShieldAlert, 
+    ShieldCheck, 
+    Clock, 
+    Unlock, 
+    Search,
+    Loader2
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { adminService } from '../api/adminService';
+import type { User } from '../types';
 import styles from './AdminPanelPage.module.css';
+import { toast } from 'react-hot-toast';
 
 const AdminPanelPage: React.FC = () => {
-    const { user } = useAuth();
-    
-    // Some mock data representing global users until we have a real fetch users endpoint
-    const [mockUsers] = useState([
-        { id: 1, name: 'Alice Smith', email: 'alice@example.com', role: 'ADMIN', lastActive: '2 min ago' },
-        { id: 2, name: 'Бекболат Ахметов', email: 'bek@example.com', role: 'MODERATOR', lastActive: '1 hr ago' },
-        { id: 3, name: 'Nukaaaaa', email: 'student@example.com', role: 'USER', lastActive: '12 hrs ago' },
-    ]);
+    const { user: currentUser } = useAuth();
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
-    if (!user || user.role !== 'ADMIN') {
+    const fetchUsers = async () => {
+        try {
+            setLoading(true);
+            const data = await adminService.getAllUsers();
+            setUsers(data);
+        } catch (error) {
+            toast.error('Ошибка при загрузке пользователей');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (currentUser?.role === 'ADMIN') {
+            fetchUsers();
+        }
+    }, [currentUser]);
+
+    if (!currentUser || currentUser.role !== 'ADMIN') {
         return <Navigate to="/dashboard" replace />;
+    }
+
+    const handleRoleChange = async (userId: number, newRole: string) => {
+        try {
+            await adminService.updateUserRole(userId, newRole);
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+            toast.success(`Роль пользователя изменена на ${newRole}`);
+        } catch (error) {
+            toast.error('Не удалось изменить роль');
+        }
+    };
+
+    const handleBlock = async (userId: number, minutes: number) => {
+        try {
+            await adminService.blockUser(userId, minutes);
+            const blockedUntil = new Date(Date.now() + minutes * 60000).toISOString();
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, blocked_until: blockedUntil } : u));
+            toast.success(`Пользователь заблокирован на ${minutes} мин.`);
+        } catch (error) {
+            toast.error('Ошибка при блокировке');
+        }
+    };
+
+    const handleUnblock = async (userId: number) => {
+        try {
+            await adminService.unblockUser(userId);
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, blocked_until: undefined } : u));
+            toast.success('Пользователь разблокирован');
+        } catch (error) {
+            toast.error('Ошибка при разблокировке');
+        }
+    };
+
+    const isBlocked = (user: User) => {
+        if (!user.blocked_until) return false;
+        return new Date(user.blocked_until) > new Date();
+    };
+
+    const filteredUsers = users.filter(u => 
+        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${u.firstname} ${u.lastname}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (loading) {
+        return (
+            <div className={styles.loadingContainer}>
+                <Loader2 className={styles.spin} size={48} />
+                <p>Загрузка панели управления...</p>
+            </div>
+        );
     }
 
     return (
         <div className={styles.container}>
             <header className={styles.header}>
-                <h1 className={styles.title}>Панель Администратора</h1>
-                <p className={styles.subtitle}>Добро пожаловать, {user.firstname}! Здесь вы управляете доступом всей платформы.</p>
+                <div className={styles.headerIcon}>
+                    <Shield size={32} />
+                </div>
+                <div>
+                    <h1 className={styles.title}>Панель администратора</h1>
+                    <p className={styles.subtitle}>Управление пользователями, ролями и безопасностью системы</p>
+                </div>
             </header>
 
             <div className={styles.dashboardGrid}>
@@ -31,82 +112,101 @@ const AdminPanelPage: React.FC = () => {
                         <Users size={24} />
                     </div>
                     <div className={styles.statInfo}>
-                        <p className={styles.statValue}>1,248</p>
+                        <p className={styles.statValue}>{users.length}</p>
                         <p className={styles.statLabel}>Всего пользователей</p>
                     </div>
                 </div>
-
                 <div className={styles.statCard}>
-                    <div className={`${styles.statIcon} ${styles.iconPurple}`}>
-                        <Shield size={24} />
+                    <div className={`${styles.statIcon} ${styles.iconRed}`}>
+                        <ShieldAlert size={24} />
                     </div>
                     <div className={styles.statInfo}>
-                        <p className={styles.statValue}>14</p>
-                        <p className={styles.statLabel}>Модераторов на портале</p>
-                    </div>
-                </div>
-
-                <div className={styles.statCard}>
-                    <div className={`${styles.statIcon} ${styles.iconGreen}`}>
-                        <Activity size={24} />
-                    </div>
-                    <div className={styles.statInfo}>
-                        <p className={styles.statValue}>892</p>
-                        <p className={styles.statLabel}>Активны за 24ч</p>
+                        <p className={styles.statValue}>{users.filter(u => isBlocked(u)).length}</p>
+                        <p className={styles.statLabel}>Заблокировано</p>
                     </div>
                 </div>
             </div>
 
             <section className={styles.managementSection}>
-                <h2 className={styles.sectionTitle}>
-                    <Settings size={20} />
-                    Управление ролями
-                </h2>
-                
+                <div className={styles.tableToolbar}>
+                    <div className={styles.searchWrapper}>
+                        <Search size={18} />
+                        <input 
+                            type="text" 
+                            placeholder="Поиск по email или имени..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+
                 <table className={styles.usersTable}>
                     <thead>
                         <tr>
                             <th>Пользователь</th>
                             <th>Роль</th>
-                            <th>Последняя активность</th>
-                            <th>Действия</th>
+                            <th>Статус</th>
+                            <th className={styles.actionsCell}>Действия</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {mockUsers.map(u => (
-                            <tr key={u.id}>
+                        {filteredUsers.map(user => (
+                            <tr key={user.id}>
                                 <td>
                                     <div className={styles.userCell}>
-                                        <img src={`https://ui-avatars.com/api/?name=${u.name}&background=random`} alt="" className={styles.avatar} />
+                                        <img 
+                                            src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.firstname}`} 
+                                            alt={user.firstname} 
+                                            className={styles.avatar}
+                                        />
                                         <div>
-                                            <p className={styles.userName}>{u.name}</p>
-                                            <p className={styles.userEmail}>{u.email}</p>
+                                            <span className={styles.userName}>{user.firstname} {user.lastname}</span>
+                                            <span className={styles.userEmail}>{user.email}</span>
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span className={`${styles.roleBadge} ${
-                                        u.role === 'ADMIN' ? styles.roleAdmin :
-                                        u.role === 'MODERATOR' ? styles.roleModerator :
-                                        styles.roleUser
-                                    }`}>
-                                        {u.role}
-                                    </span>
+                                    <select 
+                                        className={styles.roleSelect}
+                                        value={user.role}
+                                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                    >
+                                        <option value="USER">USER</option>
+                                        <option value="MODERATOR">MODERATOR</option>
+                                        <option value="ADMIN">ADMIN</option>
+                                    </select>
                                 </td>
                                 <td>
-                                    <span style={{ color: 'var(--text-secondary)' }}>{u.lastActive}</span>
+                                    {isBlocked(user) ? (
+                                        <span className={`${styles.roleBadge} ${styles.roleAdmin}`}>
+                                            <ShieldAlert size={12} /> Заблокирован
+                                        </span>
+                                    ) : (
+                                        <span className={`${styles.roleBadge} ${styles.roleModerator}`}>
+                                            <ShieldCheck size={12} /> Активен
+                                        </span>
+                                    )}
                                 </td>
-                                <td>
-                                    <div className={styles.actionsCell}>
-                                        {u.role !== 'ADMIN' && (
-                                            <button className={styles.actionBtn} title="Повысить до модератора">
-                                                <UserPlus size={16} />
-                                            </button>
-                                        )}
-                                        <button className={styles.actionBtn}>
-                                            <MoreVertical size={16} />
+                                <td className={styles.actionsCell}>
+                                    {isBlocked(user) ? (
+                                        <button 
+                                            className={styles.actionBtn}
+                                            onClick={() => handleUnblock(user.id)}
+                                            title="Разблокировать"
+                                        >
+                                            <Unlock size={18} />
                                         </button>
-                                    </div>
+                                    ) : (
+                                        <div className={styles.blockActions}>
+                                            <div className={styles.blockPresets}>
+                                                <button onClick={() => handleBlock(user.id, 1)}>1м</button>
+                                                <button onClick={() => handleBlock(user.id, 15)}>15м</button>
+                                                <button onClick={() => handleBlock(user.id, 30)}>30м</button>
+                                                <button onClick={() => handleBlock(user.id, 60)}>60м</button>
+                                            </div>
+                                            <Clock size={16} />
+                                        </div>
+                                    )}
                                 </td>
                             </tr>
                         ))}

@@ -13,9 +13,13 @@ export const apiClient = axios.create({
 });
 
 // Helper to get client for specific service
-export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION') => {
+export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION' | 'CHAT') => {
+  let baseURL = API_URL;
+  if (service === 'INTERACTION') baseURL = `${API_URL}/interactions`;
+  if (service === 'CHAT') baseURL = `${API_URL}/chat`;
+
   const instance = axios.create({
-    baseURL: service === 'INTERACTION' ? `${API_URL}/interactions` : API_URL,
+    baseURL,
     timeout: 5000,
     headers: {
       'Content-Type': 'application/json',
@@ -58,12 +62,22 @@ export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERAC
   instance.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
+      const status = error.response?.status;
+      const data = error.response?.data;
+
+      if (status === 401) {
         localStorage.removeItem('token');
-        // Avoid redirect loop if we're already on login/register
         if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
           window.location.href = '/login';
         }
+      } else if (status === 403 && data?.status === 'BANNED') {
+          // Instant logout and show ban info
+          localStorage.removeItem('token');
+          localStorage.setItem('ban_info', JSON.stringify({
+              blockedUntil: data.blockedUntil,
+              message: data.message
+          }));
+          window.location.href = '/login?banned=true';
       }
       return Promise.reject(error);
     }

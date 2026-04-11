@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import styles from './Login.module.css';
 import LanguageSelector from '../components/LanguageSelector';
+import BannedModal from '../components/BannedModal';
 
 const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -12,6 +13,24 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // Ban modal state
+    const [isBannedModalOpen, setIsBannedModalOpen] = useState(false);
+    const [blockedUntil, setBlockedUntil] = useState('');
+
+    React.useEffect(() => {
+        if (searchParams.get('banned') === 'true') {
+            const banInfoRaw = localStorage.getItem('ban_info');
+            if (banInfoRaw) {
+                const banInfo = JSON.parse(banInfoRaw);
+                setBlockedUntil(banInfo.blockedUntil);
+                setIsBannedModalOpen(true);
+                // Clean up to avoid showing it on manual refresh later
+                localStorage.removeItem('ban_info');
+            }
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,6 +125,12 @@ const Login: React.FC = () => {
                     </Link>
                 </p>
             </div>
+            
+            <BannedModal 
+                isOpen={isBannedModalOpen} 
+                onClose={() => setIsBannedModalOpen(false)} 
+                blockedUntil={blockedUntil} 
+            />
         </div>
     );
 };

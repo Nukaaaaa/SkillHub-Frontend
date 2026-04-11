@@ -51,7 +51,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ content, onChange, plac
             }),
         ],
         editorProps: {
-            handlePaste: (view, event) => {
+            handlePaste: (_view, event) => {
                 const text = event.clipboardData?.getData('text/plain');
                 if (text && (text.includes('# ') || text.includes('## ') || text.includes('### '))) {
                     // Very simple markdown-to-html conversion for headers on paste

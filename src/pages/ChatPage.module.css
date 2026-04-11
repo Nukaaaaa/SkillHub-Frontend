@@ -32,8 +32,15 @@
 .sidebarHeader h2 {
     font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin: 0;
     color: #1e293b;
+}
+
+.headerTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .searchBox {
@@ -379,15 +386,119 @@
     margin-bottom: 0.5rem;
 }
 
-@media (max-width: 768px) {
-    .sidebar {
-        width: 80px;
-    }
-    .chatHeader, .chatPreview, .sidebarHeader h2, .searchBox input, .searchBox svg {
-        display: none;
-    }
-    .chatItem {
-        padding: 0.75rem;
-        justify-content: center;
-    }
+.logoutBtn {
+    padding: 0.5rem;
+    background-color: #fee2e2;
+    color: #ef4444;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-left: 0.5rem;
+}
+
+.logoutBtn:hover {
+    background-color: #fecaca;
+    transform: scale(1.05);
+}
+
+.searchingSpin {
+    position: absolute;
+    right: 1rem;
+    animation: spin 1s linear infinite;
+    color: #4f46e5;
+}
+
+.searchResults {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.resultsLabel {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0.5rem;
+}
+
+.searchResultItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #f1f5f9;
+}
+
+.searchResultItem:hover {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.avatarTiny {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+}
+
+.searchInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.searchName {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.searchEmail {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.addFriendBtn {
+    background: #f1f5f9;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    color: #4f46e5;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.addFriendBtn:hover {
+    background: #eef2ff;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.searchResultItem:hover .addFriendBtn {
+    opacity: 0.9;
+}
+
+.noResults {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-style: italic;
 }

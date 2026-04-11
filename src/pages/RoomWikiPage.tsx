@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useOutletContext } from 'react-router-dom';
+=======
+import { useParams } from 'react-router-dom';
+>>>>>>> 7c7841a (new method admin)
 import {
     Search,
     History,

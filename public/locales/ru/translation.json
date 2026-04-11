@@ -89,6 +89,7 @@
         "githubUrl": "GitHub Профиль",
         "githubPlaceholder": "github.com/ваш_логин",
         "changeAvatar": "Изменить аватар",
+        "uploadAvatar": "Загрузить аватар",
         "tabs": {
             "publications": "Публикации",
             "achievements": "Достижения",

@@ -158,11 +158,6 @@ const ProfilePage: React.FC = () => {
     const effectiveDirId = profileUser?.selectedDirectionId || (savedDirId ? Number(savedDirId) : null);
     const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
 
-    // Mock contribution data restored for premium look
-    const seed = profileUser?.id || 1;
-    const contributionData = Array.from({ length: 52 }, (_, i) =>
-        Array.from({ length: 7 }, (_, j) => ((seed + i + j) % 5 === 0 ? Math.floor(((seed + i * j) % 3) + 1) : 0))
-    );
 
     // Derived stats
     const reputation = (profileUser?.stats?.points || 0);

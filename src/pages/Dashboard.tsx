@@ -48,7 +48,10 @@ const Dashboard: React.FC = () => {
         fetchDirections();
     }, []);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7c7841a (new method admin)
     const handleConfirm = () => {
         if (!selectedId) return;
         const selectedDir = directions.find(d => d.id === selectedId);

@@ -7,57 +7,57 @@ import {
     Video, 
     Paperclip, 
     Smile, 
-    User,
-    CheckCheck
+    User as UserIcon,
+    CheckCheck,
+    Loader2,
+    WifiOff,
+    LogOut,
+    UserPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { chatService, type Message } from '../api/chatService';
+import { userService } from '../api/userService';
+import { useWebSocket } from '../hooks/useWebSocket';
+import type { User } from '../types';
+import { useChatStore, type EnrichedChat } from '../store/chatStore';
 import styles from './ChatPage.module.css';
 
-interface Message {
-    id: number;
-    senderId: number;
-    text: string;
-    time: string;
-    isOwn: boolean;
-}
-
-interface Chat {
-    id: number;
-    name: string;
-    avatar: string;
-    lastMessage: string;
-    time: string;
-    unread: number;
-    online: boolean;
-    role: string;
-}
-
 const ChatPage: React.FC = () => {
-    const { user: currentUser } = useAuth();
-    const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-    const [messages, setMessages] = useState<Message[]>([]);
+    const { user: currentUser, token } = useAuth();
+    const { 
+        chats, 
+        selectedChat, 
+        messages, 
+        loading, 
+        fetchChats, 
+        setSelectedChat, 
+        addMessage,
+        addChat
+    } = useChatStore();
+
     const [inputValue, setInputValue] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { logout } = useAuth();
 
-    const mockChats: Chat[] = [
-        { id: 1, name: 'Александр Иванов', avatar: 'https://i.pravatar.cc/150?u=alex', lastMessage: 'Слушай, а как там с дедлайном по бэкенду?', time: '14:20', unread: 2, online: true, role: 'Senior Developer' },
-        { id: 2, name: 'Мария Петрова', avatar: 'https://i.pravatar.cc/150?u=maria', lastMessage: 'Дизайн комнаты просто пушка!', time: 'Вчера', unread: 0, online: false, role: 'UX Designer' },
-        { id: 3, name: 'SkillHub AI', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=SkillHub', lastMessage: 'Я проанализировал вашу статью, есть 2 правки.', time: '10:05', unread: 1, online: true, role: 'AI Assistant' }
-    ];
-
-    const mockHistory: Record<number, Message[]> = {
-        1: [
-            { id: 1, senderId: 1, text: 'Привет! Как дела с проектом?', time: '14:00', isOwn: false },
-            { id: 2, senderId: 0, text: 'Привет, Саш! Всё круто, внедряю чат сейчас.', time: '14:15', isOwn: true },
-            { id: 3, senderId: 1, text: 'Слушай, а как там с дедлайном по бэкенду?', time: '14:20', isOwn: false }
-        ]
-    };
+    // WebSocket connection
+    const wsUrl = `ws://127.0.0.1:8080/api/chat/ws?token=${token}`;
+    const { status, sendMessage } = useWebSocket(wsUrl, {
+        shouldConnect: !!token,
+        onMessage: (msg: Message) => {
+            addMessage(msg);
+        }
+    });
 
     useEffect(() => {
-        if (selectedChat) {
-            setMessages(mockHistory[selectedChat.id] || []);
+        if (currentUser) {
+            fetchChats();
         }
-    }, [selectedChat]);
+    }, [currentUser, fetchChats]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -66,31 +66,110 @@ const ChatPage: React.FC = () => {
     const handleSendMessage = () => {
         if (!inputValue.trim() || !selectedChat) return;
 
-        const newMessage: Message = {
-            id: Date.now(),
-            senderId: currentUser?.id || 0,
-            text: inputValue,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isOwn: true
-        };
+        const success = sendMessage({
+            chat_id: selectedChat.chat_id,
+            text: inputValue
+        });
 
-        setMessages([...messages, newMessage]);
-        setInputValue('');
-
-        // Mock auto-reply for AI
-        if (selectedChat.id === 3) {
-            setTimeout(() => {
-                const reply: Message = {
-                    id: Date.now() + 1,
-                    senderId: 3,
-                    text: 'Принято! Я изучу ваш запрос.',
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    isOwn: false
-                };
-                setMessages(prev => [...prev, reply]);
-            }, 1000);
+        if (success) {
+            setInputValue('');
         }
     };
+
+    const handleSearch = async (query: string) => {
+        setSearchQuery(query);
+        if (!query.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const results = await userService.searchUsers(query);
+            // Filter out current user
+            setSearchResults(results.filter(u => u.id !== currentUser?.id));
+        } catch (error) {
+            console.error('Search failed:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleAddFriend = async (e: React.MouseEvent, friendId: number) => {
+        e.stopPropagation(); // Prevent opening chat
+        try {
+            await userService.sendFriendRequest(friendId);
+            alert('Заявка в друзья отправлена!');
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Ошибка при отправке заявки');
+        }
+    };
+
+    const handleSelectSearchResult = async (targetUser: User) => {
+        try {
+            // 1. Create or get existing chat
+            const newChat = await chatService.createChat(targetUser.id);
+            
+            // 2. Enrich it
+            const enriched: EnrichedChat = { ...newChat, user: targetUser };
+            
+            // 3. Add to store
+            addChat(enriched);
+
+            // 4. Select it and clear search
+            setSelectedChat(enriched);
+            setSearchQuery('');
+            setSearchResults([]);
+        } catch (error) {
+            console.error('Failed to start chat:', error);
+        }
+    };
+
+    const handleFileClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedChat) return;
+
+        setIsUploading(true);
+        try {
+            const { file_url } = await chatService.uploadFile(file);
+            
+            // Send message with file
+            sendMessage({
+                chat_id: selectedChat.chat_id,
+                text: file.type.startsWith('image/') ? '' : `Файл: ${file.name}`,
+                file_url: file_url
+            });
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Ошибка при загрузке файла');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const getInitials = (user: User) => {
+        return `${user.firstname?.[0] || ''}${user.lastname?.[0] || ''}` || 'UN';
+    };
+
+    const getFullUrl = (url?: string) => {
+        if (!url) return null;
+        if (url.startsWith('http')) return url;
+        return `http://127.0.0.1:8080${url}`;
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.centered}>
+                <Loader2 className={styles.spin} size={48} />
+                <p>Загрузка чатов...</p>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.chatContainer}>
@@ -98,36 +177,94 @@ const ChatPage: React.FC = () => {
                 {/* Conversations Sidebar */}
                 <aside className={styles.sidebar}>
                     <div className={styles.sidebarHeader}>
-                        <h2>Чаты</h2>
+                        <div className={styles.headerTop}>
+                            <h2>Чаты</h2>
+                            <div className={styles.headerActions}>
+                                {status !== 'open' && (
+                                    <WifiOff size={16} color="#ef4444" />
+                                )}
+                                <button className={styles.logoutBtn} onClick={logout} title="Выйти">
+                                    <LogOut size={18} />
+                                </button>
+                            </div>
+                        </div>
                         <div className={styles.searchBox}>
                             <Search size={16} />
-                            <input type="text" placeholder="Поиск диалогов..." />
+                            <input 
+                                type="text" 
+                                placeholder="Поиск пользователей..." 
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                            {isSearching && <Loader2 className={styles.searchingSpin} size={14} />}
                         </div>
                     </div>
                     
                     <div className={styles.chatList}>
-                        {mockChats.map(chat => (
-                            <div 
-                                key={chat.id} 
-                                className={`${styles.chatItem} ${selectedChat?.id === chat.id ? styles.activeChat : ''}`}
-                                onClick={() => setSelectedChat(chat)}
-                            >
-                                <div className={styles.avatarWrapper}>
-                                    <img src={chat.avatar} alt={chat.name} className={styles.avatar} />
-                                    {chat.online && <div className={styles.onlineStatus} />}
-                                </div>
-                                <div className={styles.chatInfo}>
-                                    <div className={styles.chatHeader}>
-                                        <span className={styles.chatName}>{chat.name}</span>
-                                        <span className={styles.chatTime}>{chat.time}</span>
-                                    </div>
-                                    <div className={styles.chatPreview}>
-                                        <p>{chat.lastMessage}</p>
-                                        {chat.unread > 0 && <span className={styles.unreadBadge}>{chat.unread}</span>}
-                                    </div>
-                                </div>
+                        {searchQuery.trim() ? (
+                            <div className={styles.searchResults}>
+                                <p className={styles.resultsLabel}>Результаты поиска</p>
+                                {searchResults.length > 0 ? (
+                                    searchResults.map(u => (
+                                            <div 
+                                                key={u.id} 
+                                                className={styles.searchResultItem}
+                                                onClick={() => handleSelectSearchResult(u)}
+                                            >
+                                                <img 
+                                                    src={getFullUrl(u.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${u.firstname}`} 
+                                                    alt={u.firstname} 
+                                                    className={styles.avatarTiny} 
+                                                />
+                                                <div className={styles.searchInfo}>
+                                                    <span className={styles.searchName}>{u.firstname} {u.lastname}</span>
+                                                    <span className={styles.searchEmail}>{u.email}</span>
+                                                </div>
+                                                <button 
+                                                    className={styles.addFriendBtn}
+                                                    onClick={(e) => handleAddFriend(e, u.id)}
+                                                    title="Добавить в друзья"
+                                                >
+                                                    <UserPlus size={16} />
+                                                </button>
+                                            </div>
+                                    ))
+                                ) : (
+                                    <p className={styles.noResults}>Ничего не найдено</p>
+                                )}
                             </div>
-                        ))}
+                        ) : chats.length > 0 ? (
+                            chats.map(chat => (
+                                <div 
+                                    key={chat.chat_id} 
+                                    className={`${styles.chatItem} ${selectedChat?.chat_id === chat.chat_id ? styles.activeChat : ''}`}
+                                    onClick={() => setSelectedChat(chat)}
+                                >
+                                    <div className={styles.avatarWrapper}>
+                                        <img 
+                                            src={getFullUrl(chat.user.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${getInitials(chat.user)}`} 
+                                            alt={chat.user.firstname} 
+                                            className={styles.avatar} 
+                                        />
+                                        <div className={`${styles.onlineStatus} ${styles.online}`} />
+                                    </div>
+                                    <div className={styles.chatInfo}>
+                                        <div className={styles.chatHeader}>
+                                            <span className={styles.chatName}>{chat.user.firstname} {chat.user.lastname}</span>
+                                            <span className={styles.chatTime}>
+                                                {chat.last_message ? new Date(chat.last_message.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                                            </span>
+                                        </div>
+                                        <div className={styles.chatPreview}>
+                                            <p>{chat.last_message?.text || 'Нет сообщений'}</p>
+                                            {chat.unread_count > 0 && <span className={styles.unreadBadge}>{chat.unread_count}</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className={styles.emptyState}>Чатов пока нет</div>
+                        )}
                     </div>
                 </aside>
 
@@ -137,10 +274,14 @@ const ChatPage: React.FC = () => {
                         <>
                             <header className={styles.windowHeader}>
                                 <div className={styles.headerUser}>
-                                    <img src={selectedChat.avatar} alt={selectedChat.name} className={styles.avatarSmall} />
+                                    <img 
+                                        src={getFullUrl(selectedChat.user.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${getInitials(selectedChat.user)}`} 
+                                        alt={selectedChat.user.firstname} 
+                                        className={styles.avatarSmall} 
+                                    />
                                     <div className={styles.userDetails}>
-                                        <h3>{selectedChat.name}</h3>
-                                        <span>{selectedChat.online ? 'В сети' : 'Был недавно'} • {selectedChat.role}</span>
+                                        <h3>{selectedChat.user.firstname} {selectedChat.user.lastname}</h3>
+                                        <span>{selectedChat.user.role || 'Пользователь'}</span>
                                     </div>
                                 </div>
                                 <div className={styles.headerActions}>
@@ -151,22 +292,55 @@ const ChatPage: React.FC = () => {
                             </header>
 
                             <div className={styles.messagesList}>
-                                {messages.map(msg => (
-                                    <div key={msg.id} className={`${styles.messageWrapper} ${msg.isOwn ? styles.ownMessage : styles.theirMessage}`}>
-                                        <div className={styles.messageBubble}>
-                                            <p>{msg.text}</p>
-                                            <div className={styles.messageMeta}>
-                                                <span>{msg.time}</span>
-                                                {msg.isOwn && <CheckCheck size={14} />}
+                                {messages.map(msg => {
+                                    const fullFileUrl = getFullUrl(msg.file_url);
+
+                                    return (
+                                        <div key={msg.id} className={`${styles.messageWrapper} ${msg.sender_id === currentUser?.id ? styles.ownMessage : styles.theirMessage}`}>
+                                            <div className={styles.messageBubble}>
+                                                {fullFileUrl ? (
+                                                    <div className={styles.messageAttachment}>
+                                                        {fullFileUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                                                            <img 
+                                                                src={fullFileUrl} 
+                                                                alt="Вложение" 
+                                                                className={styles.attachmentPreview} 
+                                                                onClick={() => window.open(fullFileUrl)} 
+                                                                style={{ cursor: 'pointer', maxWidth: '100%', borderRadius: '8px' }}
+                                                            />
+                                                        ) : (
+                                                            <a href={fullFileUrl} target="_blank" rel="noreferrer" className={styles.fileLink}>
+                                                                <Paperclip size={16} /> 📎 Посмотреть файл
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                ) : null}
+                                                {msg.text && <p>{msg.text}</p>}
+                                                <div className={styles.messageMeta}>
+                                                    <span>{new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                    {msg.sender_id === currentUser?.id && <CheckCheck size={14} color={msg.is_read ? '#3b82f6' : '#94a3b8'} />}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={messagesEndRef} />
                             </div>
 
                             <footer className={styles.inputArea}>
-                                <button className={styles.attachmentBtn}><Paperclip size={20} /></button>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    style={{ display: 'none' }} 
+                                    onChange={handleFileChange} 
+                                />
+                                <button 
+                                    className={styles.attachmentBtn} 
+                                    onClick={handleFileClick}
+                                    disabled={isUploading}
+                                >
+                                    {isUploading ? <Loader2 className={styles.spin} size={20} /> : <Paperclip size={20} />}
+                                </button>
                                 <div className={styles.inputWrapper}>
                                     <input 
                                         type="text" 
@@ -174,10 +348,15 @@ const ChatPage: React.FC = () => {
                                         value={inputValue}
                                         onChange={(e) => setInputValue(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        disabled={status !== 'open'}
                                     />
                                     <button className={styles.emojiBtn}><Smile size={20} /></button>
                                 </div>
-                                <button className={styles.sendBtn} onClick={handleSendMessage} disabled={!inputValue.trim()}>
+                                <button 
+                                    className={styles.sendBtn} 
+                                    onClick={handleSendMessage} 
+                                    disabled={!inputValue.trim() || status !== 'open'}
+                                >
                                     <Send size={20} />
                                 </button>
                             </footer>
@@ -185,7 +364,7 @@ const ChatPage: React.FC = () => {
                     ) : (
                         <div className={styles.noChatSelected}>
                             <div className={styles.noChatIllustration}>
-                                <User size={64} opacity={0.1} />
+                                <UserIcon size={64} opacity={0.1} />
                             </div>
                             <h3>Выберите диалог, чтобы начать общение</h3>
                             <p>Свяжитесь с коллегами или ИИ-ассистентом для решения задач.</p>

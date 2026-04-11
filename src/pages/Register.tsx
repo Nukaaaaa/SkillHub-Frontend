@@ -14,6 +14,8 @@ const Register: React.FC = () => {
     const [password, setPassword] = useState('');
     const [universite, setUniversite] = useState('');
     const [bio, setBio] = useState('');
+    const [avatar, setAvatar] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const { register } = useAuth();
@@ -30,7 +32,8 @@ const Register: React.FC = () => {
                 email,
                 password,
                 universite,
-                bio
+                bio,
+                avatar: avatar || undefined
             });
             toast.success(t('login.registerSuccess'), { id: loadingToast });
             navigate('/');
@@ -44,6 +47,18 @@ const Register: React.FC = () => {
     const handleSocialLogin = (provider: string) => {
         // Social login will be implemented with full OAuth flow
         console.log(`Social login initiated for ${provider}`);
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setAvatar(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     return (
@@ -116,6 +131,32 @@ const Register: React.FC = () => {
                     </div>
 
                     <form className={styles.form} onSubmit={handleSubmit}>
+                        <div className={styles.avatarUpload}>
+                            <div className={styles.avatarPreviewWrapper}>
+                                {avatarPreview ? (
+                                    <img src={avatarPreview} alt="Avatar preview" className={styles.avatarPreview} />
+                                ) : (
+                                    <div className={styles.avatarPlaceholder}>
+                                        <i className="fas fa-camera"></i>
+                                    </div>
+                                )}
+                                <label htmlFor="avatar-input" className={styles.uploadOverlay}>
+                                    <i className="fas fa-plus"></i>
+                                </label>
+                            </div>
+                            <div className={styles.avatarInfo}>
+                                <span className={styles.avatarLabel}>{t('profile.uploadAvatar') || 'Загрузить аватар'}</span>
+                                <p className={styles.avatarHint}>JPG, PNG или GIF (макс. 5MB)</p>
+                            </div>
+                            <input 
+                                id="avatar-input"
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleAvatarChange} 
+                                className={styles.hiddenInput}
+                            />
+                        </div>
+
                         <div className={styles.formRow}>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>{t('profile.name')}</label>

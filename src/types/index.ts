@@ -61,12 +61,14 @@ export interface User {
     universite?: string;
     bio?: string;
     role?: string;
-    status?: 'STUDENT' | 'MENTOR';
+    status?: 'STUDENT' | 'MENTOR' | 'ONLINE' | 'OFFLINE';
     skills: string[];
     skillLevels: SkillLevel[];
     avatar: string;
+    avatar_url?: string;
     isMentor: boolean;
     githubUrl?: string;
+    blocked_until?: string;
     selectedDirectionId?: number;
     selectedDirectionSlug?: string;
     stats?: {

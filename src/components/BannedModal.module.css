@@ -1,0 +1,89 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px 0;
+}
+
+.iconWrapper {
+    background-color: #fee2e2;
+    color: #dc2626;
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.heading {
+    margin: 0 0 10px 0;
+    color: #111827;
+    font-size: 1.5rem;
+}
+
+.message {
+    color: #4b5563;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.timerSection {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.timerLabel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+}
+
+.timerValue {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #111827;
+}
+
+.footer {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-bottom: 24px;
+}
+
+.button {
+    background-color: #111827;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.button:hover {
+    background-color: #374151;
+}

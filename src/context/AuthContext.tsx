@@ -18,6 +18,7 @@ interface AuthContextType {
         password: string;
         universite: string;
         bio: string;
+        avatar?: File;
     }) => Promise<boolean>;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
@@ -218,10 +219,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: string;
         universite: string;
         bio: string;
+        avatar?: File;
     }): Promise<boolean> => {
         try {
-            // 1. Регистрируем пользователя
-            const response = await userClient.post('/auth/register', userData);
+            // 1. Создаем FormData
+            const formData = new FormData();
+            formData.append('firstname', userData.firstname);
+            formData.append('lastname', userData.lastname);
+            formData.append('email', userData.email);
+            formData.append('password', userData.password);
+            formData.append('universite', userData.universite);
+            formData.append('bio', userData.bio);
+            if (userData.avatar) {
+                formData.append('avatar', userData.avatar);
+            }
+
+            // 2. Регистрируем пользователя
+            const response = await userClient.post('/auth/register', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             const { token: newToken } = response.data;
 
             if (!newToken) throw new Error('Token not returned');

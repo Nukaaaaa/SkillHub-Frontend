@@ -1,55 +1,64 @@
 .container {
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #0f172a;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    color: #e2e8f0;
 }
 
 .header {
-    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.headerIcon {
+    background: #1e3a8a;
+    color: #3b82f6;
+    padding: 12px;
+    border-radius: 12px;
 }
 
 .title {
-    font-size: 1.8rem;
+    font-size: 1.875rem;
     font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    color: #f1f5f9;
+    margin: 0;
 }
 
 .subtitle {
-    color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 4px 0 0 0;
 }
 
 .dashboardGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
 }
 
 .statCard {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
+    background: #1e293b;
+    padding: 24px;
+    border-radius: 12px;
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.statCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    align-items: center;
+    gap: 20px;
+    border: 1px solid #334155;
 }
 
 .statIcon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 12px;
 }
 
 .iconBlue {
@@ -57,51 +66,65 @@
     color: #3b82f6;
 }
 
+.iconRed {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
 .iconPurple {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
-}
-
-.iconGreen {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.statInfo {
-    flex: 1;
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
 }
 
 .statValue {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.2;
+    color: #f1f5f9;
+    margin: 0;
 }
 
 .statLabel {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0;
 }
 
 .managementSection {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    overflow: hidden;
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    padding: 24px;
 }
 
-.sectionTitle {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 1.5rem;
+.tableToolbar {
+    margin-bottom: 24px;
+}
+
+.searchWrapper {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 0 16px;
+    max-width: 400px;
+}
+
+.searchWrapper svg {
+    color: #94a3b8;
+}
+
+.searchWrapper input {
+    background: transparent;
+    border: none;
+    color: #f1f5f9;
+    padding: 12px;
+    width: 100%;
+}
+
+.searchWrapper input:focus {
+    outline: none;
 }
 
 .usersTable {
@@ -111,89 +134,139 @@
 
 .usersTable th {
     text-align: left;
-    padding: 1rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.9rem;
-    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    border-bottom: 2px solid #334155;
+    color: #94a3b8;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .usersTable td {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
+    padding: 16px;
+    border-bottom: 1px solid #334155;
     vertical-align: middle;
 }
 
 .userCell {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
 }
 
 .avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
+    background: #334155;
 }
 
 .userName {
-    font-weight: 500;
-    color: var(--text-primary);
+    display: block;
+    font-weight: 600;
+    color: #f1f5f9;
 }
 
 .userEmail {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+    display: block;
+    font-size: 0.8125rem;
+    color: #94a3b8;
 }
 
 .roleBadge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.8rem;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 600;
-    text-transform: uppercase;
 }
 
 .roleAdmin {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .roleModerator {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-.roleUser {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
+.roleSelect {
+    background: #0f172a;
+    color: #f1f5f9;
+    border: 1px solid #334155;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
 }
 
 .actionsCell {
+    text-align: right;
+}
+
+.blockActions {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.blockPresets {
+    display: flex;
+    gap: 4px;
+}
+
+.blockPresets button {
+    background: #334155;
+    border: none;
+    color: #e2e8f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.blockPresets button:hover {
+    background: #ef4444;
 }
 
 .actionBtn {
-    padding: 0.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-secondary);
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .actionBtn:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+    background: #2563eb;
 }
 
-.emptyState {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: var(--text-secondary);
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 16px;
+    color: #94a3b8;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
