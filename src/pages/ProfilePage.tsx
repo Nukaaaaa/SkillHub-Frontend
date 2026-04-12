@@ -53,14 +53,23 @@ const ProfilePage: React.FC = () => {
         avatarInputRef.current?.click();
     };
 
-    const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && isOwnProfile) {
+            // 1. Instant preview
             const reader = new FileReader();
-            reader.onloadend = () => {
+            reader.onloadend = async () => {
                 const base64String = reader.result as string;
+                // Temporarily show base64
                 updateUser({ avatar: base64String });
-                toast.success(t('settings.profileUpdated'));
+                
+                try {
+                    // 2. Real upload in background
+                    await updateUser({ avatarFile: file });
+                    toast.success(t('settings.profileUpdated'));
+                } catch (err) {
+                    toast.error(t('common.error'));
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -106,9 +115,15 @@ const ProfilePage: React.FC = () => {
 
                 // Always fetch from API to get full data (bio, stats, etc.)
                 const userData = await userService.getUserById(targetId);
-                setProfileUser(userData);
+                
+                // If it's our own profile, merge with latest context data (includes local avatar/github)
+                const finalUser = (targetId === currentUser?.id) 
+                    ? { ...userData, ...currentUser } 
+                    : userData;
+                    
+                setProfileUser(finalUser);
 
-                if (userData) {
+                if (finalUser) {
                     const [userArticles, userPosts, allDirections] = await Promise.all([
                         contentService.getArticlesByUser(userData.id).catch(() => []),
                         contentService.getPostsByUser(userData.id).catch(() => []),
@@ -133,25 +148,18 @@ const ProfilePage: React.FC = () => {
             }
         };
         fetchData();
-    }, [id, currentUser?.id, isOwnProfile]);
-
-    // This effect ensures that if the currentUser (managed by AuthContext) updates 
-    // (e.g., avatar uploaded or info edited), the profileUser state reflects it immediately.
-    useEffect(() => {
-        if (isOwnProfile && currentUser) {
-            setProfileUser(prev => {
-                // Only update if there's actually a change to avoid unnecessary re-renders
-                if (JSON.stringify(prev) !== JSON.stringify(currentUser)) {
-                    return currentUser;
-                }
-                return prev;
-            });
-        }
-    }, [currentUser, isOwnProfile]);
+    }, [id, currentUser?.id, currentUser?.avatar, currentUser?.name]);
 
     const isOwnProfile = !id || Number(id) === currentUser?.id;
 
     // Helper for displaying user name
+    const getFullUrl = (url?: string) => {
+        if (!url) return null;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
+        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
+    };
+
     const getDisplayName = (u: User | null) => {
         if (!u) return 'User';
         if (u.firstname || u.lastname) {
@@ -201,8 +209,8 @@ const ProfilePage: React.FC = () => {
                             />
                         </div>
                         <div className={styles.cardBody}>
-                             <img
-                                src={profileUser?.avatar || (isOwnProfile && currentUser?.avatar) || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
+                            <img
+                                src={getFullUrl(profileUser?.avatar) || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
                                 className={styles.profileAvatar}
                                 alt="avatar"
                             />

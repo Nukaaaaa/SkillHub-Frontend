@@ -152,14 +152,17 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const getInitials = (user: User) => {
-        return `${user.firstname?.[0] || ''}${user.lastname?.[0] || ''}` || 'UN';
-    };
+
 
     const getFullUrl = (url?: string) => {
         if (!url) return null;
-        if (url.startsWith('http')) return url;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
         return `http://127.0.0.1:8080${url}`;
+    };
+
+    const getUserAvatar = (u: User): string => {
+        const avatar = (u.id === currentUser?.id) ? currentUser?.avatar : (u.avatar || u.avatar_url);
+        return (avatar ? getFullUrl(avatar) : null) || `https://ui-avatars.com/api/?name=${u.firstname || u.name}&background=4f46e5&color=fff&size=128`;
     };
 
     if (loading) {
@@ -212,7 +215,7 @@ const ChatPage: React.FC = () => {
                                                 onClick={() => handleSelectSearchResult(u)}
                                             >
                                                 <img 
-                                                    src={getFullUrl(u.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${u.firstname}`} 
+                                                    src={getUserAvatar(u)} 
                                                     alt={u.firstname} 
                                                     className={styles.avatarTiny} 
                                                 />
@@ -242,7 +245,7 @@ const ChatPage: React.FC = () => {
                                 >
                                     <div className={styles.avatarWrapper}>
                                         <img 
-                                            src={getFullUrl(chat.user.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${getInitials(chat.user)}`} 
+                                            src={getUserAvatar(chat.user)} 
                                             alt={chat.user.firstname} 
                                             className={styles.avatar} 
                                         />
@@ -275,7 +278,7 @@ const ChatPage: React.FC = () => {
                             <header className={styles.windowHeader}>
                                 <div className={styles.headerUser}>
                                     <img 
-                                        src={getFullUrl(selectedChat.user.avatar_url) || `https://api.dicebear.com/7.x/initials/svg?seed=${getInitials(selectedChat.user)}`} 
+                                        src={getUserAvatar(selectedChat.user)} 
                                         alt={selectedChat.user.firstname} 
                                         className={styles.avatarSmall} 
                                     />

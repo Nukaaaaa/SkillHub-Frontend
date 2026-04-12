@@ -21,11 +21,27 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
         bio: user?.bio || '',
         universite: user?.universite || '',
         avatar: user?.avatar || '',
-        githubUrl: user?.githubUrl || ''
+        githubUrl: user?.githubUrl || '',
+        avatarFile: undefined as File | undefined
     });
 
     const [isSaving, setIsSaving] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(user?.avatar || null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        if (isOpen && user) {
+            setFormData({
+                firstname: user.firstname || '',
+                lastname: user.lastname || '',
+                bio: user.bio || '',
+                universite: user.universite || '',
+                avatar: user.avatar || '',
+                githubUrl: user.githubUrl || '',
+                avatarFile: undefined
+            });
+            setPreviewUrl(user.avatar || null);
+        }
+    }, [isOpen, user]);
 
     if (!isOpen || !user) return null;
 
@@ -36,10 +52,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
             reader.onloadend = () => {
                 const base64String = reader.result as string;
                 setPreviewUrl(base64String);
-                setFormData(prev => ({ ...prev, avatar: base64String }));
+                setFormData(prev => ({ ...prev, avatarFile: file }));
             };
             reader.readAsDataURL(file);
         }
+    };
+
+    const getFullUrl = (url?: string | null) => {
+        if (!url) return null;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
+        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +94,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
                     <div className={styles.avatarSection}>
                         <div className={styles.avatarPreviewContainer}>
                             <img
-                                src={previewUrl || `https://ui-avatars.com/api/?name=${user.name}&background=4f46e5&color=fff&size=256`}
+                                src={getFullUrl(previewUrl) || `https://ui-avatars.com/api/?name=${user.name}&background=4f46e5&color=fff&size=256`}
                                 alt="Avatar preview"
                                 className={styles.avatarPreview}
                             />

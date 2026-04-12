@@ -21,7 +21,7 @@ interface AuthContextType {
         avatar?: File;
     }) => Promise<boolean>;
     logout: () => void;
-    updateUser: (userData: Partial<User>) => void;
+    updateUser: (userData: Partial<User> & { avatarFile?: File }) => Promise<void>;
     resetToDefaults: () => void;
     selectDirection: (id: number, slug: string) => Promise<void>;
     isAuthenticated: boolean;
@@ -286,20 +286,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setJoinedRoomIds([]);
     };
 
-    const updateUser = async (userData: Partial<User>) => {
+    const updateUser = async (userData: Partial<User> & { avatarFile?: File }) => {
         if (!user) return;
 
         console.log('Starting profile update with data:', userData);
 
-        // Handle avatar and github locally
-        if (userData.avatar) {
+        let avatarUrl = user.avatar;
+
+        // 1. If there's a file, upload it to MinIO first
+        if (userData.avatarFile) {
+            try {
+                console.log('Uploading new avatar to MinIO...');
+                const result = await userService.uploadAvatar(userData.avatarFile);
+                avatarUrl = result.avatar_url;
+                console.log('New avatar URL from server:', avatarUrl);
+                
+                // Cache locally for instant use
+                localStorage.setItem(`user_avatar_${user.id}`, avatarUrl);
+            } catch (error) {
+                console.error('Failed to upload avatar to MinIO:', error);
+                // Continue with other updates if avatar fails? Or throw?
+                // For now, continue but log error.
+            }
+        } else if (userData.avatar && userData.avatar.startsWith('data:')) {
+            // Fallback: if we got base64 but no File object, we could convert it
+            // but it's better to pass the File directly.
             localStorage.setItem(`user_avatar_${user.id}`, userData.avatar);
-        }
-        if (userData.githubUrl !== undefined) {
-            localStorage.setItem(`user_github_${user.id}`, userData.githubUrl || '');
+            avatarUrl = userData.avatar;
         }
 
-        const updatedUser = { ...user, ...userData };
+        // 2. Prepare user state update
+        const updatedUser = { 
+            ...user, 
+            ...userData, 
+            avatar: avatarUrl 
+        };
 
         // CRITICAL: Recalculate 'name' since the UI depends on it
         const newFirstname = userData.firstname || user.firstname;
@@ -309,13 +330,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Updating local user state to:', updatedUser);
         setUser(updatedUser);
 
-        // Sync non-avatar fields to backend
-        const { avatar, name, ...backendFields } = userData;
+        // 3. Sync non-avatar fields to backend (avatar URL is already synced by UploadAvatar endpoint)
+        const { avatar, avatarFile, name, ...backendFields } = userData;
         if (Object.keys(backendFields).length > 0) {
             try {
                 console.log('Syncing non-avatar fields with backend:', backendFields);
-                const response = await userService.updateUser(user.id, backendFields);
-                console.log('Backend sync successful, response:', response);
+                await userService.updateUser(user.id, backendFields);
             } catch (error) {
                 console.error('Failed to sync profile with backend:', error);
             }
