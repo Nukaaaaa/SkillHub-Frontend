@@ -133,7 +133,21 @@ const ProfilePage: React.FC = () => {
             }
         };
         fetchData();
-    }, [id, currentUser?.id]);
+    }, [id, currentUser?.id, isOwnProfile]);
+
+    // This effect ensures that if the currentUser (managed by AuthContext) updates 
+    // (e.g., avatar uploaded or info edited), the profileUser state reflects it immediately.
+    useEffect(() => {
+        if (isOwnProfile && currentUser) {
+            setProfileUser(prev => {
+                // Only update if there's actually a change to avoid unnecessary re-renders
+                if (JSON.stringify(prev) !== JSON.stringify(currentUser)) {
+                    return currentUser;
+                }
+                return prev;
+            });
+        }
+    }, [currentUser, isOwnProfile]);
 
     const isOwnProfile = !id || Number(id) === currentUser?.id;
 
@@ -187,8 +201,8 @@ const ProfilePage: React.FC = () => {
                             />
                         </div>
                         <div className={styles.cardBody}>
-                            <img
-                                src={profileUser?.avatar || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
+                             <img
+                                src={profileUser?.avatar || (isOwnProfile && currentUser?.avatar) || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
                                 className={styles.profileAvatar}
                                 alt="avatar"
                             />

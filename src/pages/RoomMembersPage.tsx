@@ -1,9 +1,5 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { useOutletContext } from 'react-router-dom';
-=======
-import { useParams } from 'react-router-dom';
->>>>>>> 7c7841a (new method admin)
 import { useTranslation } from 'react-i18next';
 import {
     Search,
@@ -15,11 +11,7 @@ import {
 
 import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
-<<<<<<< HEAD
 import type { UserRoom, User, Room } from '../types';
-=======
-import type { UserRoom, User } from '../types';
->>>>>>> 7c7841a (new method admin)
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
 

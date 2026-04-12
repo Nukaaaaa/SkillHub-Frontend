@@ -1,15 +1,7 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Search,
-=======
-import React, { useState } from 'react';
-import {
-    Search,
-    ChevronRight,
-    ExternalLink,
->>>>>>> 7c7841a (new method admin)
     TrendingUp,
     Star,
     Layout,
