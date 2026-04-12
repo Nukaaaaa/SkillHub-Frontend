@@ -531,3 +531,153 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ─── XP Level Card ─── */
+.xpLevelCard {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4f46e5 100%);
+    border-radius: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3);
+}
+
+.xpLevelHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.875rem;
+}
+
+.xpLevelBadge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+}
+
+.xpLevelTotal {
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 0.85;
+}
+
+.xpLevelTrack {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.xpLevelFill {
+    height: 100%;
+    background: linear-gradient(90deg, #a5b4fc, #ffffff);
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+.xpLevelSub {
+    font-size: 0.68rem;
+    opacity: 0.6;
+    text-align: right;
+}
+
+/* ─── Profile Activity Mini-Grid ─── */
+.profileActivityScroll {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.profileActivityGrid {
+    display: grid;
+    grid-template-columns: repeat(52, 11px);
+    gap: 2px;
+    min-width: max-content;
+}
+
+.profileWeekCol {
+    display: grid;
+    grid-template-rows: repeat(7, 11px);
+    gap: 2px;
+}
+
+.profileGridCell {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    transition: transform 0.1s;
+    cursor: default;
+}
+
+.profileGridCell:hover {
+    transform: scale(1.4);
+}
+
+/* ─── Achievement Mini Cards ─── */
+.emptyTabMsg {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.875rem;
+}
+
+.achievementsMiniGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.achievementMiniCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    cursor: default;
+}
+
+.achievementMiniCard:hover {
+    border-color: #c7d2fe;
+    transform: translateY(-2px);
+}
+
+.achievementUnlocked {
+    background: #f0f4ff;
+    border-color: #c7d2fe;
+}
+
+.achMiniProgress {
+    height: 5px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.achMiniProgressFill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.8s ease;
+}
+
+.achMiniName {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.achMiniCount {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #94a3b8;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -10,7 +10,8 @@ import {
     Heart,
     Bot,
     MessageSquare,
-    Trophy
+    Trophy,
+    Zap
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
@@ -18,6 +19,14 @@ import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { directionService } from '../api/directionService';
+import {
+    achievementService,
+    computeLevelData,
+    getActivityColor,
+    type UserStatsDto,
+    type UserActivityDto,
+    type UserProgressDto,
+} from '../api/achievementService';
 import Loader from '../components/Loader';
 import type { Article, Post, Direction, User } from '../types/index';
 import EditProfileModal from '../components/profile/EditProfileModal';
@@ -32,6 +41,73 @@ const DEFAULT_SKILLS = [
     { subject: 'QA', value: 20, fullMark: 100 },
     { subject: 'Soft Skills', value: 75, fullMark: 100 },
 ];
+
+// ─── Compact Activity Grid for Profile ───────────────────────────────────────
+interface ProfileActivityGridProps {
+    data: UserActivityDto[];
+}
+
+function buildActivityMap(data: UserActivityDto[]): Record<string, number> {
+    const map: Record<string, number> = {};
+    data.forEach((d) => (map[d.date] = d.count));
+    return map;
+}
+
+function getLastYearWeeks(): Date[] {
+    const weeks: Date[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay();
+    const lastSunday = new Date(today);
+    lastSunday.setDate(today.getDate() - dayOfWeek);
+    for (let w = 51; w >= 0; w--) {
+        const d = new Date(lastSunday);
+        d.setDate(lastSunday.getDate() - w * 7);
+        weeks.push(d);
+    }
+    return weeks;
+}
+
+function formatDate(d: Date): string {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+const ProfileActivityGrid: React.FC<ProfileActivityGridProps> = ({ data }) => {
+    const map = buildActivityMap(data);
+    const weeks = getLastYearWeeks();
+
+    return (
+        <div className={styles.profileActivityScroll}>
+            <div className={styles.profileActivityGrid}>
+                {weeks.map((weekStart, wi) => (
+                    <div key={wi} className={styles.profileWeekCol}>
+                        {Array.from({ length: 7 }).map((_, di) => {
+                            const day = new Date(weekStart);
+                            day.setDate(weekStart.getDate() + di);
+                            const dateStr = formatDate(day);
+                            const count = map[dateStr] ?? 0;
+                            const color = getActivityColor(count);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (day > today) return <div key={di} className={styles.profileGridCell} style={{ background: 'transparent' }} />;
+                            return (
+                                <div
+                                    key={di}
+                                    className={styles.profileGridCell}
+                                    style={{ background: color }}
+                                    title={`${dateStr}: ${count}`}
+                                />
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 const ProfilePage: React.FC = () => {
     const { user: currentUser, updateUser } = useAuth();
@@ -48,6 +124,11 @@ const ProfilePage: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [userSkills, setUserSkills] = useState(DEFAULT_SKILLS);
     const avatarInputRef = useRef<HTMLInputElement>(null);
+
+    // Achievement service state
+    const [xpStats, setXpStats] = useState<UserStatsDto | null>(null);
+    const [activityData, setActivityData] = useState<UserActivityDto[]>([]);
+    const [userAchievements, setUserAchievements] = useState<UserProgressDto[]>([]);
 
     const handleAvatarClick = () => {
         avatarInputRef.current?.click();
@@ -124,15 +205,31 @@ const ProfilePage: React.FC = () => {
                 setProfileUser(finalUser);
 
                 if (finalUser) {
-                    const [userArticles, userPosts, allDirections] = await Promise.all([
+                    const isOwn = targetId === currentUser?.id;
+                    const [userArticles, userPosts, allDirections, stats, activity, achievements] = await Promise.all([
                         contentService.getArticlesByUser(userData.id).catch(() => []),
                         contentService.getPostsByUser(userData.id).catch(() => []),
-                        directionService.getDirections().catch(() => [])
+                        directionService.getDirections().catch(() => []),
+                        (isOwn
+                            ? achievementService.getMyStats()
+                            : achievementService.getUserStats(targetId)
+                        ).catch(() => null),
+                        (isOwn
+                            ? achievementService.getMyActivity()
+                            : achievementService.getUserActivity(targetId)
+                        ).catch(() => []),
+                        (isOwn
+                            ? achievementService.getMyAchievements()
+                            : Promise.resolve([])
+                        ).catch(() => []),
                     ]);
 
                     setArticles(Array.isArray(userArticles) ? userArticles : []);
                     setPosts(Array.isArray(userPosts) ? userPosts : []);
                     setDirections(Array.isArray(allDirections) ? allDirections : []);
+                    setXpStats(stats);
+                    setActivityData(Array.isArray(activity) ? activity : []);
+                    setUserAchievements(Array.isArray(achievements) ? achievements : []);
                 }
             } catch (error) {
                 console.error('Failed to fetch user context:', error);
@@ -181,11 +278,12 @@ const ProfilePage: React.FC = () => {
     const currentDir = directions.find(d => Number(d.id) === Number(effectiveDirId));
 
 
-    // Derived stats
-    const reputation = (profileUser?.stats?.points || 0);
+    // Derived stats — prefer achievement service data if available
+    const reputation = xpStats?.reputation ?? (profileUser?.stats?.points || 0);
     const articlesCount = articles.length;
     const answersCount = (profileUser?.stats?.sessionsAttended || 0);
-    const awardsCount = 0; // Set to actual when implemented
+    const awardsCount = userAchievements.filter(a => a.isUnlocked).length;
+    const xpLevel = xpStats ? computeLevelData(xpStats.totalXp) : null;
 
     return (
         <div className={styles.profileContainer}>
@@ -310,15 +408,31 @@ const ProfilePage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Contribution Card placeholder */}
+                    {/* XP Level Bar */}
+                    {xpLevel && (
+                        <div className={styles.xpLevelCard}>
+                            <div className={styles.xpLevelHeader}>
+                                <span className={styles.xpLevelBadge}>
+                                    <Zap size={14} /> Уровень {xpLevel.level}
+                                </span>
+                                <span className={styles.xpLevelTotal}>{xpStats?.totalXp.toLocaleString()} XP</span>
+                            </div>
+                            <div className={styles.xpLevelTrack}>
+                                <div className={styles.xpLevelFill} style={{ width: `${xpLevel.progressPercent}%` }} />
+                            </div>
+                            <p className={styles.xpLevelSub}>{xpLevel.xpInLevel} / {xpLevel.xpPerLevel} XP до следующего уровня</p>
+                        </div>
+                    )}
+
+                    {/* Activity Contribution Grid */}
                     <div className={styles.contributionCard}>
                         <div className={styles.sectionHeader}>
                             <h3 className={styles.sectionTitle}>{t('profile.activity')}</h3>
-                            <span className={styles.sectionSubtitle}>0 {t('profile.contributionsYear')}</span>
+                            <span className={styles.sectionSubtitle}>
+                                {activityData.reduce((s, d) => s + d.count, 0)} {t('profile.contributionsYear')}
+                            </span>
                         </div>
-                        <div className={styles.contributionGrid} style={{ opacity: 0.1 }}>
-                            {/* Empty grid */}
-                        </div>
+                        <ProfileActivityGrid data={activityData} />
                     </div>
 
                     {/* Tabs & Content */}
@@ -402,10 +516,36 @@ const ProfilePage: React.FC = () => {
                                         ))}
                                     </>
                                 )
+                            ) : activeTab === 'achievements' ? (
+                                userAchievements.length === 0 ? (
+                                    <p className={styles.emptyTabMsg}>{t('common.noData')}</p>
+                                ) : (
+                                    <div className={styles.achievementsMiniGrid}>
+                                        {userAchievements.map((ach) => (
+                                            <div
+                                                key={ach.achievementId}
+                                                className={`${styles.achievementMiniCard} ${ach.isUnlocked ? styles.achievementUnlocked : ''}`}
+                                                title={ach.description}
+                                            >
+                                                <div className={styles.achMiniProgress}>
+                                                    <div
+                                                        className={styles.achMiniProgressFill}
+                                                        style={{
+                                                            width: `${Math.min(Math.round((ach.currentCount / ach.targetCount) * 100), 100)}%`,
+                                                            background: ach.isUnlocked
+                                                                ? 'linear-gradient(90deg, #6366f1, #4f46e5)'
+                                                                : '#c7d2fe',
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className={styles.achMiniName}>{ach.name}</span>
+                                                <span className={styles.achMiniCount}>{ach.currentCount}/{ach.targetCount}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
                             ) : (
-                                <p className="text-center py-8 text-gray-400 italic">
-                                    {activeTab === 'achievements' ? t('profile.tabs.achievements') : t('profile.tabs.bookmarks')}
-                                </p>
+                                <p className={styles.emptyTabMsg}>{t('common.noData')}</p>
                             )}
                         </div>
                     </div>
