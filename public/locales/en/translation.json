@@ -184,7 +184,10 @@
         "post": "Post",
         "writeHere": "Write here...",
         "whatsOnMind": "What's on your mind?",
-        "filterByTag": "Filter by tag"
+        "filterByTag": "Filter by tag",
+        "professionalArticles": "Professional Articles",
+        "articlesSubtitle": "Deep dives and tutorials from room members",
+        "writeArticle": "Write Article"
     },
     "notifications": {
         "liked": "Your content was liked",

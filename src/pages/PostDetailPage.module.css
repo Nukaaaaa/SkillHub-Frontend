@@ -37,8 +37,8 @@
 }
 
 .actionBtn {
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 0.75rem;
@@ -46,25 +46,36 @@
     align-items: center;
     justify-content: center;
     color: #64748b;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .actionBtn:hover {
     color: #4f46e5;
-    border-color: #4f46e5;
+    background: white;
+    border-color: #e2e8f0;
     transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .likeBtn {
     width: auto;
-    padding: 0 1rem;
-    gap: 0.5rem;
+    padding: 0 1.25rem;
+    gap: 0.625rem;
+}
+
+.likeBtn.liked {
+    color: #ef4444;
+    background: #fff1f2;
+    border-color: #fee2e2;
+}
+
+.likeBtn.liked:hover {
+    border-color: #fecaca;
 }
 
 .likeBtn span {
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .mainContent {

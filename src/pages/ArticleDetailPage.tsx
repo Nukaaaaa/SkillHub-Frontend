@@ -75,6 +75,7 @@ const ArticleDetailPage: React.FC = () => {
                 let currentRoom: Room | null = roomFromContext || null;
                 if (!currentRoom) {
                     try {
+                        // Use roomId from article if slug is not available
                         currentRoom = await roomService.getRoom(found.roomId.toString()).catch(() => null);
                         if (currentRoom) setRoom(currentRoom);
                     } catch (e) {
@@ -115,7 +116,7 @@ const ArticleDetailPage: React.FC = () => {
             const saved = bookmarks.some((b: any) => b.target_type === 'article' && b.target_id === Number(articleId));
             setIsBookmarked(saved);
 
-            const localLiked = localStorage.getItem(`liked_article_${articleId}`) === 'true';
+            const localLiked = user?.id ? localStorage.getItem(`liked_article_${user.id}_${articleId}`) === 'true' : false;
             setIsLiked(localLiked);
         } catch (e) {
             console.error('Failed to fetch interaction data', e);
@@ -138,7 +139,7 @@ const ArticleDetailPage: React.FC = () => {
             if (isLiked) {
                 await interactionService.removeLike('article', Number(articleId));
                 setLikes(prev => Math.max(0, prev - 1));
-                localStorage.removeItem(`liked_article_${articleId}`);
+                if (user?.id) localStorage.removeItem(`liked_article_${user.id}_${articleId}`);
                 setIsLiked(false);
             } else {
                 if (!article) return; // Add null check for lint
@@ -150,15 +151,15 @@ const ArticleDetailPage: React.FC = () => {
                     room?.directionId
                 );
                 setLikes(prev => prev + 1);
-                localStorage.setItem(`liked_article_${articleId}`, 'true');
+                if (user?.id) localStorage.setItem(`liked_article_${user.id}_${articleId}`, 'true');
                 setIsLiked(true);
             }
         } catch (e: any) {
             if (e.response?.status === 400 && !isLiked) {
-                localStorage.setItem(`liked_article_${articleId}`, 'true');
+                if (user?.id) localStorage.setItem(`liked_article_${user.id}_${articleId}`, 'true');
                 setIsLiked(true);
             } else if (e.response?.status === 400 && isLiked) {
-                localStorage.removeItem(`liked_article_${articleId}`);
+                if (user?.id) localStorage.removeItem(`liked_article_${user.id}_${articleId}`);
                 setIsLiked(false);
             } else {
                 toast.error(t('common.error') || 'Ошибка при лайке');
@@ -174,7 +175,12 @@ const ArticleDetailPage: React.FC = () => {
                 toast.success('Удалено из закладок');
                 setIsBookmarked(false);
             } else {
-                await interactionService.addBookmark('article', Number(articleId));
+                await interactionService.addBookmark(
+                    'article', 
+                    Number(articleId), 
+                    article?.userId, 
+                    room?.directionId
+                );
                 toast.success('Добавлено в закладки');
                 setIsBookmarked(true);
             }
@@ -344,8 +350,8 @@ const ArticleDetailPage: React.FC = () => {
                                 <BookOpen size={18} fill={isInWiki ? "currentColor" : "none"} />
                             </button>
                         )}
-                        <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
-                            <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />
+                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
+                            <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
                             <span>{likes}</span>
                         </button>
                     </div>

@@ -110,72 +110,74 @@ const RoomDetailPage: React.FC = () => {
     return (
         <div className={styles.contentContainer}>
             <div className={styles.leftColumn}>
-                <div className={styles.creationBox}>
-                    <div className={styles.creationHeader}>
-                        <img
-                            src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || 'User'}&background=random`}
-                            className={styles.userAvatarMain}
-                            alt="avatar"
-                        />
-                        <div className={styles.creationGreeting}>
-                            <h3>{t('rooms.createSomething') || `Что создадим, ${user?.firstname}?`}</h3>
-                            <p>{t('rooms.shareExpertise') || 'Поделитесь своим опытом или задайте вопрос сообществу'}</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.creationGrid}>
-                        <div
-                            className={styles.creationCard}
-                            onClick={() => {
-                                if (!isMember(room.id)) {
-                                    toast.error(t('rooms.joinRequiredToPost'));
-                                    return;
-                                }
-                                setPostModalType('POST');
-                                setIsPostModalOpen(true);
-                            }}
-                        >
-                            <div className={`${styles.cardIcon} ${styles.iconPost}`}>
-                                <Pencil size={24} />
+                {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                    <div className={styles.creationBox}>
+                        <div className={styles.creationHeader}>
+                            <img
+                                src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || 'User'}&background=random`}
+                                className={styles.userAvatarMain}
+                                alt="avatar"
+                            />
+                            <div className={styles.creationGreeting}>
+                                <h3>{t('rooms.createSomething') || `Что создадим, ${user?.firstname}?`}</h3>
+                                <p>{t('rooms.shareExpertise') || 'Поделитесь своим опытом или задайте вопрос сообществу'}</p>
                             </div>
-                            <span className={styles.cardTitle}>{t('rooms.post') || 'Пост'}</span>
-                            <span className={styles.cardDesc}>{t('rooms.postDesc') || 'Короткая мысль или новость'}</span>
                         </div>
 
-                        <div
-                            className={styles.creationCard}
-                            onClick={() => {
-                                if (!isMember(room.id)) {
-                                    toast.error(t('rooms.joinRequiredToPost'));
-                                    return;
-                                }
-                                setPostModalType('QUESTION');
-                                setIsPostModalOpen(true);
-                            }}
-                        >
-                            <div className={`${styles.cardIcon} ${styles.iconQuestion}`}>
-                                <HelpCircle size={24} />
+                        <div className={styles.creationGrid}>
+                            <div
+                                className={styles.creationCard}
+                                onClick={() => {
+                                    if (!isMember(room.id)) {
+                                        toast.error(t('rooms.joinRequiredToPost'));
+                                        return;
+                                    }
+                                    setPostModalType('POST');
+                                    setIsPostModalOpen(true);
+                                }}
+                            >
+                                <div className={`${styles.cardIcon} ${styles.iconPost}`}>
+                                    <Pencil size={24} />
+                                </div>
+                                <span className={styles.cardTitle}>{t('rooms.post') || 'Пост'}</span>
+                                <span className={styles.cardDesc}>{t('rooms.postDesc') || 'Короткая мысль или новость'}</span>
                             </div>
-                            <span className={styles.cardTitle}>{t('rooms.question') || 'Вопрос'}</span>
-                            <span className={styles.cardDesc}>{t('rooms.questionDesc') || 'Помощь экспертов'}</span>
+
+                            <div
+                                className={styles.creationCard}
+                                onClick={() => {
+                                    if (!isMember(room.id)) {
+                                        toast.error(t('rooms.joinRequiredToPost'));
+                                        return;
+                                    }
+                                    setPostModalType('QUESTION');
+                                    setIsPostModalOpen(true);
+                                }}
+                            >
+                                <div className={`${styles.cardIcon} ${styles.iconQuestion}`}>
+                                    <HelpCircle size={24} />
+                                </div>
+                                <span className={styles.cardTitle}>{t('rooms.question') || 'Вопрос'}</span>
+                                <span className={styles.cardDesc}>{t('rooms.questionDesc') || 'Помощь экспертов'}</span>
+                            </div>
+                        </div>
+
+                        <div className={styles.creationFooter}>
+                            <button
+                                className={styles.editorLinkPremium}
+                                onClick={() => {
+                                    if (!isMember(room.id)) {
+                                        toast.error(t('rooms.joinRequiredToArticle'));
+                                        return;
+                                    }
+                                    navigate(`/rooms/${room.slug}/articles/create`);
+                                }}
+                            >
+                                <span className={styles.editorLinkText}>{t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}</span>
+                            </button>
                         </div>
                     </div>
-
-                    <div className={styles.creationFooter}>
-                        <button
-                            className={styles.editorLinkPremium}
-                            onClick={() => {
-                                if (!isMember(room.id)) {
-                                    toast.error(t('rooms.joinRequiredToArticle'));
-                                    return;
-                                }
-                                navigate(`/rooms/${room.slug}/articles/create`);
-                            }}
-                        >
-                            <span className={styles.editorLinkText}>{t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}</span>
-                        </button>
-                    </div>
-                </div>
+                )}
 
                 <div className={styles.filtersRow}>
                     <div className={styles.tabs}>
@@ -260,8 +262,7 @@ const RoomDetailPage: React.FC = () => {
                                     <div className={`${styles.statItem} ${user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? styles.liked : ''}`}>
                                         <Heart 
                                             size={14} 
-                                            fill={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "var(--accent-primary)" : "none"} 
-                                            color={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "var(--accent-primary)" : "currentColor"} 
+                                            fill={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "currentColor" : "none"} 
                                         />
                                         <span>{likesData[item.id] || 0}</span>
                                     </div>

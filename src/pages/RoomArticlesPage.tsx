@@ -32,6 +32,9 @@ const RoomArticlesPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'new' | 'popular'>('all');
     const [difficulty, setDifficulty] = useState<string>('Любая');
+    const [likesData, setLikesData] = useState<Record<number, number>>({});
+    const [likedArticles, setLikedArticles] = useState<Record<number, boolean>>({});
+    const [bookmarkedArticles, setBookmarkedArticles] = useState<Record<number, boolean>>({});
 
     const fetchArticles = async () => {
         if (!room) return;
@@ -50,6 +53,35 @@ const RoomArticlesPage: React.FC = () => {
             }));
             
             setArticles(articlesWithLikes as Article[]);
+
+            // Initialize local likes and bookmarks data
+            const likesMap: Record<number, number> = {};
+            const likedMap: Record<number, boolean> = {};
+            const bookmarkMap: Record<number, boolean> = {};
+
+            // Fetch user bookmarks to highlight indicators
+            try {
+                if (user?.id) {
+                    const bookmarks = await interactionService.getMyBookmarks();
+                    bookmarks.forEach((b: any) => {
+                        if (b.target_type === 'article') {
+                            bookmarkMap[b.target_id] = true;
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to fetch bookmarks for indicators", e);
+            }
+
+            articlesWithLikes.forEach(art => {
+                likesMap[art.id] = (art as any).likesCount || 0;
+                if (user?.id) {
+                    likedMap[art.id] = localStorage.getItem(`liked_article_${user.id}_${art.id}`) === 'true';
+                }
+            });
+            setLikesData(likesMap);
+            setLikedArticles(likedMap);
+            setBookmarkedArticles(bookmarkMap);
 
             const authorIds = Array.from(new Set(data.map(a => a.userId)));
             const profilePromises = authorIds.map(id => userService.getUserById(id).catch(() => null));
@@ -113,24 +145,26 @@ const RoomArticlesPage: React.FC = () => {
             <header className={styles.pageHeader}>
                 <div className={styles.headerContent}>
                     <div className={styles.titleArea}>
-                        <h1>Профессиональные статьи</h1>
+                        <h1>{t('rooms.professionalArticles') || 'Профессиональные статьи'}</h1>
                         <p className={styles.pageSubtitle}>
-                            Глубокие разборы и туториалы от участников комнаты
+                            {t('rooms.articlesSubtitle') || 'Глубокие разборы и туториалы от участников комнаты'}
                         </p>
                     </div>
-                    <button
-                        className={styles.primaryBtn}
-                        onClick={() => {
-                            if (!isMember(room.id)) {
-                                toast.error('Вступите в комнату, чтобы написать статью');
-                                return;
-                            }
-                            navigate(`/rooms/${room.slug}/articles/create`);
-                        }}
-                    >
-                        <Plus size={20} style={{ marginRight: '0.5rem' }} />
-                        Написать статью
-                    </button>
+                    {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                        <button
+                            className={styles.primaryBtn}
+                            onClick={() => {
+                                if (!isMember(room.id)) {
+                                    toast.error(t('rooms.joinRequiredToArticle') || 'Вступите в комнату, чтобы написать статью');
+                                    return;
+                                }
+                                navigate(`/rooms/${room.slug}/articles/create`);
+                            }}
+                        >
+                            <Plus size={20} style={{ marginRight: '0.5rem' }} />
+                            {t('rooms.writeArticle') || 'Написать статью'}
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -219,17 +253,16 @@ const RoomArticlesPage: React.FC = () => {
                                 <p className={styles.articlePreview}>{createExcerpt(article.content, 120)}</p>
                                 <div className={styles.cardFooter}>
                                     <div className={styles.actionsGroup}>
-                                        <button className={`${styles.actionBtn} ${styles.bookmarkBtn}`}>
-                                            <Bookmark size={16} />
-                                        </button>
-                                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? styles.liked : ''}`}>
+                                        <div className={`${styles.actionIndicator} ${styles.bookmarkIndicator} ${bookmarkedArticles[article.id] ? styles.activeBookmark : ''}`}>
+                                            <Bookmark size={16} fill={bookmarkedArticles[article.id] ? "currentColor" : "none"} />
+                                        </div>
+                                        <div className={`${styles.actionIndicator} ${styles.likeIndicator} ${likedArticles[article.id] ? styles.liked : ''}`}>
                                             <Heart 
                                                 size={16} 
-                                                fill={user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? "var(--accent-primary)" : "none"} 
-                                                color={user?.id && localStorage.getItem(`liked_article_${user.id}_${article.id}`) === 'true' ? "var(--accent-primary)" : "currentColor"} 
+                                                fill={likedArticles[article.id] ? "currentColor" : "none"} 
                                             />
-                                            <span className={styles.statValue}>{(article as any).likesCount || 0}</span>
-                                        </button>
+                                            <span className={styles.statValue}>{likesData[article.id] || 0}</span>
+                                        </div>
                                     </div>
                                     <div className={styles.tagsGroup}>
                                         {article.tags?.slice(0, 3).map(tag => (

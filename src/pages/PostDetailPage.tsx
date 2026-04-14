@@ -57,8 +57,8 @@ const PostDetailPage: React.FC = () => {
             const [userProfile, postComments, roomData] = await Promise.all([
                 userService.getUserById(postData.userId).catch(() => null),
                 contentService.getCommentsByPost(Number(postId)),
-                // We need room to get directionId for gamification
-                postData.roomSlug ? roomService.getRoom(postData.roomSlug).catch(() => null) : Promise.resolve(null)
+                // Use roomId if roomSlug is not available
+                (postData.roomSlug ? roomService.getRoom(postData.roomSlug) : roomService.getRoom(postData.roomId.toString())).catch(() => null)
             ]);
 
             setAuthor(userProfile);
@@ -140,7 +140,12 @@ const PostDetailPage: React.FC = () => {
                 toast.success('Удалено из закладок');
                 setIsBookmarked(false);
             } else {
-                await interactionService.addBookmark('post', Number(postId));
+                await interactionService.addBookmark(
+                    'post', 
+                    Number(postId), 
+                    post?.userId, 
+                    room?.directionId
+                );
                 toast.success('Добавлено в закладки');
                 setIsBookmarked(true);
             }
@@ -204,8 +209,8 @@ const PostDetailPage: React.FC = () => {
                         <button className={styles.actionBtn} onClick={handleBookmark}>
                             <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
                         </button>
-                        <button className={`${styles.actionBtn} ${styles.likeBtn}`} onClick={handleLike}>
-                            <Heart size={18} fill={isLiked ? "var(--accent-primary)" : "none"} color={isLiked ? "var(--accent-primary)" : "currentColor"} />
+                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
+                            <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
                             <span>{likes}</span>
                         </button>
                     </div>

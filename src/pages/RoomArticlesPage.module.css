@@ -290,29 +290,47 @@
     gap: 1rem;
 }
 
-.actionBtn {
-    color: #9ca3af;
-    transition: all 0.2s;
+.actionIndicator {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    border-radius: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8fafc;
+    color: #94a3b8;
+    border: 1px solid transparent;
 }
 
-.bookmarkBtn:hover {
-    color: #4f46e5;
+.bookmarkIndicator svg {
+    color: #94a3b8;
 }
 
-.likeBtn:hover {
+.activeBookmark {
+    background: #eef2ff;
+    color: #6366f1;
+    border-color: #e0e7ff;
+}
+
+.activeBookmark svg {
+    color: #6366f1;
+}
+
+.likeIndicator.liked {
+    color: #ef4444;
+    background: #fff1f2;
+    border-color: #fee2e2;
+}
+
+.likeIndicator.liked svg {
     color: #ef4444;
 }
 
 .statValue {
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .tagsGroup {

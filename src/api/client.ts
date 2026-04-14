@@ -13,10 +13,11 @@ export const apiClient = axios.create({
 });
 
 // Helper to get client for specific service
-export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION' | 'CHAT') => {
+export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION' | 'CHAT' | 'ACHIEVEMENT') => {
   let baseURL = API_URL;
   if (service === 'INTERACTION') baseURL = `${API_URL}/interactions`;
   if (service === 'CHAT') baseURL = `${API_URL}/chat`;
+  if (service === 'ACHIEVEMENT') baseURL = `${API_URL}/achievements`;
 
   const instance = axios.create({
     baseURL,
@@ -33,9 +34,8 @@ export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERAC
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
 
-        // Emulate API Gateway behavior ONLY for ContentService
-        // Other services might reject these headers due to CORS policies
-        if (service === 'CONTENT') {
+        // Inject X-User-Id and X-User-Roles for services that need them
+        if (service === 'CONTENT' || service === 'ACHIEVEMENT') {
           const payload = parseJwt(token);
           if (payload) {
             const userId = payload.sub || payload.id || payload.userId || payload.user_id;

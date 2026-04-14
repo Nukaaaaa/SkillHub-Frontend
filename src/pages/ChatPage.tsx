@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Send, 
     Search, 
@@ -11,7 +12,6 @@ import {
     CheckCheck,
     Loader2,
     WifiOff,
-    LogOut,
     UserPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +24,8 @@ import styles from './ChatPage.module.css';
 
 const ChatPage: React.FC = () => {
     const { user: currentUser, token } = useAuth();
+    const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const { 
         chats, 
         selectedChat, 
@@ -42,7 +44,7 @@ const ChatPage: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { logout } = useAuth();
+
 
     // WebSocket connection
     const wsUrl = `ws://127.0.0.1:8080/api/chat/ws?token=${token}`;
@@ -56,8 +58,26 @@ const ChatPage: React.FC = () => {
     useEffect(() => {
         if (currentUser) {
             fetchChats();
+            
+            // Auto-start chat if userId is in URL
+            const userId = searchParams.get('userId');
+            if (userId && currentUser.id !== Number(userId)) {
+                const autoStartChat = async () => {
+                    try {
+                        const targetUser = await userService.getUserById(Number(userId));
+                        if (targetUser) {
+                            await handleSelectSearchResult(targetUser);
+                            // Clear the param after starting the chat
+                            navigate('/chat', { replace: true });
+                        }
+                    } catch (error) {
+                        console.error('Auto-start chat failed:', error);
+                    }
+                };
+                autoStartChat();
+            }
         }
-    }, [currentUser, fetchChats]);
+    }, [currentUser, fetchChats, searchParams]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -186,9 +206,6 @@ const ChatPage: React.FC = () => {
                                 {status !== 'open' && (
                                     <WifiOff size={16} color="#ef4444" />
                                 )}
-                                <button className={styles.logoutBtn} onClick={logout} title="Выйти">
-                                    <LogOut size={18} />
-                                </button>
                             </div>
                         </div>
                         <div className={styles.searchBox}>

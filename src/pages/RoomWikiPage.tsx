@@ -265,29 +265,42 @@ const RoomWikiPage: React.FC = () => {
                         ))}
 
                         {isModeratorOrAdmin && (
-                            <div style={{ padding: '0 1.5rem', marginTop: '1rem' }}>
+                            <div className={styles.adminActions}>
                                 {isAddingSection ? (
-                                    <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                                    <div className={styles.addSectionForm}>
                                         <input
                                             type="text"
                                             placeholder="Название..."
+                                            className={styles.sectionInput}
                                             value={newSectionName}
                                             onChange={(e) => setNewSectionName(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleCreateSection()}
-                                            style={{ width: '100%', padding: '0.25rem', marginBottom: '0.5rem', fontSize: '0.75rem' }}
+                                            autoFocus
                                         />
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={handleCreateSection} style={{ fontSize: '0.7rem', color: '#2563eb' }}>ОК</button>
-                                            <button onClick={() => setIsAddingSection(false)} style={{ fontSize: '0.7rem', color: '#ef4444' }}>Отмена</button>
+                                        <div className={styles.sectionActions}>
+                                            <button 
+                                                className={styles.confirmBtn}
+                                                onClick={handleCreateSection}
+                                            >
+                                                ОК
+                                            </button>
+                                            <button 
+                                                className={styles.cancelBtn}
+                                                onClick={() => setIsAddingSection(false)}
+                                            >
+                                                Отмена
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <button
-                                        onClick={() => setIsAddingSection(true)}
-                                        style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800, background: 'none', border: '1px dashed #e2e8f0', width: '100%', padding: '0.5rem', borderRadius: '0.5rem' }}
-                                    >
-                                        + Добавить раздел
-                                    </button>
+                                    <div style={{ padding: '0 0.75rem' }}>
+                                        <button
+                                            onClick={() => setIsAddingSection(true)}
+                                            className={styles.addSectionBtn}
+                                        >
+                                            + Добавить раздел
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -315,65 +328,66 @@ const RoomWikiPage: React.FC = () => {
                 {/* Main Content */}
                 <main className={styles.contentArea}>
                     <div className={styles.articleWrapper}>
-                        <header className={styles.header}>
-                            <nav className={styles.breadcrumbs}>
-                                <span>База</span>
-                                <ChevronRight size={10} />
-                                <span>{sections.find(s => s.id === selectedEntry?.sectionId)?.name || 'Общее'}</span>
-                                <ChevronRight size={10} />
-                                <span className={styles.breadcrumbActive}>
-                                    {selectedEntry ? selectedEntry.title : 'Выберите статью'}
-                                </span>
-                            </nav>
-
-                            <div className={styles.headerActions}>
-                                <button className={styles.actionBtn}><Share2 size={18} /></button>
-                                <button className={styles.actionBtn} onClick={handleBookmark}>
-                                    <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
-                                </button>
-                                <button className={styles.actionBtn} onClick={() => toast.success('PDF готов')}>
-                                    <Download size={18} />
-                                </button>
-                                <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
-                                    <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
-                                    <span>{likes}</span>
-                                </button>
-                            </div>
-                        </header>
-
-                        <div className={styles.metadataBar}>
-                            <div className={styles.metaItem}>
-                                <div className={styles.aiIcon}>AI</div>
-                                <div>
-                                    <div className={styles.metaLabel}>AI SCORE</div>
-                                    <div className={`${styles.metaValue} ${styles.scoreValue}`}>9.5</div>
-                                </div>
-                            </div>
-                            <div className={styles.divider} />
-                            <div className={styles.metaItem}>
-                                <div>
-                                    <div className={styles.metaLabel}>СЛОЖНОСТЬ</div>
-                                    <div className={`${styles.metaValue} ${styles.diffValue}`}>Advanced</div>
-                                </div>
-                            </div>
-                            <div className={styles.divider} />
-                            <div className={styles.metaItem}>
-                                <div>
-                                    <div className={styles.metaLabel}>ЧТЕНИЕ</div>
-                                    <div className={styles.metaValue}>5 мин</div>
-                                </div>
-                            </div>
-                        </div>
-
                         {selectedEntry ? (
                             <>
+                                <header className={styles.header}>
+                                    <nav className={styles.breadcrumbs}>
+                                        <span>База</span>
+                                        <ChevronRight size={10} />
+                                        <span>{sections.find(s => s.id === selectedEntry?.sectionId)?.name || 'Общее'}</span>
+                                        <ChevronRight size={10} />
+                                        <span className={styles.breadcrumbActive}>
+                                            {selectedEntry.title}
+                                        </span>
+                                    </nav>
+
+                                    <div className={styles.headerActions}>
+                                        <button className={styles.actionBtn}><Share2 size={18} /></button>
+                                        <button className={styles.actionBtn} onClick={handleBookmark}>
+                                            <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+                                        </button>
+                                        <button className={styles.actionBtn} onClick={() => toast.success('PDF готов')}>
+                                            <Download size={18} />
+                                        </button>
+                                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
+                                            <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+                                            <span>{likes}</span>
+                                        </button>
+                                    </div>
+                                </header>
+
+                                <div className={styles.metadataBar}>
+                                    <div className={styles.metaChip}>
+                                        <div className={styles.aiPill}>AI</div>
+                                        <div>
+                                            <div className={styles.metaLabel}>AI SCORE</div>
+                                            <div className={`${styles.metaValue} ${styles.scoreValue}`}>9.5</div>
+                                        </div>
+                                    </div>
+                                    <div className={styles.metaChip}>
+                                        <div>
+                                            <div className={styles.metaLabel}>СЛОЖНОСТЬ</div>
+                                            <div className={styles.metaValue}>Advanced</div>
+                                        </div>
+                                    </div>
+                                    <div className={styles.metaChip}>
+                                        <div>
+                                            <div className={styles.metaLabel}>ЧТЕНИЕ</div>
+                                            <div className={styles.metaValue}>5 мин</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <h1 className={styles.articleTitle}>{selectedEntry.title}</h1>
                                 <article className={styles.richContent} dangerouslySetInnerHTML={{ __html: parsedContent }} />
                             </>
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
-                                <BookOpen size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
-                                <p>Выберите запись из списка слева, чтобы начать чтение</p>
+                            <div className={styles.emptyContent}>
+                                <div className={styles.emptyIconWrapper}>
+                                    <BookOpen size={48} />
+                                </div>
+                                <h2>База знаний комнаты</h2>
+                                <p>Выберите запись из списка слева, чтобы приступить к изучению материалов</p>
                             </div>
                         )}
                     </div>

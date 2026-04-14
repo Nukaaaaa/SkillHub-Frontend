@@ -88,6 +88,8 @@ function App() {
             <Route path="/moderator" element={<ModeratorPanelPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/wiki/articles/:articleId" element={<ArticleDetailPage />} />
+            <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
+            <Route path="/posts/:postId" element={<PostDetailPage />} />
           </Route>
 
           <Route path="/rooms/:roomSlug" element={

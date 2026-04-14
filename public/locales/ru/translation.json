@@ -204,7 +204,10 @@
         "post": "Пост",
         "writeHere": "Напишите здесь...",
         "whatsOnMind": "Что нового?",
-        "filterByTag": "Фильтр по тегу"
+        "filterByTag": "Фильтр по тегу",
+        "professionalArticles": "Профессиональные статьи",
+        "articlesSubtitle": "Глубокие разборы и туториалы от участников комнаты",
+        "writeArticle": "Написать статью"
     },
     "notifications": {
         "liked": "Ваш материал оценили",

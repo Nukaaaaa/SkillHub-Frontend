@@ -27,7 +27,7 @@ const RoomLayout: React.FC = () => {
     const [onlineCount, setOnlineCount] = useState<number>(0);
     const [joining, setJoining] = useState(false);
     const [leaving, setLeaving] = useState(false);
-    const { isMember, joinRoom, leaveRoom, token } = useAuth();
+    const { isMember, joinRoom, leaveRoom, token, user } = useAuth();
 
     useEffect(() => {
         const fetchRoom = async () => {
@@ -192,30 +192,32 @@ const RoomLayout: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-
+ 
                         <div className={styles.headerActions}>
-                            {isMember(room.id) ? (
-                                <button
-                                    className={styles.leaveBtn}
-                                    onClick={handleLeave}
-                                    disabled={leaving}
-                                >
-                                    <LogOut size={16} />
-                                    <span>{leaving ? t('common.loading') : (t('rooms.leave') || 'Покинуть')}</span>
-                                </button>
-                            ) : (
-                                <button
-                                    className={styles.joinBtn}
-                                    onClick={handleJoin}
-                                    disabled={joining}
-                                >
-                                    {joining ? t('common.loading') : (
-                                        <>
-                                            <Users size={16} />
-                                            <span>{t('rooms.join') || 'Вступить в комнату'}</span>
-                                        </>
-                                    )}
-                                </button>
+                            {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                                isMember(room.id) ? (
+                                    <button
+                                        className={styles.leaveBtn}
+                                        onClick={handleLeave}
+                                        disabled={leaving}
+                                    >
+                                        <LogOut size={16} />
+                                        <span>{leaving ? t('common.loading') : (t('rooms.leave') || 'Покинуть')}</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        className={styles.joinBtn}
+                                        onClick={handleJoin}
+                                        disabled={joining}
+                                    >
+                                        {joining ? t('common.loading') : (
+                                            <>
+                                                <Users size={16} />
+                                                <span>{t('rooms.join') || 'Вступить в комнату'}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                )
                             )}
                         </div>
                     </div>

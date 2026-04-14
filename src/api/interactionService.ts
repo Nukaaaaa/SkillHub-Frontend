@@ -31,9 +31,14 @@ export const interactionService = {
     return data.count;
   },
 
-  async addBookmark(targetType: TargetType, targetId: number) {
+  async addBookmark(targetType: TargetType, targetId: number, authorId?: number, directionId?: number) {
     const client = getServiceClient('INTERACTION');
-    const { data } = await client.post('/bookmarks', { target_type: targetType, target_id: targetId });
+    const { data } = await client.post('/bookmarks', { 
+        target_type: targetType, 
+        target_id: targetId,
+        author_id: authorId,
+        direction_id: directionId
+    });
     return data;
   },
 

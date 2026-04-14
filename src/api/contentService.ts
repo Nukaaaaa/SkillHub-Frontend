@@ -66,6 +66,10 @@ export const contentService = {
         const response = await apiClient.get<Comment[]>(`/comments/post/${postId}`);
         return response.data;
     },
+    getCommentsByUser: async (userId: number): Promise<Comment[]> => {
+        const response = await apiClient.get<Comment[]>(`/comments/user/${userId}`);
+        return response.data;
+    },
     createComment: async (comment: Partial<Comment>): Promise<Comment> => {
         const response = await apiClient.post<Comment>('/comments', comment);
         return response.data;

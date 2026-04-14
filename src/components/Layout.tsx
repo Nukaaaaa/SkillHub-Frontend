@@ -18,6 +18,7 @@ import {
     MessageSquare
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
+import { achievementService } from '../api/achievementService';
 
 const Layout: React.FC = () => {
     const { user, logout } = useAuth();
@@ -28,12 +29,21 @@ const Layout: React.FC = () => {
     const [notifOpen, setNotifOpen] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState('');
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
+    const [totalXp, setTotalXp] = React.useState<number>(0);
 
     const mockNotifs = [
         { id: 1, text: t('notifications.liked') || 'Пользователь оценил вашу статью', time: '2 мин. назад' },
         { id: 2, text: t('notifications.commented') || 'Новый ответ в обсуждении', time: '15 мин. назад' },
         { id: 3, text: t('notifications.approved') || 'Ваш пост прошел модерацию', time: '1 час назад' }
     ];
+
+    React.useEffect(() => {
+        if (user) {
+            achievementService.getMyStats().then(stats => {
+                setTotalXp(stats.totalXp);
+            }).catch(err => console.error('Failed to fetch sidebar stats:', err));
+        }
+    }, [user]);
 
     const handleLogout = () => {
         logout();
@@ -120,12 +130,11 @@ const Layout: React.FC = () => {
 
                 <div className={styles.sidebarFooter}>
                     <div className={styles.reputationCard}>
-                        <p className={styles.repLabel}>{t('profile.reputation')}</p>
-                        <p className={styles.repValue}>1,250 pts</p>
+                        <p className={styles.repLabel}>Всего XP</p>
+                        <p className={styles.repValue}>{totalXp.toLocaleString()} XP</p>
                     </div>
 
                     <div className={styles.systemActions}>
-                        <LanguageSelector variant="sidebar" />
                         <button onClick={handleLogout} className={styles.actionBtn}>
                             <LogOut size={16} />
                             <span>{t('common.logout')}</span>
@@ -173,6 +182,7 @@ const Layout: React.FC = () => {
                         )}
                     </div>
                     <div className={styles.headerActions}>
+                        <LanguageSelector variant="header" />
                         <div className={styles.notificationWrapper}>
                             <button 
                                 className={styles.iconBtn} 

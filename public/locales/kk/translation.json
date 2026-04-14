@@ -186,7 +186,11 @@
         "post": "Жазба",
         "writeHere": "Осында жазыңыз...",
         "whatsOnMind": "Не жаңалық?",
-        "filterByTag": "Тег бойынша сүзгі"
+        "filterByTag": "Тег бойынша сүзгі",
+        "professionalArticles": "Кәсіби мақалалар",
+        "articlesSubtitle": "Бөлме қатысушыларының терең талдаулары мен нұсқаулықтары",
+        "writeArticle": "Мақала жазу",
+        "joinRequiredToArticle": "Мақала жазу үшін бөлмеге кіріңіз"
     },
     "notifications": {
         "liked": "Сіздің материалыңыз бағаланды",
