@@ -18,10 +18,12 @@ import 'highlight.js/styles/atom-one-dark.css';
 
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
 import type { Post, User, Comment } from '../types';
 import Loader from '../components/Loader';
 import Button from '../components/Button';
+import ReportModal from '../components/ReportModal';
 import styles from './PostDetailPage.module.css';
 
 const PostDetailPage: React.FC = () => {
@@ -31,6 +33,7 @@ const PostDetailPage: React.FC = () => {
     const { t } = useTranslation();
 
     const [post, setPost] = useState<Post | null>(null);
+    const [room, setRoom] = useState<any | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentAuthors, setCommentAuthors] = useState<Record<number, User>>({});
@@ -41,6 +44,7 @@ const PostDetailPage: React.FC = () => {
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
     const [isReported, setIsReported] = useState<boolean>(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     const fetchData = async () => {
         if (!postId) return;
@@ -49,17 +53,21 @@ const PostDetailPage: React.FC = () => {
             const postData = await contentService.getPost(Number(postId));
             setPost(postData);
 
-            const [userProfile, postComments] = await Promise.all([
+            // Fetch room and author details
+            const [userProfile, postComments, roomData] = await Promise.all([
                 userService.getUserById(postData.userId).catch(() => null),
-                contentService.getCommentsByPost(Number(postId))
+                contentService.getCommentsByPost(Number(postId)),
+                // We need room to get directionId for gamification
+                postData.roomSlug ? roomService.getRoom(postData.roomSlug).catch(() => null) : Promise.resolve(null)
             ]);
 
             setAuthor(userProfile);
             setComments(postComments);
+            setRoom(roomData);
 
             // Fetch comment authors
-            const commentUserIds = Array.from(new Set(postComments.map(c => c.userId)));
-            const profilePromises = commentUserIds.map(id => userService.getUserById(id).catch(() => null));
+            const commentUserIds = Array.from(new Set(postComments.map((c: Comment) => c.userId)));
+            const profilePromises = commentUserIds.map((id: number) => userService.getUserById(id).catch(() => null));
             const profiles = await Promise.all(profilePromises);
 
             const profileMap: Record<number, User> = {};
@@ -92,7 +100,7 @@ const PostDetailPage: React.FC = () => {
     };
 
     const handleLike = async () => {
-        if (!postId) return;
+        if (!postId || !post) return;
         try {
             if (isLiked) {
                 await interactionService.removeLike('post', Number(postId));
@@ -100,7 +108,13 @@ const PostDetailPage: React.FC = () => {
                 if (currentUser?.id) localStorage.removeItem(`liked_post_${currentUser.id}_${postId}`);
                 setIsLiked(false);
             } else {
-                await interactionService.addLike('post', Number(postId));
+                // Pass authorId and directionId for gamification
+                await interactionService.addLike(
+                    'post', 
+                    Number(postId), 
+                    post.userId, 
+                    room?.directionId
+                );
                 setLikes(prev => prev + 1);
                 if (currentUser?.id) localStorage.setItem(`liked_post_${currentUser.id}_${postId}`, 'true');
                 setIsLiked(true);
@@ -175,16 +189,18 @@ const PostDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
-                        <button 
-                            className={`${styles.actionBtn} ${isReported ? styles.reported : ''}`} 
-                            onClick={() => {
-                                setIsReported(true);
-                                toast.success('Жалоба на пост отправлена (Mock)');
-                            }}
-                            title="Пожаловаться"
-                        >
-                            <Flag size={18} fill={isReported ? "currentColor" : "none"} />
-                        </button>
+                        {currentUser?.id !== post.userId && (
+                            <button 
+                                className={`${styles.actionBtn} ${isReported ? styles.reported : ''}`} 
+                                onClick={() => {
+                                    if (!isReported) setIsReportModalOpen(true);
+                                }}
+                                title={isReported ? "Жалоба отправлена" : "Пожаловаться"}
+                                disabled={isReported}
+                            >
+                                <Flag size={18} fill={isReported ? "currentColor" : "none"} />
+                            </button>
+                        )}
                         <button className={styles.actionBtn} onClick={handleBookmark}>
                             <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
                         </button>
@@ -280,6 +296,15 @@ const PostDetailPage: React.FC = () => {
                     </div>
                 </section>
             </div>
+
+            <ReportModal 
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                targetType="post"
+                targetId={Number(postId)}
+                targetAuthorId={post.userId}
+                onSuccess={() => setIsReported(true)}
+            />
         </div>
     );
 };

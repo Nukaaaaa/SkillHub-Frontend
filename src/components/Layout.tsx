@@ -40,6 +40,13 @@ const Layout: React.FC = () => {
         navigate('/login');
     };
 
+    const getFullUrl = (url?: string) => {
+        if (!url) return null;
+        if (url.startsWith('http') || url.startsWith('data:')) return url;
+        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
+        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
+    };
+
     const currentDirection = directionSlug || user?.selectedDirectionSlug;
 
     const navItems = [
@@ -194,7 +201,7 @@ const Layout: React.FC = () => {
 
                         <div className={styles.userAvatar}>
                             <img
-                                src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || user?.name || 'User'}&background=random`}
+                                src={getFullUrl(user?.avatar) || `https://ui-avatars.com/api/?name=${user?.firstname || user?.name || 'User'}&background=random`}
                                 alt="avatar"
                             />
                         </div>

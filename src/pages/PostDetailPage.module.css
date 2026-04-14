@@ -101,10 +101,15 @@
 
 .reported {
     color: #ef4444 !important;
+    border-color: #fca5a5 !important;
+    background-color: #fef2f2 !important;
 }
 
 .reported:hover {
-    background-color: #fef2f2 !important;
+    color: #ef4444 !important;
+    border-color: #fca5a5 !important;
+    transform: none !important;
+    cursor: default !important;
 }
 
 .discussion {

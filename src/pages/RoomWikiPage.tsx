@@ -176,7 +176,9 @@ const RoomWikiPage: React.FC = () => {
                 localStorage.removeItem(`liked_article_${selectedEntry.id}`);
                 setIsLiked(false);
             } else {
-                await interactionService.addLike('article', selectedEntry.id);
+                // Pass directionId for gamification (AuthorID is missing in WikiEntry for now)
+                // TODO: Extend WikiEntry to include AuthorID if needed for XP
+                await interactionService.addLike('article', selectedEntry.id, undefined, room?.directionId);
                 setLikes(prev => prev + 1);
                 localStorage.setItem(`liked_article_${selectedEntry.id}`, 'true');
                 setIsLiked(true);

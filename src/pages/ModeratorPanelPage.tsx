@@ -1,21 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle, XCircle, Database } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Database, ShieldAlert, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { interactionService } from '../api/interactionService';
+import { contentService } from '../api/contentService';
+import { adminService } from '../api/adminService';
 import styles from './ModeratorPanelPage.module.css';
+import adminStyles from './AdminPanelPage.module.css';
+import { toast } from 'react-hot-toast';
+
+interface Report {
+    id: number;
+    reporter_id: number;
+    target_id: number;
+    target_author_id: number;
+    target_type: string;
+    reason: string;
+    status: 'OPEN' | 'REJECTED' | 'RESOLVED';
+    created_at: string;
+}
 
 const ModeratorPanelPage: React.FC = () => {
     const { user } = useAuth();
-    
-    // Mocks for prototype UI
-    const [reports] = useState([
-        { id: 1, type: 'СПАМ', info: 'Комментарий к статье "Основы Go"', date: '10 мин назад' },
-        { id: 2, type: 'НАРУШЕНИЕ', info: 'Пост "Неприемлемый контент"', date: '2 часа назад' }
-    ]);
+    const [reports, setReports] = useState<Report[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Role verification
+    const fetchReports = async () => {
+        try {
+            setLoading(true);
+            const data = await interactionService.getReports();
+            setReports(data);
+        } catch (error) {
+            toast.error('Ошибка при загрузке жалоб');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (user && (user.role === 'MODERATOR' || user.role === 'ADMIN')) {
+            fetchReports();
+        }
+    }, [user]);
+
     if (!user || (user.role !== 'MODERATOR' && user.role !== 'ADMIN')) {
         return <Navigate to="/dashboard" replace />;
+    }
+
+    const handleRejectReport = async (reportId: number) => {
+        try {
+            await interactionService.updateReportStatus(reportId, 'REJECTED');
+            setReports(prev => prev.filter(r => r.id !== reportId));
+            toast.success('Жалоба отклонена');
+        } catch (error) {
+            toast.error('Ошибка при отклонении жалобы');
+        }
+    };
+
+    const handleResolveAndBlock = async (report: Report) => {
+        try {
+            // Delete content
+            if (report.target_type === 'post') await contentService.deletePost(report.target_id);
+            if (report.target_type === 'article') await contentService.deleteArticle(report.target_id);
+
+            // Block user & resolve report
+            await adminService.blockUser(report.target_author_id, 60);
+            await interactionService.updateReportStatus(report.id, 'RESOLVED');
+            
+            setReports(prev => prev.filter(r => r.id !== report.id));
+            toast.success('Контент удален, пользователь заблокирован');
+        } catch (error) {
+            toast.error('Ошибка при обработке жалобы');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className={styles.container}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <Loader2 className={adminStyles.spin} size={32} />
+                    <p>Загрузка данных...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -26,41 +93,77 @@ const ModeratorPanelPage: React.FC = () => {
             </header>
 
             <div className={styles.grid}>
-                <section className={styles.panel}>
+                <section className={styles.panel} style={{ gridColumn: '1 / -1' }}>
                     <h2 className={styles.panelTitle}>
                         <AlertTriangle size={20} color="#f59e0b" />
                         Жалобы на контент
                     </h2>
                     
-                    {reports.length > 0 ? (
-                        <div className={styles.list}>
-                            {reports.map((report) => (
-                                <div key={report.id} className={styles.reportCard}>
-                                    <div className={styles.reportHeader}>
-                                        <span className={styles.reportType}>{report.type}</span>
-                                        <span className={styles.reportDate}>{report.date}</span>
-                                    </div>
-                                    <div className={styles.reportContent}>
-                                        <h4>{report.info}</h4>
-                                        <p>Пользователь подал жалобу. Требуется ваше вмешательство.</p>
-                                    </div>
-                                    <div className={styles.actions}>
-                                        <button className={`${styles.btn} ${styles.btnApprove}`}>
-                                            <CheckCircle size={16} /> Оставить
-                                        </button>
-                                        <button className={`${styles.btn} ${styles.btnReject}`}>
-                                            <XCircle size={16} /> Удалить контент
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className={styles.emptyState}>Всё чисто! Нет открытых жалоб.</div>
-                    )}
+                    <div className={adminStyles.reportsContainer} style={{ background: 'transparent', padding: 0, boxShadow: 'none' }}>
+                        {reports.length === 0 ? (
+                            <div className={adminStyles.emptyState}>
+                                <CheckCircle size={48} />
+                                <p>Активных жалоб нет. Все чисто!</p>
+                            </div>
+                        ) : (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className={adminStyles.usersTable}>
+                                    <thead>
+                                        <tr>
+                                            <th>Тип</th>
+                                            <th>Причина</th>
+                                            <th>Автор контента (ID)</th>
+                                            <th>Дата</th>
+                                            <th className={adminStyles.actionsCell}>Модерация</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {reports.map(report => (
+                                            <tr key={report.id} className={adminStyles.reportRow}>
+                                                <td>
+                                                    <span className={adminStyles.targetBadge}>
+                                                        {report.target_type === 'post' ? <MessageSquare size={12} /> : null}
+                                                        {report.target_type}
+                                                    </span>
+                                                </td>
+                                                <td className={adminStyles.reasonCol}>
+                                                    {report.reason}
+                                                </td>
+                                                <td>
+                                                    <div className={adminStyles.userCell}>
+                                                        <AlertCircle size={16} color="#ef4444" />
+                                                        <span>User #{report.target_author_id}</span>
+                                                    </div>
+                                                </td>
+                                                <td style={{ fontSize: '0.8125rem', color: '#94a3b8' }}>
+                                                    {new Date(report.created_at).toLocaleString()}
+                                                </td>
+                                                <td className={adminStyles.actionsCell}>
+                                                    <button 
+                                                        className={adminStyles.rejectBtn}
+                                                        onClick={() => handleRejectReport(report.id)}
+                                                    >
+                                                        <XCircle size={14} style={{ marginRight: '4px' }} />
+                                                        Отклонить
+                                                    </button>
+                                                    <button 
+                                                        className={adminStyles.resolveBtn}
+                                                        onClick={() => handleResolveAndBlock(report)}
+                                                    >
+                                                        <ShieldAlert size={14} style={{ marginRight: '4px' }} />
+                                                        Удалить & Блок
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </section>
 
-                <section className={styles.panel}>
+                <section className={styles.panel} style={{ gridColumn: '1 / -1' }}>
                     <h2 className={styles.panelTitle}>
                         <Database size={20} color="#3b82f6" />
                         Управление Wiki

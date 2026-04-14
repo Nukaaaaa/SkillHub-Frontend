@@ -459,6 +459,17 @@
 
 .commentActions {
     display: flex;
-    justify-content: flex-end;
-    margin-top: 1rem;
+}
+
+.reportedItem {
+    color: #ef4444;
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+}
+
+.reportedItem:hover {
+    color: #ef4444;
+    border-color: #fca5a5;
+    transform: none;
+    cursor: default;
 }

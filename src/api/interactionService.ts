@@ -3,9 +3,14 @@ import { getServiceClient } from './client';
 export type TargetType = 'post' | 'article' | 'comment';
 
 export const interactionService = {
-  async addLike(targetType: TargetType, targetId: number) {
+  async addLike(targetType: TargetType, targetId: number, authorId?: number, directionId?: number) {
     const client = getServiceClient('INTERACTION');
-    const { data } = await client.post('/likes', { target_type: targetType, target_id: targetId });
+    const { data } = await client.post('/likes', { 
+        target_type: targetType, 
+        target_id: targetId,
+        author_id: authorId,
+        direction_id: directionId
+    });
     return data;
   },
 
@@ -44,5 +49,28 @@ export const interactionService = {
     const client = getServiceClient('INTERACTION');
     const { data } = await client.get('/bookmarks/my');
     return data.bookmarks || [];
+  },
+
+  async submitReport(targetType: TargetType, targetId: number, targetAuthorId: number, reason: string) {
+    const client = getServiceClient('INTERACTION');
+    const { data } = await client.post('/reports', { 
+        target_type: targetType, 
+        target_id: targetId, 
+        target_author_id: targetAuthorId,
+        reason: reason 
+    });
+    return data;
+  },
+
+  async getReports() {
+    const client = getServiceClient('INTERACTION');
+    const { data } = await client.get('/moderation/reports');
+    return data || [];
+  },
+
+  async updateReportStatus(reportId: number, status: 'REJECTED' | 'RESOLVED') {
+    const client = getServiceClient('INTERACTION');
+    const { data } = await client.put(`/moderation/reports/${reportId}/status`, { status });
+    return data;
   }
 };

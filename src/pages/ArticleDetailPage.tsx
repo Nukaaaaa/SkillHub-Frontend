@@ -12,7 +12,8 @@ import {
     FileText,
     ArrowLeft,
     Loader,
-    BookOpen
+    BookOpen,
+    Flag
 } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -26,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import type { Article, User, WikiEntry, Room } from '../types';
 import Button from '../components/Button';
 import SectionSelectModal from '../components/wiki/SectionSelectModal';
+import ReportModal from '../components/ReportModal';
 import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage: React.FC = () => {
@@ -52,6 +54,8 @@ const ArticleDetailPage: React.FC = () => {
     const [likes, setLikes] = useState<number>(0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
     const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+    const [isReported, setIsReported] = useState<boolean>(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     const [isInWiki, setIsInWiki] = useState<boolean>(false);
     const [sections, setSections] = useState<{ id: number; name: string }[]>([]);
@@ -137,7 +141,14 @@ const ArticleDetailPage: React.FC = () => {
                 localStorage.removeItem(`liked_article_${articleId}`);
                 setIsLiked(false);
             } else {
-                await interactionService.addLike('article', Number(articleId));
+                if (!article) return; // Add null check for lint
+                // Pass authorId and directionId for gamification
+                await interactionService.addLike(
+                    'article', 
+                    Number(articleId), 
+                    article.userId, 
+                    room?.directionId
+                );
                 setLikes(prev => prev + 1);
                 localStorage.setItem(`liked_article_${articleId}`, 'true');
                 setIsLiked(true);
@@ -300,6 +311,18 @@ const ArticleDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
+                        {user?.id !== article.userId && (
+                            <button 
+                                className={`${styles.actionBtn} ${isReported ? styles.reportedItem : ''}`} 
+                                onClick={() => {
+                                    if (!isReported) setIsReportModalOpen(true);
+                                }}
+                                title={isReported ? "Жалоба отправлена" : "Пожаловаться"}
+                                disabled={isReported}
+                            >
+                                <Flag size={18} fill={isReported ? "currentColor" : "none"} />
+                            </button>
+                        )}
                         <button className={styles.actionBtn} onClick={handleBookmark}>
                             <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
                         </button>
@@ -468,6 +491,15 @@ const ArticleDetailPage: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleConfirmWiki}
                 sections={sections}
+            />
+
+            <ReportModal 
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                targetType="article"
+                targetId={Number(articleId)}
+                targetAuthorId={article.userId}
+                onSuccess={() => setIsReported(true)}
             />
         </div>
     );
