@@ -11,11 +11,14 @@ interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (email: string, password: string) => Promise<boolean>;
+    registerSendCode: (email: string) => Promise<boolean>;
     register: (userData: {
         firstname: string;
         lastname: string;
         email: string;
         password: string;
+        confirm_password: string;
+        code: string;
         universite: string;
         bio: string;
         avatar?: File;
@@ -52,15 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try {
                         const realUser = await userService.getUserById(userId);
 
-                        // Load local fallbacks
-                        const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
-                        const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
-
                         userToSet = {
                             ...realUser,
                             name: `${realUser.firstname} ${realUser.lastname}`,
-                            avatar: localAvatar || realUser.avatar,
-                            githubUrl: localGithub || (realUser as any).githubUrl
+                            avatar: realUser.avatar_url || '',
                         };
                     } catch (e) {
                         console.error('Failed to restore user by ID, trying /me');
@@ -174,15 +172,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     const realUser = await userService.getUserById(userId);
 
-                    // Load local fallbacks
-                    const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
-                    const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
-
                     userToSet = {
                         ...realUser,
                         name: `${realUser.firstname} ${realUser.lastname}`,
-                        avatar: localAvatar || realUser.avatar,
-                        githubUrl: localGithub || (realUser as any).githubUrl
+                        avatar: realUser.avatar_url || '',
                     };
                 } catch (e) {
                     console.error('Failed to fetch user by ID');
@@ -212,11 +205,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const registerSendCode = async (email: string) => {
+        try {
+            await userClient.post('/auth/register/send-code', { email });
+            return true;
+        } catch (error) {
+            console.error('Send code failed:', error);
+            throw error;
+        }
+    };
+
     const register = async (userData: {
         firstname: string;
         lastname: string;
         email: string;
         password: string;
+        confirm_password: string;
+        code: string;
         universite: string;
         bio: string;
         avatar?: File;
@@ -228,6 +233,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             formData.append('lastname', userData.lastname);
             formData.append('email', userData.email);
             formData.append('password', userData.password);
+            formData.append('confirm_password', userData.confirm_password);
+            formData.append('code', userData.code);
             formData.append('universite', userData.universite);
             formData.append('bio', userData.bio);
             if (userData.avatar) {
@@ -257,15 +264,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 throw new Error('Registration succeeded, but profile retrieval failed');
             }
 
-            // Load local fallbacks
-            const localAvatar = localStorage.getItem(`user_avatar_${realUser.id}`);
-            const localGithub = localStorage.getItem(`user_github_${realUser.id}`);
-
             const userToSet = {
                 ...realUser,
                 name: `${realUser.firstname} ${realUser.lastname}`,
-                avatar: localAvatar || realUser.avatar,
-                githubUrl: localGithub || (realUser as any).githubUrl
+                avatar: realUser.avatar_url || '',
             };
 
             // 5. Сохраняем пользователя и комнаты
@@ -300,18 +302,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const result = await userService.uploadAvatar(userData.avatarFile);
                 avatarUrl = result.avatar_url;
                 console.log('New avatar URL from server:', avatarUrl);
-                
-                // Cache locally for instant use
-                localStorage.setItem(`user_avatar_${user.id}`, avatarUrl);
             } catch (error) {
                 console.error('Failed to upload avatar to MinIO:', error);
                 // Continue with other updates if avatar fails? Or throw?
                 // For now, continue but log error.
             }
         } else if (userData.avatar && userData.avatar.startsWith('data:')) {
-            // Fallback: if we got base64 but no File object, we could convert it
-            // but it's better to pass the File directly.
-            localStorage.setItem(`user_avatar_${user.id}`, userData.avatar);
             avatarUrl = userData.avatar;
         }
 
@@ -364,7 +360,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <AuthContext.Provider value={{
-            user, token, login, register, logout,
+            user, token, login, register, registerSendCode, logout,
             updateUser, resetToDefaults, selectDirection,
             isAuthenticated: !!token, loading,
             joinedRoomIds, isMember, joinRoom, leaveRoom, refreshUserRooms

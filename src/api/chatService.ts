@@ -9,6 +9,7 @@ export interface Message {
     text: string;
     file_url?: string;
     is_read: boolean;
+    type?: string;
     created_at: string;
 }
 
@@ -17,6 +18,7 @@ export interface ChatDTO {
     recipient_id: number;
     last_message: Message | null;
     unread_count: number;
+    is_online: boolean;
 }
 
 export const chatService = {

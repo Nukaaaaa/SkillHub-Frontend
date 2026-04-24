@@ -23,6 +23,7 @@ interface ChatState {
     updateChatLastMessage: (message: Message, isSelected: boolean) => void;
     markAsRead: (chatId: uint) => void;
     clearMessages: () => void;
+    updateUserOnlineStatus: (userId: number, online: boolean) => void;
 }
 
 // Minimal type for chatId because it's uint in some places
@@ -118,4 +119,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     },
 
     clearMessages: () => set({ messages: [] }),
+    
+    updateUserOnlineStatus: (userId, online) => {
+        set((state) => ({
+            chats: state.chats.map((c) => 
+                c.recipient_id === userId ? { ...c, is_online: online } : c
+            )
+        }));
+    }
 }));

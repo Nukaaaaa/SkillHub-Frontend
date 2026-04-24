@@ -11,8 +11,7 @@ import {
     User as UserIcon,
     CheckCheck,
     Loader2,
-    WifiOff,
-    UserPlus
+    WifiOff
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { chatService, type Message } from '../api/chatService';
@@ -34,7 +33,8 @@ const ChatPage: React.FC = () => {
         fetchChats, 
         setSelectedChat, 
         addMessage,
-        addChat
+        addChat,
+        updateUserOnlineStatus
     } = useChatStore();
 
     const [inputValue, setInputValue] = useState('');
@@ -51,7 +51,13 @@ const ChatPage: React.FC = () => {
     const { status, sendMessage } = useWebSocket(wsUrl, {
         shouldConnect: !!token,
         onMessage: (msg: Message) => {
-            addMessage(msg);
+            if (msg.type === 'PRESENCE_ONLINE') {
+                updateUserOnlineStatus(msg.sender_id, true);
+            } else if (msg.type === 'PRESENCE_OFFLINE') {
+                updateUserOnlineStatus(msg.sender_id, false);
+            } else {
+                addMessage(msg);
+            }
         }
     });
 
@@ -115,15 +121,6 @@ const ChatPage: React.FC = () => {
         }
     };
 
-    const handleAddFriend = async (e: React.MouseEvent, friendId: number) => {
-        e.stopPropagation(); // Prevent opening chat
-        try {
-            await userService.sendFriendRequest(friendId);
-            alert('Заявка в друзья отправлена!');
-        } catch (error: any) {
-            alert(error.response?.data?.error || 'Ошибка при отправке заявки');
-        }
-    };
 
     const handleSelectSearchResult = async (targetUser: User) => {
         try {
@@ -240,13 +237,6 @@ const ChatPage: React.FC = () => {
                                                     <span className={styles.searchName}>{u.firstname} {u.lastname}</span>
                                                     <span className={styles.searchEmail}>{u.email}</span>
                                                 </div>
-                                                <button 
-                                                    className={styles.addFriendBtn}
-                                                    onClick={(e) => handleAddFriend(e, u.id)}
-                                                    title="Добавить в друзья"
-                                                >
-                                                    <UserPlus size={16} />
-                                                </button>
                                             </div>
                                     ))
                                 ) : (
@@ -266,7 +256,7 @@ const ChatPage: React.FC = () => {
                                             alt={chat.user.firstname} 
                                             className={styles.avatar} 
                                         />
-                                        <div className={`${styles.onlineStatus} ${styles.online}`} />
+                                        <div className={`${styles.onlineStatus} ${chat.is_online ? styles.online : styles.offline}`} />
                                     </div>
                                     <div className={styles.chatInfo}>
                                         <div className={styles.chatHeader}>
@@ -301,7 +291,6 @@ const ChatPage: React.FC = () => {
                                     />
                                     <div className={styles.userDetails}>
                                         <h3>{selectedChat.user.firstname} {selectedChat.user.lastname}</h3>
-                                        <span>{selectedChat.user.role || 'Пользователь'}</span>
                                     </div>
                                 </div>
                                 <div className={styles.headerActions}>
