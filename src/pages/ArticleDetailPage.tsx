@@ -28,6 +28,7 @@ import type { Article, User, WikiEntry, Room } from '../types';
 import Button from '../components/Button';
 import SectionSelectModal from '../components/wiki/SectionSelectModal';
 import ReportModal from '../components/ReportModal';
+import Avatar from '../components/Avatar';
 import styles from './ArticleDetailPage.module.css';
 
 const ArticleDetailPage: React.FC = () => {
@@ -389,9 +390,10 @@ const ArticleDetailPage: React.FC = () => {
                     <h1 className={styles.title}>{article.title}</h1>
 
                     <div className={styles.authorSection}>
-                        <img
-                            src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
-                            alt="avatar"
+                        <Avatar 
+                            src={author?.avatar} 
+                            name={author?.firstname} 
+                            size="md"
                             className={styles.authorAvatar}
                         />
                         <div className={styles.authorInfo}>
@@ -448,9 +450,10 @@ const ArticleDetailPage: React.FC = () => {
                     <div className={styles.sidebarWidget}>
                         <div className={styles.authorWidgetHeader}>
                             <Link to={`/profile/${author?.id}`}>
-                                <img
-                                    src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
-                                    alt="avatar"
+                                <Avatar 
+                                    src={author?.avatar} 
+                                    name={author?.firstname} 
+                                    size="lg"
                                     className={styles.sidebarAvatar}
                                 />
                             </Link>

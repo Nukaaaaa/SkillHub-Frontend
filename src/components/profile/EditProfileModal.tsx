@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import styles from './EditProfileModal.module.css';
+import Avatar from '../Avatar';
 
 interface EditProfileModalProps {
     isOpen: boolean;
@@ -58,12 +59,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
         }
     };
 
-    const getFullUrl = (url?: string | null) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
-        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,9 +88,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ isOpen, onClose }) 
                 <form onSubmit={handleSubmit} className={styles.editForm}>
                     <div className={styles.avatarSection}>
                         <div className={styles.avatarPreviewContainer}>
-                            <img
-                                src={getFullUrl(previewUrl) || `https://ui-avatars.com/api/?name=${user.name}&background=4f46e5&color=fff&size=256`}
-                                alt="Avatar preview"
+                            <Avatar 
+                                src={previewUrl} 
+                                name={user.firstname || user.name} 
+                                size="xl"
                                 className={styles.avatarPreview}
                             />
                             <button

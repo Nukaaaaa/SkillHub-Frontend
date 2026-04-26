@@ -24,6 +24,7 @@ import type { Post, User, Comment } from '../types';
 import Loader from '../components/Loader';
 import Button from '../components/Button';
 import ReportModal from '../components/ReportModal';
+import Avatar from '../components/Avatar';
 import styles from './PostDetailPage.module.css';
 
 const PostDetailPage: React.FC = () => {
@@ -232,9 +233,10 @@ const PostDetailPage: React.FC = () => {
 
                     <div className={styles.authorSection}>
                         <Link to={`/profile/${author?.id}`}>
-                            <img
-                                src={author?.avatar || `https://ui-avatars.com/api/?name=${author?.firstname}&background=random`}
-                                alt="avatar"
+                            <Avatar 
+                                src={author?.avatar} 
+                                name={author?.firstname} 
+                                size="md"
                                 className={styles.authorAvatar}
                             />
                         </Link>

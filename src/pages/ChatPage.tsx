@@ -19,6 +19,8 @@ import { userService } from '../api/userService';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { User } from '../types';
 import { useChatStore, type EnrichedChat } from '../store/chatStore';
+import Avatar from '../components/Avatar';
+import { getFullMediaUrl } from '../utils/urlUtils';
 import styles from './ChatPage.module.css';
 
 const ChatPage: React.FC = () => {
@@ -171,16 +173,6 @@ const ChatPage: React.FC = () => {
 
 
 
-    const getFullUrl = (url?: string) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        return `http://127.0.0.1:8080${url}`;
-    };
-
-    const getUserAvatar = (u: User): string => {
-        const avatar = (u.id === currentUser?.id) ? currentUser?.avatar : (u.avatar || u.avatar_url);
-        return (avatar ? getFullUrl(avatar) : null) || `https://ui-avatars.com/api/?name=${u.firstname || u.name}&background=4f46e5&color=fff&size=128`;
-    };
 
     if (loading) {
         return (
@@ -228,10 +220,10 @@ const ChatPage: React.FC = () => {
                                                 className={styles.searchResultItem}
                                                 onClick={() => handleSelectSearchResult(u)}
                                             >
-                                                <img 
-                                                    src={getUserAvatar(u)} 
-                                                    alt={u.firstname} 
-                                                    className={styles.avatarTiny} 
+                                                <Avatar 
+                                                    src={u.id === currentUser?.id ? currentUser?.avatar : (u.avatar || u.avatar_url)} 
+                                                    name={u.firstname || u.name} 
+                                                    size={32}
                                                 />
                                                 <div className={styles.searchInfo}>
                                                     <span className={styles.searchName}>{u.firstname} {u.lastname}</span>
@@ -250,14 +242,12 @@ const ChatPage: React.FC = () => {
                                     className={`${styles.chatItem} ${selectedChat?.chat_id === chat.chat_id ? styles.activeChat : ''}`}
                                     onClick={() => setSelectedChat(chat)}
                                 >
-                                    <div className={styles.avatarWrapper}>
-                                        <img 
-                                            src={getUserAvatar(chat.user)} 
-                                            alt={chat.user.firstname} 
-                                            className={styles.avatar} 
-                                        />
-                                        <div className={`${styles.onlineStatus} ${chat.is_online ? styles.online : styles.offline}`} />
-                                    </div>
+                                    <Avatar 
+                                        src={chat.user.id === currentUser?.id ? currentUser?.avatar : (chat.user.avatar || chat.user.avatar_url)} 
+                                        name={chat.user.firstname || chat.user.name} 
+                                        size="md"
+                                        isOnline={chat.is_online}
+                                    />
                                     <div className={styles.chatInfo}>
                                         <div className={styles.chatHeader}>
                                             <span className={styles.chatName}>{chat.user.firstname} {chat.user.lastname}</span>
@@ -284,10 +274,10 @@ const ChatPage: React.FC = () => {
                         <>
                             <header className={styles.windowHeader}>
                                 <div className={styles.headerUser}>
-                                    <img 
-                                        src={getUserAvatar(selectedChat.user)} 
-                                        alt={selectedChat.user.firstname} 
-                                        className={styles.avatarSmall} 
+                                    <Avatar 
+                                        src={selectedChat.user.avatar || selectedChat.user.avatar_url} 
+                                        name={selectedChat.user.firstname || selectedChat.user.name} 
+                                        size="sm"
                                     />
                                     <div className={styles.userDetails}>
                                         <h3>{selectedChat.user.firstname} {selectedChat.user.lastname}</h3>
@@ -302,7 +292,7 @@ const ChatPage: React.FC = () => {
 
                             <div className={styles.messagesList}>
                                 {messages.map(msg => {
-                                    const fullFileUrl = getFullUrl(msg.file_url);
+                                    const fullFileUrl = getFullMediaUrl(msg.file_url);
 
                                     return (
                                         <div key={msg.id} className={`${styles.messageWrapper} ${msg.sender_id === currentUser?.id ? styles.ownMessage : styles.theirMessage}`}>

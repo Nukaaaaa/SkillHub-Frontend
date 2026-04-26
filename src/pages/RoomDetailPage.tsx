@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import type { User, Post, Room } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
+import Avatar from '../components/Avatar';
 import styles from './RoomDetailPage.module.css';
 
 const RoomDetailPage: React.FC = () => {
@@ -113,10 +114,11 @@ const RoomDetailPage: React.FC = () => {
                 {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
                     <div className={styles.creationBox}>
                         <div className={styles.creationHeader}>
-                            <img
-                                src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.firstname || 'User'}&background=random`}
+                            <Avatar 
+                                src={user?.avatar} 
+                                name={user?.firstname} 
+                                size="md"
                                 className={styles.userAvatarMain}
-                                alt="avatar"
                             />
                             <div className={styles.creationGreeting}>
                                 <h3>{t('rooms.createSomething') || `Что создадим, ${user?.firstname}?`}</h3>
@@ -221,10 +223,11 @@ const RoomDetailPage: React.FC = () => {
                         <article key={`${item.feedType}-${item.id}`} className={styles.articleCard}>
                             <div className={styles.cardTop}>
                                 <Link to={`/profile/${item.userId}`}>
-                                    <img
-                                        src={authorProfiles[item.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[item.userId]?.firstname || 'User'}&background=random`}
+                                    <Avatar 
+                                        src={authorProfiles[item.userId]?.avatar} 
+                                        name={authorProfiles[item.userId]?.firstname} 
+                                        size="sm"
                                         className={styles.userAvatarMini}
-                                        alt="avatar"
                                     />
                                 </Link>
                                 <div className={styles.authorInfo}>

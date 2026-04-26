@@ -21,6 +21,7 @@ import type { Article, User, Room } from '../types';
 import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
 import styles from './RoomArticlesPage.module.css';
+import Avatar from '../components/Avatar';
 
 const RoomArticlesPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
@@ -225,10 +226,11 @@ const RoomArticlesPage: React.FC = () => {
                             </div>
                             <div className={styles.cardBody}>
                                 <div className={styles.authorRow}>
-                                    <img
-                                        src={authorProfiles[article.userId]?.avatar || `https://ui-avatars.com/api/?name=${authorProfiles[article.userId]?.firstname || 'User'}&background=random`}
+                                    <Avatar 
+                                        src={authorProfiles[article.userId]?.avatar} 
+                                        name={authorProfiles[article.userId]?.firstname || 'User'} 
+                                        size="xs"
                                         className={styles.authorAvatar}
-                                        alt="avatar"
                                     />
                                     <span className={styles.authorName}>
                                         {authorProfiles[article.userId]

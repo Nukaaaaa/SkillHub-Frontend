@@ -31,6 +31,7 @@ import Loader from '../components/Loader';
 import type { Article, Post, Direction, User, Comment } from '../types/index';
 import EditProfileModal from '../components/profile/EditProfileModal';
 import SkillRadar from '../components/profile/SkillRadar';
+import Avatar from '../components/Avatar';
 import styles from './ProfilePage.module.css';
 
 const DEFAULT_SKILLS = [
@@ -244,12 +245,6 @@ const ProfilePage: React.FC = () => {
     const isOwnProfile = !id || Number(id) === currentUser?.id;
 
     // Helper for displaying user name
-    const getFullUrl = (url?: string) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
-        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
-    };
 
     const getDisplayName = (u: User | null) => {
         if (!u) return 'User';
@@ -324,10 +319,11 @@ const ProfilePage: React.FC = () => {
                             />
                         </div>
                         <div className={styles.cardBody}>
-                            <img
-                                src={getFullUrl(profileUser?.avatar) || `https://ui-avatars.com/api/?name=${getDisplayName(profileUser)}&background=4f46e5&color=fff&size=256`}
+                            <Avatar 
+                                src={profileUser?.avatar} 
+                                name={getDisplayName(profileUser)} 
+                                size="xl"
                                 className={styles.profileAvatar}
-                                alt="avatar"
                             />
                             <h2 className={styles.userName}>{getDisplayName(profileUser)}</h2>
                             <p className={styles.userHandle}>

@@ -14,6 +14,7 @@ import { userService } from '../api/userService';
 import type { UserRoom, User, Room } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
+import Avatar from '../components/Avatar';
 
 const RoomMembersPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
@@ -85,11 +86,6 @@ const RoomMembersPage: React.FC = () => {
         return m.name || `User #${m.userId}`;
     };
 
-    const getMemberAvatar = (m: UserRoom) => {
-        const profile = memberProfiles[m.userId];
-        if (profile?.avatar) return profile.avatar;
-        return `https://ui-avatars.com/api/?name=${getMemberName(m)}&background=random`;
-    };
 
     const leaders = filteredMembers.slice(0, 3);
 
@@ -132,10 +128,11 @@ const RoomMembersPage: React.FC = () => {
                                     <Medal />
                                 </div>
                                 <div className={styles.avatarWrapper}>
-                                    <img
-                                        src={getMemberAvatar(leader)}
+                                    <Avatar 
+                                        src={memberProfiles[leader.userId]?.avatar} 
+                                        name={getMemberName(leader)} 
+                                        size="lg"
                                         className={styles.leaderAvatar}
-                                        alt="avatar"
                                     />
                                     <span className={styles.rankBadge}>{index + 1}</span>
                                 </div>
@@ -200,10 +197,11 @@ const RoomMembersPage: React.FC = () => {
                                     <tr key={member.userId} className={styles.memberRow}>
                                         <td className={styles.memberCell}>
                                             <div className={styles.userCellInfo}>
-                                                <img
-                                                    src={getMemberAvatar(member)}
+                                                <Avatar 
+                                                    src={memberProfiles[member.userId]?.avatar} 
+                                                    name={getMemberName(member)} 
+                                                    size="sm"
                                                     className={styles.tableAvatar}
-                                                    alt="avatar"
                                                 />
                                                 <div>
                                                     <p className={styles.userName}>{getMemberName(member)}</p>

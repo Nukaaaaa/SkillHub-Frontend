@@ -21,6 +21,7 @@ import { contentService } from '../api/contentService';
 import type { User } from '../types';
 import styles from './AdminPanelPage.module.css';
 import { toast } from 'react-hot-toast';
+import Avatar from '../components/Avatar';
 
 interface Report {
     id: number;
@@ -244,9 +245,10 @@ const AdminPanelPage: React.FC = () => {
                                     <tr key={user.id}>
                                         <td>
                                             <div className={styles.userCell}>
-                                                <img 
-                                                    src={user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.firstname}`} 
-                                                    alt={user.firstname} 
+                                                <Avatar 
+                                                    src={user.avatar_url || user.avatar} 
+                                                    name={user.firstname || user.name} 
+                                                    size="sm"
                                                     className={styles.avatar}
                                                 />
                                                 <div>

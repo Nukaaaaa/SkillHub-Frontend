@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import styles from './Register.module.css';
 import LanguageSelector from '../components/LanguageSelector';
+import Avatar from '../components/Avatar';
 
 const Register: React.FC = () => {
     const { t } = useTranslation();
@@ -109,21 +110,9 @@ const Register: React.FC = () => {
 
                     <div className={styles.sidebarFooter}>
                         <div className={styles.avatars}>
-                            <img
-                                className={styles.avatar}
-                                src="https://ui-avatars.com/api/?name=Doc&background=random"
-                                alt="avatar"
-                            />
-                            <img
-                                className={styles.avatar}
-                                src="https://ui-avatars.com/api/?name=Artist&background=random"
-                                alt="avatar"
-                            />
-                            <img
-                                className={styles.avatar}
-                                src="https://ui-avatars.com/api/?name=Lawyer&background=random"
-                                alt="avatar"
-                            />
+                            <Avatar name="Doc" size="sm" className={styles.avatar} />
+                            <Avatar name="Artist" size="sm" className={styles.avatar} />
+                            <Avatar name="Lawyer" size="sm" className={styles.avatar} />
                         </div>
                         <p className={styles.statsText}>
                             {t('login.registerSidebarStats')}

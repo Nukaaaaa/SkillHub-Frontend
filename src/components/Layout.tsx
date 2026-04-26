@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
 import { achievementService } from '../api/achievementService';
+import Avatar from './Avatar';
 
 const Layout: React.FC = () => {
     const { user, logout } = useAuth();
@@ -50,12 +51,6 @@ const Layout: React.FC = () => {
         navigate('/login');
     };
 
-    const getFullUrl = (url?: string) => {
-        if (!url) return null;
-        if (url.startsWith('http') || url.startsWith('data:')) return url;
-        const baseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://127.0.0.1:8080';
-        return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
-    };
 
     const currentDirection = directionSlug || user?.selectedDirectionSlug;
 
@@ -209,12 +204,13 @@ const Layout: React.FC = () => {
                             )}
                         </div>
 
-                        <div className={styles.userAvatar}>
-                            <img
-                                src={getFullUrl(user?.avatar) || `https://ui-avatars.com/api/?name=${user?.firstname || user?.name || 'User'}&background=random`}
-                                alt="avatar"
-                            />
-                        </div>
+                        <Avatar 
+                            src={user?.avatar} 
+                            name={user?.firstname || user?.name} 
+                            size="sm"
+                            className={styles.userAvatar}
+                            onClick={() => navigate('/profile')}
+                        />
                     </div>
                 </header>
 
