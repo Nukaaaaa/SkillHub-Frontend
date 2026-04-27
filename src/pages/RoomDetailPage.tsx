@@ -7,17 +7,24 @@ import {
     Heart,
     HelpCircle,
     Flame,
-    Pencil
+    Pencil,
+    Users,
+    ArrowRight,
+    UserPlus,
+    Sparkles,
+    GraduationCap
 } from 'lucide-react';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
+import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
 import type { User, Post, Room } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
 import Avatar from '../components/Avatar';
+import ModeratorExamModal from '../components/ModeratorExamModal';
 import styles from './RoomDetailPage.module.css';
 
 const RoomDetailPage: React.FC = () => {
@@ -28,6 +35,7 @@ const RoomDetailPage: React.FC = () => {
 
 
     const [posts, setPosts] = useState<Post[]>([]);
+    const [members, setMembers] = useState<User[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [likesData, setLikesData] = useState<Record<number, number>>({});
     const [answersData, setAnswersData] = useState<Record<number, number>>({});
@@ -35,6 +43,7 @@ const RoomDetailPage: React.FC = () => {
     const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [isExamModalOpen, setIsExamModalOpen] = useState(false);
     const [postModalType, setPostModalType] = useState<'POST' | 'QUESTION'>('POST');
 
     const fetchData = async () => {
@@ -44,8 +53,16 @@ const RoomDetailPage: React.FC = () => {
             const [postData] = await Promise.all([
                 contentService.getPostsByRoom(room.id)
             ]);
+            const membersData = await roomService.getMembers(room.slug);
 
             setPosts(postData);
+
+            // Fetch profiles for the first 5 members for the sidebar widget
+            const sidebarMemberIds = membersData.slice(0, 5).map(m => m.userId);
+            const sidebarProfiles = await Promise.all(
+                sidebarMemberIds.map(id => userService.getUserById(id).catch(() => null))
+            );
+            setMembers(sidebarProfiles.filter((p): p is User => p !== null));
 
             try {
                 const likeCounts = await Promise.all(
@@ -277,6 +294,76 @@ const RoomDetailPage: React.FC = () => {
             </div>
 
             <aside className={styles.rightSidebar}>
+                {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                    <div className={styles.aiPromoWidget}>
+                        <div className={styles.aiPromoHeader}>
+                            <div className={styles.aiPromoIcon}>
+                                <Sparkles size={20} color="#8b5cf6" />
+                            </div>
+                            <span>ИИ Модерация</span>
+                        </div>
+                        <h4>Хотите стать модератором?</h4>
+                        <p>Пройдите экзамен под руководством ИИ и получите роль эксперта в этой комнате.</p>
+                        <button 
+                            className={styles.aiStartBtn}
+                            onClick={() => setIsExamModalOpen(true)}
+                        >
+                            Пройти квалификацию
+                            <GraduationCap size={18} />
+                        </button>
+                    </div>
+                )}
+
+                <div className={styles.sidebarWidget}>
+                    <div className={styles.widgetHeader}>
+                        <h3 className={styles.widgetTitle}>
+                            <Users size={18} color="#4f46e5" />
+                            {t('members.title') || 'Участники комнаты'}
+                        </h3>
+                        <span className={styles.memberCountBadge}>{room.participantsCount || 0}</span>
+                    </div>
+                    
+                    <div className={styles.membersPreview}>
+                        {members.length > 0 ? (
+                            <div className={styles.avatarStack}>
+                                {members.map((member) => (
+                                    <Link 
+                                        key={member.id} 
+                                        to={`/profile/${member.id}`} 
+                                        title={`${member.firstname} ${member.lastname}`}
+                                        className={styles.stackItem}
+                                    >
+                                        <Avatar 
+                                            src={member.avatar} 
+                                            name={member.firstname} 
+                                            size="sm" 
+                                            className={styles.sidebarAvatar}
+                                        />
+                                    </Link>
+                                ))}
+                                {(room.participantsCount || 0) > members.length && (
+                                    <div className={styles.moreMembersCircle}>
+                                        +{(room.participantsCount || 0) - members.length}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles.emptyMembers}>
+                                <UserPlus size={20} />
+                                <p>Будьте первым участником!</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <button 
+                        className={styles.viewAllBtn}
+                        onClick={() => navigate(`/rooms/${room.slug}/members`)}
+                    >
+                        <span>{t('members.allMembers') || 'Все участники'}</span>
+                        <ArrowRight size={14} />
+                    </button>
+                </div>
+
                 <div className={styles.sidebarWidget}>
                     <h3 className={styles.widgetTitle}>
                         <Flame size={18} color="#f97316" />
@@ -311,6 +398,14 @@ const RoomDetailPage: React.FC = () => {
                 roomId={room.id}
                 initialType={postModalType}
                 onSuccess={fetchData}
+            />
+
+            <ModeratorExamModal
+                isOpen={isExamModalOpen}
+                onClose={() => setIsExamModalOpen(false)}
+                roomName={room.name}
+                roomId={room.id}
+                roomSlug={room.slug}
             />
         </div>
     );

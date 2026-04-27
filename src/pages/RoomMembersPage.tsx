@@ -11,6 +11,7 @@ import {
 
 import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
+import { achievementService } from '../api/achievementService';
 import type { UserRoom, User, Room } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
@@ -30,7 +31,7 @@ const RoomMembersPage: React.FC = () => {
         if (!room) return;
         try {
             setLoading(true);
-            const data = await roomService.getMembers(room.id);
+            const data = await roomService.getMembers(room.slug);
             setMembers(data);
 
             const profilePromises = data.map(m =>
@@ -41,10 +42,24 @@ const RoomMembersPage: React.FC = () => {
             );
             const profiles = await Promise.all(profilePromises);
 
+            // Also fetch stats for each profile to show reputation
+            const statsPromises = profiles.map(p => 
+                p ? achievementService.getUserStats(p.id).catch(() => null) : null
+            );
+            const allStats = await Promise.all(statsPromises);
+
             const profileMap: Record<number, User> = {};
-            profiles.forEach(p => {
+            profiles.forEach((p, idx) => {
                 if (p) {
-                    profileMap[p.id] = p;
+                    const stats = allStats[idx];
+                    profileMap[p.id] = {
+                        ...p,
+                        stats: stats ? {
+                            roomsJoined: stats.directionStats?.length || 0,
+                            sessionsAttended: Math.floor(stats.totalXp / 100), // Demo proxy for articles/sessions
+                            points: stats.totalXp
+                        } : p.stats
+                    };
                 }
             });
             setMemberProfiles(profileMap);

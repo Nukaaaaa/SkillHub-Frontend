@@ -9,6 +9,7 @@ import { MessageSquare, Users, SearchX, PlusCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import AiRecommendations from '../components/AiRecommendations';
 
 // Helper to get random avatars for demo purposes
 const getDemoAvatars = (count: number) => [
@@ -99,6 +100,10 @@ const RoomsPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {filterType === 'all' && !selectedTag && rooms.length > 0 && (
+                <AiRecommendations rooms={rooms} />
+            )}
 
             <div className={styles.grid}>
                 {rooms

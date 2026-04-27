@@ -4,11 +4,14 @@ import { toast } from 'react-hot-toast';
 import {
     X,
     Brain,
-    Bot
+    Bot,
+    Loader2
 } from 'lucide-react';
 import RichTextEditor from './RichTextEditor';
 
 import { contentService } from '../api/contentService';
+import { aiService } from '../api/aiService';
+import type { ArticleModerationResponse } from '../api/aiService';
 import { useAuth } from '../context/AuthContext';
 import styles from './CreateArticleModal.module.css';
 
@@ -34,6 +37,10 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>([]);
     const [submitting, setSubmitting] = useState(false);
+    
+    // AI Related State
+    const [aiResult, setAiResult] = useState<ArticleModerationResponse | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -41,8 +48,38 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
             setContent('');
             setTags([]);
             setDifficulty('BEGINNER');
+            setAiResult(null);
         }
     }, [isOpen]);
+
+    const handleAiCheck = async () => {
+        if (!title.trim() || !content.trim()) {
+            toast.error('Заполните заголовок и текст для проверки');
+            return;
+        }
+
+        setAiLoading(true);
+        try {
+            const result = await aiService.moderateArticle({
+                requestId: `req-${Date.now()}`,
+                roomId: roomId,
+                difficultyLevel: difficulty,
+                title,
+                content
+            });
+            setAiResult(result);
+            if (result.verdict === 'APPROVED') {
+                toast.success('AI Инспектор: Контент одобрен!');
+            } else {
+                toast.error(`AI Инспектор: ${result.verdict}`);
+            }
+        } catch (error) {
+            console.error('AI Moderation failed', error);
+            toast.error('Не удалось связаться с AI Инспектором');
+        } finally {
+            setAiLoading(false);
+        }
+    };
 
     const handleAddTag = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && tagInput.trim()) {
@@ -188,17 +225,43 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                                 <span className={styles.aiTitle}>AI Инспектор</span>
                             </div>
                             <p className={styles.aiText}>
-                                ИИ проверит вашу статью на техническую грамотность в реальном времени.
+                                {aiResult ? aiResult.note : 'ИИ проверит вашу статью на техническую грамотность в реальном времени.'}
                             </p>
+                            
+                            {aiResult && (
+                                <div className={`${styles.verdict} ${styles[aiResult.verdict]}`}>
+                                    {aiResult.verdict}
+                                </div>
+                            )}
+
                             <div className={styles.aiProgress}>
                                 <div className={styles.progressLabel}>
-                                    <span>Профессионализм</span>
-                                    <span>--%</span>
+                                    <span>Качество контента</span>
+                                    <span>{aiResult?.qualityScore ?? '--'}%</span>
                                 </div>
                                 <div className={styles.progressBar}>
-                                    <div className={styles.progressFill} style={{ width: '0%' }}></div>
+                                    <div className={styles.progressFill} style={{ width: `${aiResult?.qualityScore ?? 0}%` }}></div>
                                 </div>
                             </div>
+                            
+                            <button 
+                                className={styles.aiActionBtn} 
+                                onClick={handleAiCheck}
+                                disabled={aiLoading || !title.trim() || !content.trim()}
+                            >
+                                {aiLoading ? (
+                                    <>
+                                        <Loader2 className={styles.spin} size={16} />
+                                        Анализирую...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Brain size={16} />
+                                        Запустить проверку
+                                    </>
+                                )}
+                            </button>
+
                             <div className={styles.aiBgIcon}>
                                 <Brain size={80} />
                             </div>

@@ -1,0 +1,186 @@
+.wrapper {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: 1.5rem;
+    padding: 1.75rem;
+    color: white;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.6s ease-out;
+}
+
+.wrapper::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.titleInfo {
+    display: flex;
+    gap: 1rem;
+}
+
+.iconBox {
+    background: rgba(99, 102, 241, 0.2);
+    padding: 0.75rem;
+    border-radius: 1rem;
+    color: #818cf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.titleInfo h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.01em;
+}
+
+.titleInfo p {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.sparkleIcon {
+    color: #fbbf24;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+}
+
+.explanation {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.explanation p {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+    margin: 0;
+    font-style: italic;
+}
+
+.roomsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.roomCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.roomCard:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #6366f1;
+    transform: translateY(-4px);
+}
+
+.roomInfo h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+    color: white;
+}
+
+.roomInfo p {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+.arrow {
+    color: #6366f1;
+    transition: transform 0.3s;
+}
+
+.roomCard:hover .arrow {
+    transform: translateX(4px);
+}
+
+.containerLoading {
+    background: #f8fafc;
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #64748b;
+    border: 1px dashed #e2e8f0;
+    margin-bottom: 2.5rem;
+}
+
+.spin {
+    animation: spin 2s linear infinite;
+    color: #4f46e5;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+    .roomsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.emptyPrompt {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px dashed rgba(99, 102, 241, 0.3);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #e2e8f0;
+}
+
+.emptyPrompt:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-style: solid;
+    transform: scale(1.01);
+}
+
+.emptyPrompt p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+

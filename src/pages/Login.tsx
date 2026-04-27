@@ -45,8 +45,17 @@ const Login: React.FC = () => {
     };
 
     const handleSocialLogin = (provider: string) => {
-        // Social login will be implemented with full OAuth flow
-        console.log(`Social login initiated for ${provider}`);
+        const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+        
+        if (provider === 'Google') {
+            window.location.href = `${apiBase}/auth/google/login`;
+        } else if (provider === 'GitHub') {
+            window.location.href = `${apiBase}/auth/github/login`;
+        } else if (provider === 'LinkedIn') {
+            window.location.href = `${apiBase}/auth/linkedin/login`;
+        } else {
+            console.log(`Social login initiated for ${provider}`);
+        }
     };
 
     return (
@@ -100,7 +109,7 @@ const Login: React.FC = () => {
                         <div className={styles.formGroup}>
                             <div className={styles.labelWrapper}>
                                 <label className={styles.label}>{t('login.password')}</label>
-                                <a href="#" className={styles.forgotLink}>{t('login.forgotPassword')}</a>
+                                <Link to="/forgot-password" className={styles.forgotLink}>{t('login.forgotPassword')}</Link>
                             </div>
                             <input
                                 type="password"

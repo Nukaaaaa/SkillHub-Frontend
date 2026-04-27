@@ -3,6 +3,10 @@ const apiClient = getServiceClient('ROOM');
 import type { Room, RoomDto, UserRoom, RoomRole } from '../types';
 
 export const roomService = {
+    getAllRooms: async (): Promise<Room[]> => {
+        const response = await apiClient.get<Room[]>('/rooms/all');
+        return response.data;
+    },
     getRoom: async (slug: string): Promise<Room> => {
         const response = await apiClient.get<Room>(`/rooms/${slug}`);
         return response.data;
@@ -45,8 +49,12 @@ export const roomService = {
         await apiClient.post(`/rooms/${roomSlug}/leave?userId=${userId}`);
     },
 
-    getMembers: async (roomId: number): Promise<UserRoom[]> => {
-        const response = await apiClient.get<UserRoom[]>(`/rooms/${roomId}/members`);
+    getMembers: async (roomSlug: string): Promise<UserRoom[]> => {
+        const response = await apiClient.get<UserRoom[]>(`/rooms/${roomSlug}/members`);
+        return response.data;
+    },
+    updateMemberRole: async (roomSlug: string, userId: number, role: RoomRole): Promise<UserRoom> => {
+        const response = await apiClient.put<UserRoom>(`/rooms/${roomSlug}/members/${userId}/role?role=${role}`);
         return response.data;
     },
 };

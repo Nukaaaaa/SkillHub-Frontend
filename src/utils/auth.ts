@@ -27,9 +27,6 @@ export const getUserIdFromToken = (token: string): number | null => {
     const payload = parseJwt(token);
     if (!payload) return null;
 
-    console.log('JWT Payload Keys:', Object.keys(payload)); // Show all available fields
-    console.log('Full JWT Payload:', payload); // Show the whole thing for debugging
-
     // Try a broad range of possible ID claim names
     const id = payload?.sub ||
         payload?.id ||

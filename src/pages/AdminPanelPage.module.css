@@ -281,6 +281,119 @@
     width: fit-content;
 }
 
+.scoreBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    color: white;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
+}
+
+.aiVerdict {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    line-height: 1.4;
+    max-width: 400px;
+}
+
+.aiVerdict span {
+    color: #e2e8f0;
+    font-style: italic;
+}
+
+.roomAssignBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.roomSelect {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    flex: 1;
+}
+
+.assignBtn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.assignBtn:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.assignBtn:disabled {
+    background: #1e293b;
+    color: #475569;
+    cursor: not-allowed;
+}
+
+.indicator {
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 700;
+}
+
+.blockRow {
+    display: flex;
+    gap: 4px;
+}
+
+.blockRow button {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.blockRow button:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.unblockBtn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .tabBtn {
     padding: 8px 16px;
     border-radius: 8px;

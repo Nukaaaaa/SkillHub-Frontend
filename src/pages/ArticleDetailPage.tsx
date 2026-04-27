@@ -13,7 +13,9 @@ import {
     ArrowLeft,
     Loader,
     BookOpen,
-    Flag
+    Flag,
+    Sparkles,
+    Lightbulb
 } from 'lucide-react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -23,6 +25,7 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
+import { aiService } from '../api/aiService';
 import { useAuth } from '../context/AuthContext';
 import type { Article, User, WikiEntry, Room } from '../types';
 import Button from '../components/Button';
@@ -61,6 +64,11 @@ const ArticleDetailPage: React.FC = () => {
     const [isInWiki, setIsInWiki] = useState<boolean>(false);
     const [sections, setSections] = useState<{ id: number; name: string }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [comments, setComments] = useState<any[]>([]);
+    const [commentText, setCommentText] = useState('');
+    const [submittingComment, setSubmittingComment] = useState(false);
+    const [aiAnalysis, setAiAnalysis] = useState<{ summary: string; keyTakeaways: string[] } | null>(null);
+    const [analyzing, setAnalyzing] = useState(false);
 
     const fetchData = async () => {
         if (!articleId) return;
@@ -98,6 +106,13 @@ const ArticleDetailPage: React.FC = () => {
                 } catch (e) {
                     console.error('Failed to fetch sections', e);
                 }
+
+                // Fetch comments
+                const comms = await contentService.getCommentsByPost(Number(articleId));
+                setComments(comms);
+
+                // Start AI analysis
+                handleAiAnalyze(found.title, found.content);
             } else {
                 toast.error('Статья не найдена');
                 navigate(-1);
@@ -255,6 +270,29 @@ const ArticleDetailPage: React.FC = () => {
         return () => observer.disconnect();
     }, [headings]);
 
+    const handleAddComment = async () => {
+        if (!commentText.trim() || !user || !articleId) return;
+        setSubmittingComment(true);
+        try {
+            const newComment = await contentService.createComment({ 
+                userId: user.id, // Добавляем userId
+                postId: Number(articleId), 
+                content: commentText 
+            });
+            // In a real app we'd fetch the author info too, but for UI feedback:
+            setComments(prev => [...prev, { 
+                ...newComment, 
+                authorName: (user.firstname || '') + ' ' + (user.lastname || '') 
+            }]);
+            setCommentText('');
+            toast.success('Комментарий добавлен');
+        } catch (e) {
+            toast.error('Не удалось отправить комментарий');
+        } finally {
+            setSubmittingComment(false);
+        }
+    };
+
     const handleDownloadPDF = () => {
         if (!articleRef.current || !article) return;
 
@@ -275,6 +313,21 @@ const ArticleDetailPage: React.FC = () => {
             setDownloading(false);
             toast.error('Ошибка при генерации PDF');
         });
+    };
+    
+    const handleAiAnalyze = async (title: string, content: string) => {
+        setAnalyzing(true);
+        try {
+            const cleanContent = content.replace(/<[^>]*>?/gm, '');
+            const res = await aiService.analyzeArticle({ title, content: cleanContent });
+            if (!res.error) {
+                setAiAnalysis({ summary: res.summary, keyTakeaways: res.keyTakeaways });
+            }
+        } catch (e) {
+            console.error("AI Analysis failed", e);
+        } finally {
+            setAnalyzing(false);
+        }
     };
 
     const handleConfirmWiki = async (sectionId?: number) => {
@@ -407,6 +460,37 @@ const ArticleDetailPage: React.FC = () => {
                         className={styles.content}
                         dangerouslySetInnerHTML={{ __html: parsedContent || article.content }}
                     />
+                    
+                    { (analyzing || aiAnalysis) && (
+                        <div className={styles.aiInsightSection}>
+                            <div className={styles.aiInsightHeader}>
+                                <Sparkles size={20} color="#8b5cf6" />
+                                <h3>AI Insight & Резюме</h3>
+                            </div>
+                            
+                            {analyzing ? (
+                                <div className={styles.aiAnalyzing}>
+                                    <Loader className={styles.spinning} size={20} />
+                                    <span>ИИ анализирует статью...</span>
+                                </div>
+                            ) : (
+                                <div className={styles.aiAnalysisBody}>
+                                    <p className={styles.aiSummary}>{aiAnalysis?.summary}</p>
+                                    <div className={styles.takeaways}>
+                                        <h4>Ключевые моменты:</h4>
+                                        <ul>
+                                            {aiAnalysis?.keyTakeaways.map((t, i) => (
+                                                <li key={i}>
+                                                    <Lightbulb size={14} color="#f59e0b" />
+                                                    {t}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <footer className={styles.articleFooter}>
                         <div className={styles.tags}>
@@ -483,14 +567,50 @@ const ArticleDetailPage: React.FC = () => {
             <section className={styles.commentsSection}>
                 <div className={styles.container}>
                     <div className={styles.commentsHeader}>
-                        <h2>{t('article.comments') || 'Комментарии'} (0)</h2>
+                        <h2>Комментарии ({comments.length})</h2>
                     </div>
 
                     <div className={styles.commentInputWrapper}>
-                        <textarea placeholder="Написать комментарий..." className={styles.commentArea}></textarea>
+                        <textarea 
+                            placeholder="Написать комментарий..." 
+                            className={styles.commentArea}
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                        ></textarea>
                         <div className={styles.commentActions}>
-                            <Button>Отправить</Button>
+                            <Button 
+                                onClick={handleAddComment} 
+                                disabled={submittingComment || !commentText.trim()}
+                            >
+                                {submittingComment ? 'Отправка...' : 'Отправить'}
+                            </Button>
                         </div>
+                    </div>
+
+                    <div className={styles.commentsList}>
+                        {comments.length > 0 ? (
+                            comments.map((comment, index) => (
+                                <div key={comment.id || index} className={styles.commentCard}>
+                                    <div className={styles.commentHeader}>
+                                        <div className={styles.commentAuthorInfo}>
+                                            <Avatar 
+                                                name={comment.authorName || 'Пользователь'} 
+                                                size="sm" 
+                                            />
+                                            <span className={styles.commentAuthor}>{comment.authorName || `User #${comment.userId}`}</span>
+                                        </div>
+                                        <span className={styles.commentDate}>
+                                            {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : 'Только что'}
+                                        </span>
+                                    </div>
+                                    <div className={styles.commentBody}>
+                                        {comment.content}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className={styles.noComments}>Комментариев пока нет. Будьте первым!</p>
+                        )}
                     </div>
                 </div>
             </section>

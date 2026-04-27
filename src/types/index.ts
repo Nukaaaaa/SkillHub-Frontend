@@ -20,7 +20,7 @@ export interface Room {
     tags?: string[];
 }
 
-export type RoomRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+export type RoomRole = 'OWNER' | 'ADMIN' | 'MODERATOR' | 'MEMBER';
 
 export interface UserRoom {
     userId: number;

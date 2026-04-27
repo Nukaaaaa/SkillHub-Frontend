@@ -151,7 +151,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         try {
             const response = await userClient.post('/auth/login', { email, password });
-            console.log('Full Login Response:', response.data);
             const { token: newToken } = response.data;
 
             localStorage.setItem('token', newToken);
@@ -291,46 +290,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateUser = async (userData: Partial<User> & { avatarFile?: File }) => {
         if (!user) return;
 
-        console.log('Starting profile update with data:', userData);
-
         let avatarUrl = user.avatar;
 
-        // 1. If there's a file, upload it to MinIO first
         if (userData.avatarFile) {
             try {
-                console.log('Uploading new avatar to MinIO...');
                 const result = await userService.uploadAvatar(userData.avatarFile);
                 avatarUrl = result.avatar_url;
-                console.log('New avatar URL from server:', avatarUrl);
             } catch (error) {
                 console.error('Failed to upload avatar to MinIO:', error);
-                // Continue with other updates if avatar fails? Or throw?
-                // For now, continue but log error.
             }
         } else if (userData.avatar && userData.avatar.startsWith('data:')) {
             avatarUrl = userData.avatar;
         }
 
-        // 2. Prepare user state update
         const updatedUser = { 
             ...user, 
             ...userData, 
             avatar: avatarUrl 
         };
 
-        // CRITICAL: Recalculate 'name' since the UI depends on it
         const newFirstname = userData.firstname || user.firstname;
         const newLastname = userData.lastname || user.lastname;
         updatedUser.name = `${newFirstname} ${newLastname}`.trim();
 
-        console.log('Updating local user state to:', updatedUser);
         setUser(updatedUser);
 
-        // 3. Sync non-avatar fields to backend (avatar URL is already synced by UploadAvatar endpoint)
         const { avatar, avatarFile, name, ...backendFields } = userData;
         if (Object.keys(backendFields).length > 0) {
             try {
-                console.log('Syncing non-avatar fields with backend:', backendFields);
                 await userService.updateUser(user.id, backendFields);
             } catch (error) {
                 console.error('Failed to sync profile with backend:', error);

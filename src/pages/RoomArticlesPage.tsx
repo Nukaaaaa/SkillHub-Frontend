@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import {
     Bookmark,
     Heart,
@@ -24,10 +24,12 @@ import styles from './RoomArticlesPage.module.css';
 import Avatar from '../components/Avatar';
 
 const RoomArticlesPage: React.FC = () => {
+    const { roomSlug } = useParams<{ roomSlug: string }>();
     const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { isMember, user } = useAuth();
+    
     const [articles, setArticles] = useState<Article[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
@@ -36,6 +38,54 @@ const RoomArticlesPage: React.FC = () => {
     const [likesData, setLikesData] = useState<Record<number, number>>({});
     const [likedArticles, setLikedArticles] = useState<Record<number, boolean>>({});
     const [bookmarkedArticles, setBookmarkedArticles] = useState<Record<number, boolean>>({});
+
+    const handleLike = async (e: React.MouseEvent, articleId: number) => {
+        e.stopPropagation();
+        if (!user) {
+            toast.error(t('common.loginRequired') || 'Войдите, чтобы ставить лайки');
+            return;
+        }
+
+        try {
+            const isLiked = likedArticles[articleId];
+            if (isLiked) {
+                await interactionService.removeLike('article', articleId);
+                setLikesData(prev => ({ ...prev, [articleId]: (prev[articleId] || 1) - 1 }));
+                setLikedArticles(prev => ({ ...prev, [articleId]: false }));
+                localStorage.removeItem(`liked_article_${user.id}_${articleId}`);
+            } else {
+                await interactionService.addLike('article', articleId);
+                setLikesData(prev => ({ ...prev, [articleId]: (prev[articleId] || 0) + 1 }));
+                setLikedArticles(prev => ({ ...prev, [articleId]: true }));
+                localStorage.setItem(`liked_article_${user.id}_${articleId}`, 'true');
+            }
+        } catch (error) {
+            toast.error('Не удалось поставить лайк');
+        }
+    };
+
+    const handleBookmark = async (e: React.MouseEvent, articleId: number) => {
+        e.stopPropagation();
+        if (!user) {
+            toast.error(t('common.loginRequired') || 'Войдите, чтобы сохранять закладки');
+            return;
+        }
+
+        try {
+            const isBookmarked = bookmarkedArticles[articleId];
+            if (isBookmarked) {
+                await interactionService.removeBookmark('article', articleId);
+                setBookmarkedArticles(prev => ({ ...prev, [articleId]: false }));
+                toast.success('Удалено из закладок');
+            } else {
+                await interactionService.addBookmark('article', articleId);
+                setBookmarkedArticles(prev => ({ ...prev, [articleId]: true }));
+                toast.success('Добавлено в закладки');
+            }
+        } catch (error) {
+            toast.error('Ошибка при работе с закладками');
+        }
+    };
 
     const fetchArticles = async () => {
         if (!room) return;
@@ -248,17 +298,25 @@ const RoomArticlesPage: React.FC = () => {
                                 </div>
                                 <h3
                                     className={styles.articleTitle}
-                                    onClick={() => navigate(`/rooms/${room.slug}/articles/${article.id}`)}
+                                    onClick={() => navigate(`/rooms/${roomSlug}/articles/${article.id}`)}
                                 >
                                     {article.title}
                                 </h3>
                                 <p className={styles.articlePreview}>{createExcerpt(article.content, 120)}</p>
                                 <div className={styles.cardFooter}>
                                     <div className={styles.actionsGroup}>
-                                        <div className={`${styles.actionIndicator} ${styles.bookmarkIndicator} ${bookmarkedArticles[article.id] ? styles.activeBookmark : ''}`}>
+                                        <div 
+                                            className={`${styles.actionIndicator} ${styles.bookmarkIndicator} ${bookmarkedArticles[article.id] ? styles.activeBookmark : ''}`}
+                                            onClick={(e) => handleBookmark(e, article.id)}
+                                            title="Добавить в закладки"
+                                        >
                                             <Bookmark size={16} fill={bookmarkedArticles[article.id] ? "currentColor" : "none"} />
                                         </div>
-                                        <div className={`${styles.actionIndicator} ${styles.likeIndicator} ${likedArticles[article.id] ? styles.liked : ''}`}>
+                                        <div 
+                                            className={`${styles.actionIndicator} ${styles.likeIndicator} ${likedArticles[article.id] ? styles.liked : ''}`}
+                                            onClick={(e) => handleLike(e, article.id)}
+                                            title="Лайкнуть"
+                                        >
                                             <Heart 
                                                 size={16} 
                                                 fill={likedArticles[article.id] ? "currentColor" : "none"} 

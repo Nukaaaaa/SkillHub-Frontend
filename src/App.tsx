@@ -23,6 +23,8 @@ import CreateArticlePage from './pages/CreateArticlePage';
 import AdminPanelPage from './pages/AdminPanelPage';
 import ModeratorPanelPage from './pages/ModeratorPanelPage';
 import ChatPage from './pages/ChatPage';
+import LoginSuccess from './pages/LoginSuccess';
+import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
@@ -62,6 +64,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/login-success" element={<LoginSuccess />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route path="/dashboard" element={
             <PrivateRoute>

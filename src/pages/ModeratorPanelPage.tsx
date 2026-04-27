@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { AlertTriangle, CheckCircle, XCircle, Database, ShieldAlert, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
+import { Navigate, Link } from 'react-router-dom';
+import { AlertTriangle, CheckCircle, XCircle, Database, ShieldAlert, MessageSquare, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { interactionService } from '../api/interactionService';
-import { contentService } from '../api/contentService';
-import { adminService } from '../api/adminService';
 import styles from './ModeratorPanelPage.module.css';
 import adminStyles from './AdminPanelPage.module.css';
 import { toast } from 'react-hot-toast';
@@ -14,9 +12,9 @@ interface Report {
     reporter_id: number;
     target_id: number;
     target_author_id: number;
-    target_type: string;
+    target_type: 'post' | 'article' | 'comment';
     reason: string;
-    status: 'OPEN' | 'REJECTED' | 'RESOLVED';
+    status: 'OPEN' | 'REJECTED' | 'RESOLVED' | 'ESCALATED';
     created_at: string;
 }
 
@@ -28,7 +26,7 @@ const ModeratorPanelPage: React.FC = () => {
     const fetchReports = async () => {
         try {
             setLoading(true);
-            const data = await interactionService.getReports();
+            const data = await interactionService.getReports('OPEN');
             setReports(data);
         } catch (error) {
             toast.error('Ошибка при загрузке жалоб');
@@ -57,20 +55,13 @@ const ModeratorPanelPage: React.FC = () => {
         }
     };
 
-    const handleResolveAndBlock = async (report: Report) => {
+    const handleEscalateReport = async (reportId: number) => {
         try {
-            // Delete content
-            if (report.target_type === 'post') await contentService.deletePost(report.target_id);
-            if (report.target_type === 'article') await contentService.deleteArticle(report.target_id);
-
-            // Block user & resolve report
-            await adminService.blockUser(report.target_author_id, 60);
-            await interactionService.updateReportStatus(report.id, 'RESOLVED');
-            
-            setReports(prev => prev.filter(r => r.id !== report.id));
-            toast.success('Контент удален, пользователь заблокирован');
+            await interactionService.updateReportStatus(reportId, 'ESCALATED');
+            setReports(prev => prev.filter(r => r.id !== reportId));
+            toast.success('Жалоба передана администратору');
         } catch (error) {
-            toast.error('Ошибка при обработке жалобы');
+            toast.error('Ошибка при передаче жалобы');
         }
     };
 
@@ -111,8 +102,9 @@ const ModeratorPanelPage: React.FC = () => {
                                     <thead>
                                         <tr>
                                             <th>Тип</th>
+                                            <th>Контент</th>
                                             <th>Причина</th>
-                                            <th>Автор контента (ID)</th>
+                                            <th>Автор (ID)</th>
                                             <th>Дата</th>
                                             <th className={adminStyles.actionsCell}>Модерация</th>
                                         </tr>
@@ -125,6 +117,23 @@ const ModeratorPanelPage: React.FC = () => {
                                                         {report.target_type === 'post' ? <MessageSquare size={12} /> : null}
                                                         {report.target_type}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    {report.target_type === 'comment' ? (
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
+                                                            Коммент #{report.target_id}
+                                                        </span>
+                                                    ) : (
+                                                        <Link 
+                                                            to={report.target_type === 'article' ? `/articles/${report.target_id}` : `/posts/${report.target_id}`} 
+                                                            target="_blank"
+                                                            className={adminStyles.contentLink}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', textDecoration: 'underline' }}
+                                                        >
+                                                            <ExternalLink size={12} />
+                                                            Открыть {report.target_type}
+                                                        </Link>
+                                                    )}
                                                 </td>
                                                 <td className={adminStyles.reasonCol}>
                                                     {report.reason}
@@ -144,14 +153,15 @@ const ModeratorPanelPage: React.FC = () => {
                                                         onClick={() => handleRejectReport(report.id)}
                                                     >
                                                         <XCircle size={14} style={{ marginRight: '4px' }} />
-                                                        Отклонить
+                                                        Ложная
                                                     </button>
                                                     <button 
                                                         className={adminStyles.resolveBtn}
-                                                        onClick={() => handleResolveAndBlock(report)}
+                                                        onClick={() => handleEscalateReport(report.id)}
+                                                        style={{ background: '#f59e0b', color: 'white' }}
                                                     >
                                                         <ShieldAlert size={14} style={{ marginRight: '4px' }} />
-                                                        Удалить & Блок
+                                                        Админу
                                                     </button>
                                                 </td>
                                             </tr>

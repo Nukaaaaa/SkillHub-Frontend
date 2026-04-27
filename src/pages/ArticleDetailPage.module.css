@@ -466,10 +466,68 @@
     outline: none;
     font-size: 1rem;
     resize: none;
+    color: #1e293b;
 }
 
 .commentActions {
     display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.commentsList {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.commentCard {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.commentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.commentAuthorInfo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.commentAuthor {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.9375rem;
+}
+
+.commentDate {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.commentBody {
+    line-height: 1.6;
+    color: #475569;
+    font-size: 0.9375rem;
+}
+
+.noComments {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+    font-style: italic;
+    background: #f8fafc;
+    border-radius: 1rem;
+    border: 1px dashed #e2e8f0;
 }
 
 .reportedItem {
