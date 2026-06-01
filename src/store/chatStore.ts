@@ -12,6 +12,7 @@ interface ChatState {
     selectedChat: EnrichedChat | null;
     messages: Message[];
     loading: boolean;
+    fetchError: string | null;
     
     // Actions
     setLoading: (loading: boolean) => void;
@@ -34,20 +35,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
     selectedChat: null,
     messages: [],
     loading: false,
+    fetchError: null,
 
     setLoading: (loading) => set({ loading }),
 
     fetchChats: async () => {
-        set({ loading: true });
+        set({ loading: true, fetchError: null });
         try {
             const chatList = await chatService.listChats();
-            const enriched = await Promise.all(chatList.map(async (c) => {
-                const user = await userService.getUserById(c.recipient_id);
-                return { ...c, user };
-            }));
+            const enriched = (
+                await Promise.allSettled(
+                    chatList.map(async (c) => {
+                        try {
+                            const user = await userService.getUserById(c.recipient_id);
+                            return { ...c, user } as EnrichedChat;
+                        } catch {
+                            return {
+                                ...c,
+                                user: {
+                                    id: c.recipient_id,
+                                    firstname: 'Пользователь',
+                                    lastname: `#${c.recipient_id}`,
+                                    email: '',
+                                } as User,
+                            } as EnrichedChat;
+                        }
+                    })
+                )
+            )
+                .filter((r): r is PromiseFulfilledResult<EnrichedChat> => r.status === 'fulfilled')
+                .map((r) => r.value);
+
             set({ chats: enriched });
-        } catch (error) {
+        } catch (error: unknown) {
+            const msg =
+                (error as { response?: { status?: number } })?.response?.status === 401
+                    ? 'Нужна авторизация. Перезайдите в аккаунт.'
+                    : 'Не удалось загрузить чаты. Проверьте, что Chat Service и API Gateway запущены.';
             console.error('Failed to fetch chats:', error);
+            set({ chats: [], fetchError: msg });
         } finally {
             set({ loading: false });
         }

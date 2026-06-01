@@ -11,7 +11,7 @@ import {
     XCircle,
     ClipboardCheck,
     Sparkles,
-    MessageSquare
+    ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminService } from '../api/adminService';
@@ -69,7 +69,8 @@ const AdminPanelPage: React.FC = () => {
     const fetchReports = async () => {
         try {
             setLoading(true);
-            const data = await interactionService.getReports('OPEN');
+            // Pass empty string to get OPEN + ESCALATED for Admin
+            const data = await interactionService.getReports('');
             setReports(data.filter((r: any) => r.target_type !== 'moderator_application'));
             setApplications(data.filter((r: any) => r.target_type === 'moderator_application'));
         } catch (error) {
@@ -462,8 +463,31 @@ const AdminPanelPage: React.FC = () => {
                                 <tbody>
                                     {reports.map(report => (
                                         <tr key={report.id}>
-                                            <td><span className={styles.targetBadge}>{report.target_type}</span></td>
-                                            <td>#{report.target_id}</td>
+                                            <td>
+                                                <div className={styles.typeCol}>
+                                                    <span className={styles.targetBadge}>{report.target_type}</span>
+                                                    {report.status === 'ESCALATED' && (
+                                                        <span className={styles.escalatedBadge}>От модератора</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.contentCol}>
+                                                    <span>#{report.target_id}</span>
+                                                    <a 
+                                                        href={
+                                                            report.target_type === 'article' ? `/articles/${report.target_id}` :
+                                                            report.target_type === 'post' ? `/posts/${report.target_id}` : '#'
+                                                        } 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className={styles.viewLink}
+                                                        title="Открыть контент"
+                                                    >
+                                                        <ExternalLink size={14} />
+                                                    </a>
+                                                </div>
+                                            </td>
                                             <td>{report.reason}</td>
                                             <td>{new Date(report.created_at).toLocaleDateString()}</td>
                                             <td className={styles.actionsCell}>

@@ -13,6 +13,7 @@ import { contentService } from '../api/contentService';
 import { aiService } from '../api/aiService';
 import type { ArticleModerationResponse } from '../api/aiService';
 import { useAuth } from '../context/AuthContext';
+import AiDecisionModal from './AiDecisionModal';
 import styles from './CreateArticleModal.module.css';
 
 interface CreateArticleModalProps {
@@ -41,6 +42,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
     // AI Related State
     const [aiResult, setAiResult] = useState<ArticleModerationResponse | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
+    const [showAiDecision, setShowAiDecision] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -95,9 +97,20 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
         setTags(tags.filter(t => t !== tagToRemove));
     };
 
-    const handlePublish = async () => {
+    const handlePublish = async (forcedStatus?: 'PUBLISHED' | 'DRAFT' | 'DELETED') => {
         if (!title.trim() || !content.trim()) {
             toast.error('Заполните заголовок и содержание');
+            return;
+        }
+
+        // If user just clicks "Publish" but AI found issues, show decision modal
+        if (!forcedStatus && aiResult?.verdict === 'NEEDS_REVISION') {
+            setShowAiDecision(true);
+            return;
+        }
+
+        if (forcedStatus === 'DELETED') {
+            onClose();
             return;
         }
 
@@ -109,15 +122,30 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                 roomId,
                 userId: user?.id,
                 difficultyLevel: difficulty,
+                articleStatus: forcedStatus || 'PUBLISHED',
+                aiModerationVerdict: aiResult?.verdict || null,
+                aiModerationNote: aiResult?.note || null
             });
-            toast.success('Статья успешно опубликована!');
+            
+            const actionText = forcedStatus === 'DRAFT' ? 'сохранена как черновик' : 'успешно опубликована';
+            toast.success(`Статья ${actionText}!`);
+            
             if (onSuccess) onSuccess();
             onClose();
         } catch (error) {
             console.error('Failed to publish article', error);
-            toast.error('Ошибка при публикации статьи');
+            toast.error('Ошибка при сохранении статьи');
         } finally {
             setSubmitting(false);
+            setShowAiDecision(false);
+        }
+    };
+
+    const handleCloseWithCheck = () => {
+        if (aiResult?.verdict === 'NEEDS_REVISION' && (title.trim() || content.trim())) {
+            setShowAiDecision(true);
+        } else {
+            onClose();
         }
     };
 
@@ -132,7 +160,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
             <div className={styles.modalContent}>
                 <nav className={styles.nav}>
                     <div className={styles.navLeft}>
-                        <button className={styles.closeBtn} onClick={onClose}>
+                        <button className={styles.closeBtn} onClick={handleCloseWithCheck}>
                             <X size={24} />
                         </button>
                         <h1 className={styles.title}>Написать профессиональную статью</h1>
@@ -143,7 +171,7 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                         </span>
                         <button
                             className={styles.publishBtn}
-                            onClick={handlePublish}
+                            onClick={() => handlePublish()}
                             disabled={submitting || !title.trim() || !content.trim()}
                         >
                             {submitting ? 'Публикация...' : 'Опубликовать'}
@@ -269,6 +297,13 @@ const CreateArticleModal: React.FC<CreateArticleModalProps> = ({
                     </aside>
                 </main>
             </div>
+
+            <AiDecisionModal 
+                isOpen={showAiDecision}
+                onClose={() => setShowAiDecision(false)}
+                aiNote={aiResult?.note || null}
+                onAction={(status) => handlePublish(status)}
+            />
         </div>
     );
 };

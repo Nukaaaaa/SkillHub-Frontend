@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-    X, BrainCircuit, ArrowRight, CheckCircle2, 
+import {
+    X, BrainCircuit, ArrowRight, CheckCircle2,
     AlertCircle, Loader2, Award, ClipboardCheck, Sparkles,
     MessageSquare
 } from 'lucide-react';
@@ -36,17 +36,17 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const [step, setStep] = useState<'intro' | 'form' | 'test' | 'loading' | 'result'>('intro');
-    
+
     // Form State
     const [fullName, setFullName] = useState('');
     const [specialization, setSpecialization] = useState('');
     const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
-    
+
     // Test State
     const [testData, setTestData] = useState<TestData | null>(null);
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [userAnswers, setUserAnswers] = useState<number[]>([]);
-    
+
     // Result State
     const [evaluation, setEvaluation] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +75,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
             });
 
             if (res.error) throw new Error(res.error);
-            
+
             const parsedTest = JSON.parse(res.normalizedTestJson);
             setTestData(parsedTest);
             setStep('test');
@@ -102,6 +102,16 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
         setStep('loading');
         try {
             let correct = 0;
+            const totalQ = testData?.questions.length || 0;
+            
+            // Check if all questions are answered
+            if (userAnswers.length < totalQ || userAnswers.includes(undefined as any)) {
+                toast.error('Пожалуйста, ответьте на все вопросы перед отправкой');
+                setIsLoading(false);
+                setStep('test');
+                return;
+            }
+
             testData?.questions.forEach((q, idx) => {
                 if (userAnswers[idx] === q.correctIndex) correct++;
             });
@@ -110,7 +120,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
 
             const res = await aiService.evaluateModeratorApplication({
                 requestId: `eval-${Date.now()}`,
-                applicationId: Math.floor(Math.random() * 1000), 
+                applicationId: Math.floor(Math.random() * 1000),
                 form: { fullName, specialization, level },
                 testSummary: {
                     score_percent: scorePercent,
@@ -124,8 +134,16 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                 }
             });
 
-            if (!res.success) throw new Error(res.error || 'Evaluation failed');
-            
+            // The backend returns { ai: ..., aiCallSucceeded: ..., error: ... }
+            const success = (res as any).aiCallSucceeded;
+            const evalData = (res as any).ai;
+            const errorMsg = (res as any).error;
+
+            if (!success) {
+                console.error('AI Evaluation Error:', errorMsg);
+                throw new Error(errorMsg || 'Evaluation failed');
+            }
+
             // Submit as a report/application in interaction service
             await interactionService.submitReport(
                 'moderator_application',
@@ -135,7 +153,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                     roomId,
                     roomSlug,
                     roomName,
-                    evaluation: res.aiSanitized,
+                    evaluation: evalData,
                     testSummary: {
                         score: scorePercent,
                         correct
@@ -144,7 +162,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                 roomId
             );
 
-            setEvaluation(res.aiSanitized);
+            setEvaluation(evalData);
             setStep('result');
         } catch (err) {
             console.error(err);
@@ -157,7 +175,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
 
     const contactAdmin = () => {
         // Assuming admin ID is 4 or 1 based on previous logs/context
-        navigate(`/messenger?userId=4`); 
+        navigate(`/messenger?userId=4`);
         onClose();
     };
 
@@ -197,7 +215,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                 </div>
             </div>
             <button className={styles.primaryBtn} onClick={startApplication}>
-                Начать подачу заявки 
+                Начать подачу заявки
                 <ArrowRight size={18} />
             </button>
         </div>
@@ -208,8 +226,8 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
             <h3>Краткая анкета</h3>
             <div className={styles.formGroup}>
                 <label>Ваше полное имя</label>
-                <input 
-                    className={styles.input} 
+                <input
+                    className={styles.input}
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
                     placeholder="Напр. Иван Иванов"
@@ -217,8 +235,8 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
             </div>
             <div className={styles.formGroup}>
                 <label>Ваша специализация (в этой комнате)</label>
-                <input 
-                    className={styles.input} 
+                <input
+                    className={styles.input}
                     value={specialization}
                     onChange={e => setSpecialization(e.target.value)}
                     placeholder="Напр. React разработчик, Python Expert"
@@ -228,7 +246,7 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                 <label>Ваш уровень</label>
                 <div className={styles.levelRow}>
                     {(['beginner', 'intermediate', 'advanced'] as const).map(l => (
-                        <button 
+                        <button
                             key={l}
                             className={`${styles.levelBtn} ${level === l ? styles.activeLevel : ''}`}
                             onClick={() => setLevel(l)}
@@ -261,8 +279,8 @@ const ModeratorExamModal: React.FC<ModeratorExamModalProps> = ({ isOpen, onClose
                 <h2 className={styles.qText}>{q.question}</h2>
                 <div className={styles.optionsGrid}>
                     {q.options.map((opt, idx) => (
-                        <button 
-                            key={idx} 
+                        <button
+                            key={idx}
                             className={`${styles.optionBtn} ${userAnswers[currentQuestionIdx] === idx ? styles.activeOption : ''}`}
                             onClick={() => handleAnswer(idx)}
                         >

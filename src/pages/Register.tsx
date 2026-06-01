@@ -29,6 +29,10 @@ const Register: React.FC = () => {
 
     const handleSendCode = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (password.length < 6) {
+            toast.error('Пароль должен быть не менее 6 символов');
+            return;
+        }
         if (password !== confirmPassword) {
             toast.error('Пароли не совпадают!');
             return;
@@ -48,6 +52,18 @@ const Register: React.FC = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (code.length !== 6) {
+            toast.error('Введите 6-значный код из письма');
+            return;
+        }
+        if (password.length < 6) {
+            toast.error('Пароль должен быть не менее 6 символов');
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast.error('Пароли не совпадают!');
+            return;
+        }
         setLoading(true);
         const loadingToast = toast.loading(t('common.loading') || 'Creating account...');
         try {
@@ -214,6 +230,7 @@ const Register: React.FC = () => {
                         <div className={styles.formRow}>
                             <div className={styles.formGroup} style={{ position: 'relative' }}>
                                 <label className={styles.label}>{t('login.password')}</label>
+                                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 6px' }}>Минимум 6 символов</p>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
@@ -221,6 +238,7 @@ const Register: React.FC = () => {
                                     style={{ paddingRight: '40px' }}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    minLength={6}
                                     required
                                 />
                                 <button
@@ -240,6 +258,7 @@ const Register: React.FC = () => {
                                     style={{ paddingRight: '40px' }}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
+                                    minLength={6}
                                     required
                                 />
                                 <button

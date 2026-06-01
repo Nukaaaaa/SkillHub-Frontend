@@ -79,7 +79,8 @@ export interface User {
 }
 
 export type DifficultyLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-export type AIStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type AIStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVISION';
+export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'DELETED';
 
 export interface Article {
     id: number;
@@ -93,7 +94,10 @@ export interface Article {
     createdAt: string;
     updatedAt?: string;
     aiScore?: number;
-    aiReviewStatus?: AIStatus;
+    aiReviewStatus?: AIStatus; // Legacy field
+    aiModerationVerdict?: 'APPROVED' | 'REJECTED' | 'NEEDS_REVISION' | null;
+    aiModerationNote?: string | null;
+    articleStatus?: ArticleStatus;
     tags?: string[];
 }
 

@@ -20,6 +20,7 @@ import { userService } from '../api/userService';
 import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
+import { achievementService } from '../api/achievementService';
 import type { User, Post, Room } from '../types';
 import Loader from '../components/Loader';
 import CreateContentModal from '../components/CreateContentModal';
@@ -44,18 +45,21 @@ const RoomDetailPage: React.FC = () => {
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [isExamModalOpen, setIsExamModalOpen] = useState(false);
+    const [totalXp, setTotalXp] = useState(0);
     const [postModalType, setPostModalType] = useState<'POST' | 'QUESTION'>('POST');
 
     const fetchData = async () => {
         if (!room) return;
         setLoading(true);
         try {
-            const [postData] = await Promise.all([
-                contentService.getPostsByRoom(room.id)
+            const [postData, stats] = await Promise.all([
+                contentService.getPostsByRoom(room.id),
+                achievementService.getMyStats().catch(() => ({ totalXp: 0 }))
             ]);
             const membersData = await roomService.getMembers(room.slug);
 
             setPosts(postData);
+            setTotalXp(stats?.totalXp || 0);
 
             // Fetch profiles for the first 5 members for the sidebar widget
             const sidebarMemberIds = membersData.slice(0, 5).map(m => m.userId);
@@ -294,7 +298,7 @@ const RoomDetailPage: React.FC = () => {
             </div>
 
             <aside className={styles.rightSidebar}>
-                {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                {totalXp >= 1500 && !(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
                     <div className={styles.aiPromoWidget}>
                         <div className={styles.aiPromoHeader}>
                             <div className={styles.aiPromoIcon}>

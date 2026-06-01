@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { User } from '../types';
-import { getServiceClient } from '../api/client';
+import { AUTH_TIMEOUT_MS, getServiceClient } from '../api/client';
 import { userService } from '../api/userService';
 import { roomService } from '../api/roomService';
 import { getUserIdFromToken } from '../utils/auth';
@@ -206,7 +206,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const registerSendCode = async (email: string) => {
         try {
-            await userClient.post('/auth/register/send-code', { email });
+            await userClient.post('/auth/register/send-code', { email }, { timeout: AUTH_TIMEOUT_MS });
             return true;
         } catch (error) {
             console.error('Send code failed:', error);
@@ -241,8 +241,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // 2. Регистрируем пользователя
+            // Do not set Content-Type manually — axios/browser must add multipart boundary
             const response = await userClient.post('/auth/register', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                timeout: AUTH_TIMEOUT_MS,
             });
             const { token: newToken } = response.data;
 
@@ -303,10 +304,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avatarUrl = userData.avatar;
         }
 
-        const updatedUser = { 
-            ...user, 
-            ...userData, 
-            avatar: avatarUrl 
+        const updatedUser = {
+            ...user,
+            ...userData,
+            avatar: avatarUrl
         };
 
         const newFirstname = userData.firstname || user.firstname;

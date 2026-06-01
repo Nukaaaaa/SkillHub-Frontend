@@ -164,3 +164,30 @@
     padding: 3rem 1rem;
     color: var(--text-secondary);
 }
+
+.aiAuditBtn {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.aiAuditBtn:hover {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.1);
+}
+
+.aiAuditBtn svg {
+    color: #8b5cf6;
+}
+

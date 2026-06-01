@@ -10,8 +10,12 @@ import {
 import RichTextEditor from '../components/RichTextEditor';
 
 import { contentService } from '../api/contentService';
+import { aiService } from '../api/aiService';
+import type { ArticleModerationResponse } from '../api/aiService';
 import { useAuth } from '../context/AuthContext';
 import type { Room } from '../types';
+import { Loader2 } from 'lucide-react';
+import AiDecisionModal from '../components/AiDecisionModal';
 import styles from './CreatePostPage.module.css';
 
 const CreateArticlePage: React.FC = () => {
@@ -27,6 +31,11 @@ const CreateArticlePage: React.FC = () => {
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>([]);
 
+    // AI Related State
+    const [aiResult, setAiResult] = useState<ArticleModerationResponse | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [showAiDecision, setShowAiDecision] = useState(false);
+
     const handleAddTag = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && tagInput.trim()) {
             e.preventDefault();
@@ -41,9 +50,49 @@ const CreateArticlePage: React.FC = () => {
         setTags(tags.filter(t => t !== tagToRemove));
     };
 
-    const handlePublish = async () => {
+    const handleAiCheck = async () => {
+        if (!title.trim() || !content.trim()) {
+            toast.error('Заполните заголовок и текст для проверки');
+            return;
+        }
+
+        setAiLoading(true);
+        try {
+            const result = await aiService.moderateArticle({
+                requestId: `req-${Date.now()}`,
+                roomId: room.id,
+                difficultyLevel: difficulty,
+                title,
+                content
+            });
+            setAiResult(result);
+            if (result.verdict === 'APPROVED') {
+                toast.success('AI Инспектор: Контент одобрен!');
+            } else {
+                toast.error(`AI Инспектор: ${result.verdict}`);
+            }
+        } catch (error) {
+            console.error('AI Moderation failed', error);
+            toast.error('Не удалось связаться с AI Инспектором');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    const handlePublish = async (forcedStatus?: 'PUBLISHED' | 'DRAFT' | 'DELETED') => {
         if (!title.trim() || !content.trim() || !room) {
             toast.error(t('common.error') || 'Заполните заголовок и содержание');
+            return;
+        }
+
+        // If user just clicks "Publish" but AI found issues, show decision modal
+        if (!forcedStatus && aiResult?.verdict === 'NEEDS_REVISION') {
+            setShowAiDecision(true);
+            return;
+        }
+
+        if (forcedStatus === 'DELETED') {
+            navigate(-1);
             return;
         }
 
@@ -55,15 +104,30 @@ const CreateArticlePage: React.FC = () => {
                 roomId: room.id,
                 userId: user?.id,
                 difficultyLevel: difficulty,
-                tags: tags
+                tags: tags,
+                articleStatus: forcedStatus || 'PUBLISHED',
+                aiModerationVerdict: aiResult?.verdict || null,
+                aiModerationNote: aiResult?.note || null
             });
-            toast.success(t('article.published') || 'Статья успешно опубликована!');
+            
+            const actionText = forcedStatus === 'DRAFT' ? 'сохранена как черновик' : 'успешно опубликована';
+            toast.success(`Статья ${actionText}!`);
+            
             navigate(`/rooms/${room.slug}/articles`);
         } catch (error) {
             console.error('Failed to publish article', error);
-            toast.error(t('common.error') || 'Ошибка при публикации статьи');
+            toast.error(t('common.error') || 'Ошибка при сохранении статьи');
         } finally {
             setSubmitting(false);
+            setShowAiDecision(false);
+        }
+    };
+
+    const handleCloseWithCheck = () => {
+        if (aiResult?.verdict === 'NEEDS_REVISION' && (title.trim() || content.trim())) {
+            setShowAiDecision(true);
+        } else {
+            navigate(-1);
         }
     };
 
@@ -71,7 +135,7 @@ const CreateArticlePage: React.FC = () => {
         <div className={styles.createPage}>
             <nav className={styles.nav}>
                 <div className={styles.navLeft}>
-                    <button className={styles.closeBtn} onClick={() => navigate(-1)}>
+                    <button className={styles.closeBtn} onClick={handleCloseWithCheck}>
                         <X size={24} />
                     </button>
                     <h1 className={styles.title}>{t('article.edit') || 'Написать статью'}</h1>
@@ -82,7 +146,7 @@ const CreateArticlePage: React.FC = () => {
                     </span>
                     <button
                         className={styles.publishBtn}
-                        onClick={handlePublish}
+                        onClick={() => handlePublish()}
                         disabled={submitting || !title.trim() || !content.trim()}
                     >
                         {submitting ? t('common.loading') : (t('common.publish') || 'Опубликовать')}
@@ -163,23 +227,57 @@ const CreateArticlePage: React.FC = () => {
                             <span className={styles.aiTitle}>AI Инспектор</span>
                         </div>
                         <p className={styles.aiText}>
-                            ИИ анализирует вашу статью на техническую грамотность в реальном времени.
+                            {aiResult ? aiResult.note : 'ИИ анализирует вашу статью на техническую грамотность в реальном времени.'}
                         </p>
+                        
+                        {aiResult && (
+                            <div className={`${styles.verdict} ${styles[aiResult.verdict]}`}>
+                                {aiResult.verdict}
+                            </div>
+                        )}
+
                         <div className={styles.aiProgress}>
                             <div className={styles.progressLabel}>
                                 <span>Профессионализм</span>
-                                <span>--%</span>
+                                <span>{aiResult?.qualityScore ?? '--'}%</span>
                             </div>
                             <div className={styles.progressBar}>
-                                <div className={styles.progressFill} style={{ width: '0%' }}></div>
+                                <div className={styles.progressFill} style={{ width: `${aiResult?.qualityScore ?? 0}%` }}></div>
                             </div>
                         </div>
+
+                        <button 
+                            className={styles.aiActionBtn} 
+                            onClick={handleAiCheck}
+                            disabled={aiLoading || !title.trim() || !content.trim()}
+                            style={{ width: '100%', marginTop: '1rem' }}
+                        >
+                            {aiLoading ? (
+                                <>
+                                    <Loader2 className={styles.spin} size={16} />
+                                    Анализирую...
+                                </>
+                            ) : (
+                                <>
+                                    <Brain size={16} />
+                                    Запустить проверку
+                                </>
+                            )}
+                        </button>
+
                         <div className={styles.aiBgIcon}>
                             <Brain />
                         </div>
                     </div>
                 </aside>
             </main>
+
+            <AiDecisionModal 
+                isOpen={showAiDecision}
+                onClose={() => setShowAiDecision(false)}
+                aiNote={aiResult?.note || null}
+                onAction={(status) => handlePublish(status)}
+            />
         </div>
     );
 };

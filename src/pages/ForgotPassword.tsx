@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
-import { getServiceClient } from '../api/client';
+import { AUTH_TIMEOUT_MS, getServiceClient } from '../api/client';
 import styles from './ForgotPassword.module.css';
 import LanguageSelector from '../components/LanguageSelector';
 
@@ -24,7 +24,7 @@ const ForgotPassword: React.FC = () => {
         setLoading(true);
         const loadingToast = toast.loading(t('common.loading') || 'Отправка кода...');
         try {
-            await userClient.post('/auth/password/forgot', { email });
+            await userClient.post('/auth/password/forgot', { email }, { timeout: AUTH_TIMEOUT_MS });
             toast.success('Код для сброса пароля отправлен на вашу почку', { id: loadingToast });
             setStep(2);
         } catch (error: any) {

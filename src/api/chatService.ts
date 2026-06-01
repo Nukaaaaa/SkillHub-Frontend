@@ -35,8 +35,8 @@ export const chatService = {
     },
 
     // Создать новый чат
-    createChat: async (recipientId: number): Promise<any> => {
-        const response = await chatClient.post('/create', { recipient_id: recipientId });
+    createChat: async (recipientId: number): Promise<ChatDTO> => {
+        const response = await chatClient.post<ChatDTO>('/create', { recipient_id: recipientId });
         return response.data;
     },
 

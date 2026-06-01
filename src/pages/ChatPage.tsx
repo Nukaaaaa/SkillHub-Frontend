@@ -31,7 +31,8 @@ const ChatPage: React.FC = () => {
         chats, 
         selectedChat, 
         messages, 
-        loading, 
+        loading,
+        fetchError,
         fetchChats, 
         setSelectedChat, 
         addMessage,
@@ -48,8 +49,9 @@ const ChatPage: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-    // WebSocket connection
-    const wsUrl = `ws://127.0.0.1:8080/api/chat/ws?token=${token}`;
+    // WebSocket через API Gateway (тот же хост, что и REST)
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+    const wsUrl = `${apiBase.replace(/^http/, 'ws')}/chat/ws?token=${token}`;
     const { status, sendMessage } = useWebSocket(wsUrl, {
         shouldConnect: !!token,
         onMessage: (msg: Message) => {
@@ -126,13 +128,17 @@ const ChatPage: React.FC = () => {
 
     const handleSelectSearchResult = async (targetUser: User) => {
         try {
-            // 1. Create or get existing chat
             const newChat = await chatService.createChat(targetUser.id);
-            
-            // 2. Enrich it
-            const enriched: EnrichedChat = { ...newChat, user: targetUser };
-            
-            // 3. Add to store
+
+            const enriched: EnrichedChat = {
+                chat_id: newChat.chat_id,
+                recipient_id: newChat.recipient_id ?? targetUser.id,
+                last_message: newChat.last_message ?? null,
+                unread_count: newChat.unread_count ?? 0,
+                is_online: newChat.is_online ?? false,
+                user: targetUser,
+            };
+
             addChat(enriched);
 
             // 4. Select it and clear search
@@ -262,8 +268,14 @@ const ChatPage: React.FC = () => {
                                     </div>
                                 </div>
                             ))
+                        ) : fetchError ? (
+                            <div className={styles.emptyState}>{fetchError}</div>
                         ) : (
-                            <div className={styles.emptyState}>Чатов пока нет</div>
+                            <div className={styles.emptyState}>
+                                Чатов пока нет
+                                <br />
+                                <small>Найдите пользователя в поиске выше, чтобы начать диалог</small>
+                            </div>
                         )}
                     </div>
                 </aside>

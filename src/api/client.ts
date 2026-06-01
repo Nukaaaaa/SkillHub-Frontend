@@ -4,9 +4,13 @@ import { parseJwt } from '../utils/auth';
 // Define the base URL for the API Gateway
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
+const DEFAULT_TIMEOUT_MS = 15000;
+/** Registration / password reset may upload avatar or wait on gateway cold start */
+export const AUTH_TIMEOUT_MS = 30000;
+
 export const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 5000,
+  timeout: DEFAULT_TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,7 +26,7 @@ export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERAC
 
   const instance = axios.create({
     baseURL,
-    timeout: 5000,
+    timeout: DEFAULT_TIMEOUT_MS,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -39,7 +43,7 @@ export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERAC
         if (service === 'CONTENT' || service === 'ACHIEVEMENT' || service === 'INTERACTION' || service === 'CHAT') {
           const payload = parseJwt(token);
           if (payload) {
-            const userId = payload.sub || payload.id || payload.userId || payload.user_id;
+            const userId = payload.user_id ?? payload.sub ?? payload.id ?? payload.userId;
             if (userId) config.headers['X-User-Id'] = userId;
 
             // Spring Security expects roles to have the 'ROLE_' prefix if checked via hasRole()
