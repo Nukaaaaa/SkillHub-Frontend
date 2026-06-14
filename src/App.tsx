@@ -13,6 +13,8 @@ import RoomDetailPage from './pages/RoomDetailPage';
 import RoomLayout from './components/RoomLayout';
 import RoomArticlesPage from './pages/RoomArticlesPage';
 import RoomWikiPage from './pages/RoomWikiPage';
+import RoomSkillsPage from './pages/RoomSkillsPage';
+import AssignmentDetailPage from './pages/AssignmentDetailPage';
 import SavedArticlesPage from './pages/SavedArticlesPage';
 import AchievementsPage from './pages/AchievementsPage';
 import WikiPage from './pages/WikiPage';
@@ -106,6 +108,8 @@ function App() {
             <Route path="articles/:articleId" element={<ArticleDetailPage />} />
             <Route path="posts/:postId" element={<PostDetailPage />} />
             <Route path="wiki" element={<RoomWikiPage />} />
+            <Route path="skills" element={<RoomSkillsPage />} />
+            <Route path="skills/:skillId/assignment" element={<AssignmentDetailPage />} />
             <Route path="members" element={<RoomMembersPage />} />
             <Route path="create" element={<CreatePostPage />} />
             <Route path="articles/create" element={<CreateArticlePage />} />

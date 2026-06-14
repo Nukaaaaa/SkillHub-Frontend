@@ -6,18 +6,13 @@ import {
     MessageSquare,
     Heart,
     HelpCircle,
-    Flame,
     Pencil,
-    Users,
-    ArrowRight,
-    UserPlus,
     Sparkles,
     GraduationCap
 } from 'lucide-react';
 import { createExcerpt } from '../utils/textUtils';
 import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
-import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
 import { useAuth } from '../context/AuthContext';
 import { achievementService } from '../api/achievementService';
@@ -32,11 +27,10 @@ const RoomDetailPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { isMember, user } = useAuth();
+    const { isMember, user, getUserRoomRole } = useAuth();
 
 
     const [posts, setPosts] = useState<Post[]>([]);
-    const [members, setMembers] = useState<User[]>([]);
     const [authorProfiles, setAuthorProfiles] = useState<Record<number, User>>({});
     const [likesData, setLikesData] = useState<Record<number, number>>({});
     const [answersData, setAnswersData] = useState<Record<number, number>>({});
@@ -56,17 +50,9 @@ const RoomDetailPage: React.FC = () => {
                 contentService.getPostsByRoom(room.id),
                 achievementService.getMyStats().catch(() => ({ totalXp: 0 }))
             ]);
-            const membersData = await roomService.getMembers(room.slug);
 
             setPosts(postData);
             setTotalXp(stats?.totalXp || 0);
-
-            // Fetch profiles for the first 5 members for the sidebar widget
-            const sidebarMemberIds = membersData.slice(0, 5).map(m => m.userId);
-            const sidebarProfiles = await Promise.all(
-                sidebarMemberIds.map(id => userService.getUserById(id).catch(() => null))
-            );
-            setMembers(sidebarProfiles.filter((p): p is User => p !== null));
 
             try {
                 const likeCounts = await Promise.all(
@@ -129,15 +115,17 @@ const RoomDetailPage: React.FC = () => {
 
     if (loading) return <Loader />;
 
+    const showAiPromo = totalXp >= 1500 && !(user?.role === 'ADMIN' || user?.role === 'MODERATOR' || (room && (getUserRoomRole(room.id) === 'MODERATOR' || getUserRoomRole(room.id) === 'ROOM_ADMIN' || getUserRoomRole(room.id) === 'EXPERT' || getUserRoomRole(room.id) === 'OWNER')));
+
     return (
-        <div className={styles.contentContainer}>
+        <div className={`${styles.contentContainer} ${!showAiPromo ? styles.noSidebar : ''}`}>
             <div className={styles.leftColumn}>
                 {!(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
                     <div className={styles.creationBox}>
                         <div className={styles.creationHeader}>
-                            <Avatar 
-                                src={user?.avatar} 
-                                name={user?.firstname} 
+                            <Avatar
+                                src={user?.avatar}
+                                name={user?.firstname}
                                 size="md"
                                 className={styles.userAvatarMain}
                             />
@@ -184,21 +172,6 @@ const RoomDetailPage: React.FC = () => {
                                 <span className={styles.cardDesc}>{t('rooms.questionDesc') || 'Помощь экспертов'}</span>
                             </div>
                         </div>
-
-                        <div className={styles.creationFooter}>
-                            <button
-                                className={styles.editorLinkPremium}
-                                onClick={() => {
-                                    if (!isMember(room.id)) {
-                                        toast.error(t('rooms.joinRequiredToArticle'));
-                                        return;
-                                    }
-                                    navigate(`/rooms/${room.slug}/articles/create`);
-                                }}
-                            >
-                                <span className={styles.editorLinkText}>{t('rooms.writeArticlePrompt') || 'Статью лучше писать в редакторе →'}</span>
-                            </button>
-                        </div>
                     </div>
                 )}
 
@@ -244,9 +217,9 @@ const RoomDetailPage: React.FC = () => {
                         <article key={`${item.feedType}-${item.id}`} className={styles.articleCard}>
                             <div className={styles.cardTop}>
                                 <Link to={`/profile/${item.userId}`}>
-                                    <Avatar 
-                                        src={authorProfiles[item.userId]?.avatar} 
-                                        name={authorProfiles[item.userId]?.firstname} 
+                                    <Avatar
+                                        src={authorProfiles[item.userId]?.avatar}
+                                        name={authorProfiles[item.userId]?.firstname}
                                         size="sm"
                                         className={styles.userAvatarMini}
                                     />
@@ -284,9 +257,9 @@ const RoomDetailPage: React.FC = () => {
                                         <span>{answersData[item.id] || 0} ответов</span>
                                     </div>
                                     <div className={`${styles.statItem} ${user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? styles.liked : ''}`}>
-                                        <Heart 
-                                            size={14} 
-                                            fill={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "currentColor" : "none"} 
+                                        <Heart
+                                            size={14}
+                                            fill={user?.id && localStorage.getItem(`liked_post_${user.id}_${item.id}`) === 'true' ? "currentColor" : "none"}
                                         />
                                         <span>{likesData[item.id] || 0}</span>
                                     </div>
@@ -297,8 +270,8 @@ const RoomDetailPage: React.FC = () => {
                 </div>
             </div>
 
-            <aside className={styles.rightSidebar}>
-                {totalXp >= 1500 && !(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+            {showAiPromo && (
+                <aside className={styles.rightSidebar}>
                     <div className={styles.aiPromoWidget}>
                         <div className={styles.aiPromoHeader}>
                             <div className={styles.aiPromoIcon}>
@@ -308,7 +281,7 @@ const RoomDetailPage: React.FC = () => {
                         </div>
                         <h4>Хотите стать модератором?</h4>
                         <p>Пройдите экзамен под руководством ИИ и получите роль эксперта в этой комнате.</p>
-                        <button 
+                        <button
                             className={styles.aiStartBtn}
                             onClick={() => setIsExamModalOpen(true)}
                         >
@@ -316,85 +289,8 @@ const RoomDetailPage: React.FC = () => {
                             <GraduationCap size={18} />
                         </button>
                     </div>
-                )}
-
-                <div className={styles.sidebarWidget}>
-                    <div className={styles.widgetHeader}>
-                        <h3 className={styles.widgetTitle}>
-                            <Users size={18} color="#4f46e5" />
-                            {t('members.title') || 'Участники комнаты'}
-                        </h3>
-                        <span className={styles.memberCountBadge}>{room.participantsCount || 0}</span>
-                    </div>
-                    
-                    <div className={styles.membersPreview}>
-                        {members.length > 0 ? (
-                            <div className={styles.avatarStack}>
-                                {members.map((member) => (
-                                    <Link 
-                                        key={member.id} 
-                                        to={`/profile/${member.id}`} 
-                                        title={`${member.firstname} ${member.lastname}`}
-                                        className={styles.stackItem}
-                                    >
-                                        <Avatar 
-                                            src={member.avatar} 
-                                            name={member.firstname} 
-                                            size="sm" 
-                                            className={styles.sidebarAvatar}
-                                        />
-                                    </Link>
-                                ))}
-                                {(room.participantsCount || 0) > members.length && (
-                                    <div className={styles.moreMembersCircle}>
-                                        +{(room.participantsCount || 0) - members.length}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className={styles.emptyMembers}>
-                                <UserPlus size={20} />
-                                <p>Будьте первым участником!</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <button 
-                        className={styles.viewAllBtn}
-                        onClick={() => navigate(`/rooms/${room.slug}/members`)}
-                    >
-                        <span>{t('members.allMembers') || 'Все участники'}</span>
-                        <ArrowRight size={14} />
-                    </button>
-                </div>
-
-                <div className={styles.sidebarWidget}>
-                    <h3 className={styles.widgetTitle}>
-                        <Flame size={18} color="#f97316" />
-                        Популярное сегодня
-                    </h3>
-                    <div className={styles.helpList}>
-                        <div className={styles.helpItem}>
-                            <p>Как настроить Docker для Node.js?</p>
-                            <span className={styles.helpMeta}>12 ответов • 45 лайков</span>
-                        </div>
-                        <div className={styles.helpItem}>
-                            <p>Лучшие практики именования в TS</p>
-                            <span className={styles.helpMeta}>8 ответов • 32 лайка</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={styles.sidebarWidget}>
-                    <h3 className={styles.widgetTitle}>Популярные теги</h3>
-                    <div className={styles.tagCloud}>
-                        <span className={styles.tag}>#React</span>
-                        <span className={styles.tag}>#NodeJS</span>
-                        <span className={styles.tag}>#Docker</span>
-                        <span className={styles.tag}>#NextJS</span>
-                    </div>
-                </div>
-            </aside>
+                </aside>
+            )}
 
             <CreateContentModal
                 isOpen={isPostModalOpen}

@@ -30,6 +30,16 @@ const CreateArticlePage: React.FC = () => {
     const [difficulty, setDifficulty] = useState<'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'>('BEGINNER');
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState<string[]>([]);
+    const [sections, setSections] = useState<any[]>([]);
+    const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
+
+    React.useEffect(() => {
+        if (room?.id) {
+            contentService.getWikiSectionsByRoom(room.id)
+                .then(data => setSections(data))
+                .catch(err => console.error("Failed to load sections", err));
+        }
+    }, [room?.id]);
 
     // AI Related State
     const [aiResult, setAiResult] = useState<ArticleModerationResponse | null>(null);
@@ -107,7 +117,8 @@ const CreateArticlePage: React.FC = () => {
                 tags: tags,
                 articleStatus: forcedStatus || 'PUBLISHED',
                 aiModerationVerdict: aiResult?.verdict || null,
-                aiModerationNote: aiResult?.note || null
+                aiModerationNote: aiResult?.note || null,
+                sectionId: selectedSectionId || undefined
             });
             
             const actionText = forcedStatus === 'DRAFT' ? 'сохранена как черновик' : 'успешно опубликована';
@@ -191,6 +202,22 @@ const CreateArticlePage: React.FC = () => {
                                 <option value="BEGINNER">{t('difficulty.beginner') || 'Junior'}</option>
                                 <option value="INTERMEDIATE">{t('difficulty.intermediate') || 'Middle'}</option>
                                 <option value="ADVANCED">{t('difficulty.advanced') || 'Senior'}</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.settingGroup} style={{ marginTop: '1.5rem' }}>
+                            <label className={styles.settingLabel}>Связать с навыком</label>
+                            <select
+                                className={styles.select}
+                                value={selectedSectionId || ''}
+                                onChange={(e) => setSelectedSectionId(e.target.value ? Number(e.target.value) : null)}
+                            >
+                                <option value="">-- Без привязки --</option>
+                                {sections.map(sec => (
+                                    <option key={sec.id} value={sec.id}>
+                                        {sec.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

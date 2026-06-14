@@ -1,0 +1,338 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 750px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.headerTitle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.headerTitle h2 {
+    font-size: 1.25rem;
+    font-weight: 750;
+    color: #0f172a;
+}
+
+.closeBtn {
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+}
+
+.scrollArea {
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    flex: 1;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sectionTitle {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sectionDesc {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: -0.25rem;
+}
+
+.assignmentDesc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.solutionBox {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 1.25rem;
+    border-radius: 14px;
+    white-space: pre-wrap;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.fileLinkBox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.fileLabel {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.fileLink {
+    color: #6366f1;
+    font-weight: 650;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.fileLink:hover {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+
+.rubricsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rubricCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.rubricCard:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.rubricHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.rubricInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.rubricInfo h4 {
+    font-size: 0.975rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.rubricInfo p {
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.scoreSelectWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+
+.maxPointsLabel {
+    font-size: 0.75rem;
+    font-weight: 750;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.scoreSelect {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scoreSelect:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.rubricCommentInput {
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.85rem;
+    color: #334155;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.rubricCommentInput:focus {
+    border-color: #6366f1;
+}
+
+.generalComment {
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    font-size: 0.95rem;
+    color: #1e293b;
+    outline: none;
+    resize: vertical;
+    transition: all 0.2s ease;
+}
+
+.generalComment:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.footer {
+    padding: 1.25rem 2rem;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    background: #f8fafc;
+}
+
+.btnSecondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.925rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btnSecondary:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.btnPrimary {
+    padding: 0.75rem 1.75rem;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    font-size: 0.925rem;
+    font-weight: 650;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.25s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+    box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.btnPrimary:disabled, .btnSecondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spin {
+    animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .modal {
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    .overlay {
+        padding: 0;
+    }
+}

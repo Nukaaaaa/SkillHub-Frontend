@@ -10,25 +10,21 @@ import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import AiRecommendations from '../components/AiRecommendations';
-
-// Helper to get random avatars for demo purposes
-const getDemoAvatars = (count: number) => [
-    'https://i.pravatar.cc/150?u=1',
-    'https://i.pravatar.cc/150?u=2',
-    'https://i.pravatar.cc/150?u=3'
-].slice(0, count);
+import RoomIcon from '../components/RoomIcon';
+import CreateRoomModal from '../components/CreateRoomModal';
 
 const RoomsPage: React.FC = () => {
     const { directionSlug } = useParams<{ directionSlug: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
+    const { user, joinedRoomIds } = useAuth();
 
     const [rooms, setRooms] = useState<Room[]>([]);
     const [direction, setDirection] = useState<Direction | null>(null);
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState<'all' | 'my'>('all');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
-    const { joinedRoomIds } = useAuth();
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const fetchData = async () => {
         if (!directionSlug) return;
@@ -66,14 +62,23 @@ const RoomsPage: React.FC = () => {
 
     if (loading) return <Loader />;
 
-
-
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.pageHeader}>
-                <h2 className={styles.title}>
-                    {t('rooms.availableRooms') || 'Активные комнаты'}
-                </h2>
+                <div className={styles.headerTitleRow}>
+                    <h2 className={styles.title}>
+                        {t('rooms.availableRooms') || 'Активные комнаты'}
+                    </h2>
+                    {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                        <button
+                            className={styles.createBtn}
+                            onClick={() => setIsCreateModalOpen(true)}
+                        >
+                            <PlusCircle size={18} />
+                            <span>{t('rooms.createRoom') || 'Создать комнату'}</span>
+                        </button>
+                    )}
+                </div>
                 <p className={styles.subtitle}>
                     {direction ? t(direction.name) : '...'} - {t('rooms.subtitle') || 'Выберите направление для общения и обмена опытом'}
                 </p>
@@ -110,9 +115,6 @@ const RoomsPage: React.FC = () => {
                     .filter(room => filterType === 'all' || joinedRoomIds.includes(room.id))
                     .filter(room => !selectedTag || room.tags?.includes(selectedTag))
                     .map(room => {
-                        const demoAvatars = getDemoAvatars(Math.min(3, room.participantsCount || 0));
-                        const extraMembers = (room.participantsCount || 0) - demoAvatars.length;
-
                         return (
                             <div
                                 key={room.id}
@@ -120,32 +122,26 @@ const RoomsPage: React.FC = () => {
                                 onClick={() => handleRoomClick(room.slug)}
                             >
                                 <div className={styles.cardTop}>
-                                    <div className={styles.memberStack}>
-                                        {demoAvatars.map((url, i) => (
-                                            <div key={i} className={styles.memberAvatar}>
-                                                <img src={url} alt="member" />
-                                            </div>
-                                        ))}
-                                        {extraMembers > 0 && (
-                                            <div className={styles.moreMembers}>+{extraMembers}</div>
-                                        )}
-                                    </div>
+                                    <RoomIcon name={room.name} tags={room.tags} size={44} />
                                 </div>
 
                                 <h3 className={styles.roomTitle}>{t(room.name)}</h3>
                                 <p className={styles.roomDescription}>{room.description || t('rooms.noDescription')}</p>
 
-                                {room.tags && room.tags.length > 0 && (
+                                {room.tags && room.tags.filter(t => !t.startsWith('icon:')).length > 0 && (
                                     <div className={styles.tagList}>
-                                        {room.tags.map(tag => (
-                                            <span 
-                                                key={tag} 
-                                                className={`${styles.tag} ${selectedTag === tag ? styles.activeTag : ''}`}
-                                                onClick={(e) => toggleTag(e, tag)}
-                                            >
-                                                #{tag}
-                                            </span>
-                                        ))}
+                                        {room.tags
+                                            .filter(tag => !tag.startsWith('icon:'))
+                                            .map(tag => (
+                                                <span 
+                                                    key={tag} 
+                                                    className={`${styles.tag} ${selectedTag === tag ? styles.activeTag : ''}`}
+                                                    onClick={(e) => toggleTag(e, tag)}
+                                                >
+                                                    #{tag}
+                                                </span>
+                                            ))
+                                        }
                                     </div>
                                 )}
 
@@ -181,7 +177,7 @@ const RoomsPage: React.FC = () => {
                                 {t('common.clear') || 'Сбросить фильтры'}
                             </button>
                         ) : (
-                            <button className={styles.emptyCta}>
+                            <button className={styles.emptyCta} onClick={() => setIsCreateModalOpen(true)}>
                                 <PlusCircle size={18} />
                                 {t('rooms.createRoom') || 'Создать комнату'}
                             </button>
@@ -189,6 +185,15 @@ const RoomsPage: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {directionSlug && (
+                <CreateRoomModal
+                    isOpen={isCreateModalOpen}
+                    onClose={() => setIsCreateModalOpen(false)}
+                    directionSlug={directionSlug}
+                    onSuccess={fetchData}
+                />
+            )}
         </div>
     );
 };

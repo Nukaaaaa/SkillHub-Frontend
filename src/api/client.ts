@@ -17,12 +17,13 @@ export const apiClient = axios.create({
 });
 
 // Helper to get client for specific service
-export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION' | 'CHAT' | 'ACHIEVEMENT' | 'AI') => {
+export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERACTION' | 'CHAT' | 'ACHIEVEMENT' | 'AI' | 'EDUCATION') => {
   let baseURL = API_URL;
   if (service === 'INTERACTION') baseURL = `${API_URL}/interactions`;
   if (service === 'CHAT') baseURL = `${API_URL}/chat`;
   if (service === 'ACHIEVEMENT') baseURL = `${API_URL}/achievements`;
   if (service === 'AI') baseURL = `${API_URL}/ai`;
+  if (service === 'EDUCATION') baseURL = `${API_URL}/education`;
 
   const instance = axios.create({
     baseURL,

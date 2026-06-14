@@ -91,8 +91,14 @@ export const contentService = {
         const response = await apiClient.get(`/wiki/room/${roomId}/sections`);
         return response.data;
     },
-    createWikiSection: async (roomId: number, name: string): Promise<{ id: number; roomId: number; name: string }> => {
-        const response = await apiClient.post(`/wiki/sections?roomId=${roomId}&name=${encodeURIComponent(name)}`);
+    createWikiSection: async (roomId: number, name: string, skillId?: number): Promise<{ id: number; roomId: number; name: string; skillId?: number }> => {
+        const params = new URLSearchParams();
+        params.append('roomId', roomId.toString());
+        params.append('name', name);
+        if (skillId !== undefined) {
+            params.append('skillId', skillId.toString());
+        }
+        const response = await apiClient.post(`/wiki/sections?${params.toString()}`);
         return response.data;
     },
     createWikiFromArticle: async (articleId: number, sectionId?: number): Promise<WikiEntry> => {

@@ -62,6 +62,12 @@ export const achievementService = {
         const response = await apiClient.get<UserProgressDto[]>('/my');
         return response.data;
     },
+
+    /** Returns all achievements (with progress) for any user */
+    getUserAchievements: async (userId: number): Promise<UserProgressDto[]> => {
+        const response = await apiClient.get<UserProgressDto[]>(`/user/${userId}/achievements`);
+        return response.data;
+    },
 };
 
 /** 

@@ -12,20 +12,36 @@ import {
 import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
 import { achievementService } from '../api/achievementService';
-import type { UserRoom, User, Room } from '../types';
+import type { UserRoom, User, Room, RoomRole } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
 import Avatar from '../components/Avatar';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const RoomMembersPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
     const { t } = useTranslation();
+    const { user, getUserRoomRole } = useAuth();
 
     const [members, setMembers] = useState<UserRoom[]>([]);
     const [memberProfiles, setMemberProfiles] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<'reputation' | 'date'>('reputation');
+
+    const canManageRoles = user?.role === 'ADMIN' || getUserRoomRole(room.id) === 'ROOM_ADMIN';
+
+    const handleRoleChange = async (userId: number, newRole: RoomRole) => {
+        try {
+            await roomService.updateMemberRole(room.slug, userId, newRole);
+            toast.success('Роль пользователя успешно изменена');
+            fetchMembers();
+        } catch (error) {
+            console.error('Failed to update role:', error);
+            toast.error('Не удалось изменить роль');
+        }
+    };
 
     const fetchMembers = async () => {
         if (!room) return;
@@ -154,9 +170,12 @@ const RoomMembersPage: React.FC = () => {
                                 <h4 className={styles.leaderName}>{getMemberName(leader)}</h4>
 
                                 <div className={styles.badgeStack}>
-                                    <span className={`${styles.badge} ${leader.role === 'OWNER' ? styles.roleAdmin :
-                                        leader.role === 'ADMIN' ? styles.roleExpert : styles.roleMember}`}>
-                                        {(leader.role || 'MEMBER').toLowerCase()}
+                                    <span className={`${styles.badge} ${
+                                        (leader.roomRole || leader.role) === 'ROOM_ADMIN' || (leader.roomRole || leader.role) === 'OWNER' ? styles.roleAdmin :
+                                        (leader.roomRole || leader.role) === 'EXPERT' || (leader.roomRole || leader.role) === 'MODERATOR' || (leader.roomRole || leader.role) === 'ADMIN' ? styles.roleExpert :
+                                        styles.roleMember
+                                    }`}>
+                                        {(leader.roomRole || leader.role || 'STUDENT').toLowerCase()}
                                     </span>
                                 </div>
 
@@ -224,12 +243,26 @@ const RoomMembersPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className={styles.memberCell}>
-                                            <span className={`${styles.badge} ${member.role === 'OWNER' ? styles.roleAdmin :
-                                                member.role === 'ADMIN' ? styles.roleExpert :
+                                            {canManageRoles && member.userId !== user?.id ? (
+                                                <select
+                                                    className={styles.roleSelect}
+                                                    value={member.roomRole || member.role || 'STUDENT'}
+                                                    onChange={(e) => handleRoleChange(member.userId, e.target.value as RoomRole)}
+                                                >
+                                                    <option value="STUDENT">STUDENT</option>
+                                                    <option value="MODERATOR">MODERATOR</option>
+                                                    <option value="EXPERT">EXPERT</option>
+                                                    <option value="ROOM_ADMIN">ROOM_ADMIN</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`${styles.badge} ${
+                                                    (member.roomRole || member.role) === 'ROOM_ADMIN' || (member.roomRole || member.role) === 'OWNER' ? styles.roleAdmin :
+                                                    (member.roomRole || member.role) === 'EXPERT' || (member.roomRole || member.role) === 'MODERATOR' || (member.roomRole || member.role) === 'ADMIN' ? styles.roleExpert :
                                                     styles.roleMember
                                                 }`}>
-                                                {(member.role || 'MEMBER').toLowerCase()}
-                                            </span>
+                                                    {(member.roomRole || member.role || 'STUDENT').toLowerCase()}
+                                                </span>
+                                            )}
                                         </td>
                                         <td className={styles.memberCell}>
                                             <div className={styles.activityGroup}>

@@ -8,7 +8,8 @@ import {
     BookOpen,
     Users,
     Server,
-    LogOut
+    LogOut,
+    GraduationCap
 } from 'lucide-react';
 import { roomService } from '../api/roomService';
 import type { Room } from '../types';
@@ -129,6 +130,11 @@ const RoomLayout: React.FC = () => {
             to: `/rooms/${roomSlug}/wiki`,
             icon: <BookOpen size={20} />,
             label: t('rooms.wiki')
+        },
+        {
+            to: `/rooms/${roomSlug}/skills`,
+            icon: <GraduationCap size={20} />,
+            label: 'Навыки и Задания'
         },
         {
             to: `/rooms/${roomSlug}/members`,

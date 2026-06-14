@@ -9,7 +9,9 @@ import {
     Database,
     Layout as LayoutIcon,
     Cpu,
-    Plus
+    Plus,
+    Search,
+    X
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -38,6 +40,7 @@ const RoomArticlesPage: React.FC = () => {
     const [likesData, setLikesData] = useState<Record<number, number>>({});
     const [likedArticles, setLikedArticles] = useState<Record<number, boolean>>({});
     const [bookmarkedArticles, setBookmarkedArticles] = useState<Record<number, boolean>>({});
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleLike = async (e: React.MouseEvent, articleId: number) => {
         e.stopPropagation();
@@ -183,9 +186,18 @@ const RoomArticlesPage: React.FC = () => {
 
     const filteredArticles = articles.filter(article => {
         if (difficulty !== 'Любая' && article.difficultyLevel !== difficulty) return false;
+        
+        if (searchQuery.trim()) {
+            const query = searchQuery.trim().toLowerCase();
+            const matchesTitle = article.title.toLowerCase().includes(query);
+            const matchesContent = article.content.toLowerCase().includes(query);
+            const matchesTags = article.tags?.some(tag => tag.toLowerCase().includes(query));
+            return matchesTitle || matchesContent || matchesTags;
+        }
         return true;
     }).sort((a, b) => {
         if (filter === 'new') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (filter === 'popular') return (likesData[b.id] || 0) - (likesData[a.id] || 0);
         return 0;
     });
 
@@ -241,18 +253,41 @@ const RoomArticlesPage: React.FC = () => {
                             Популярные
                         </button>
                     </div>
-                    <div className={styles.difficultyGroup}>
-                        <span className={styles.difficultyLabel}>Сложность:</span>
-                        <select
-                            className={styles.difficultySelect}
-                            value={difficulty}
-                            onChange={(e) => setDifficulty(e.target.value)}
-                        >
-                            <option value="Любая">Любая</option>
-                            <option value="BEGINNER">{t('difficulty.beginner')}</option>
-                            <option value="INTERMEDIATE">{t('difficulty.intermediate')}</option>
-                            <option value="ADVANCED">{t('difficulty.advanced')}</option>
-                        </select>
+
+                    <div className={styles.searchAndFiltersGroup}>
+                        <div className={styles.searchWrapper}>
+                            <Search size={16} className={styles.searchIcon} />
+                            <input
+                                type="text"
+                                className={styles.searchInput}
+                                placeholder="Поиск статей..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    className={styles.clearSearchBtn}
+                                    onClick={() => setSearchQuery('')}
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className={styles.difficultyGroup}>
+                            <span className={styles.difficultyLabel}>Сложность:</span>
+                            <select
+                                className={styles.difficultySelect}
+                                value={difficulty}
+                                onChange={(e) => setDifficulty(e.target.value)}
+                            >
+                                <option value="Любая">Любая</option>
+                                <option value="BEGINNER">{t('difficulty.beginner')}</option>
+                                <option value="INTERMEDIATE">{t('difficulty.intermediate')}</option>
+                                <option value="ADVANCED">{t('difficulty.advanced')}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -298,7 +333,7 @@ const RoomArticlesPage: React.FC = () => {
                                 </div>
                                 <h3
                                     className={styles.articleTitle}
-                                    onClick={() => navigate(`/rooms/${roomSlug}/articles/${article.id}`)}
+                                    onClick={() => navigate(`/rooms/${roomSlug}/articles/${article.id}`, { state: { from: 'articles' } })}
                                 >
                                     {article.title}
                                 </h3>
@@ -336,7 +371,19 @@ const RoomArticlesPage: React.FC = () => {
                 </div>
                 {filteredArticles.length === 0 && !loading && (
                     <div className={styles.empty}>
-                        <p>{t('article.noArticles') || 'В этой комнате еще нет статей. Будьте первым!'}</p>
+                        <p>
+                            {searchQuery.trim()
+                                ? 'По вашему запросу статей не найдено. Попробуйте изменить запрос.'
+                                : (t('article.noArticles') || 'В этой комнате еще нет статей. Будьте первым!')}
+                        </p>
+                        {searchQuery.trim() && (
+                            <button
+                                className={styles.clearSearchLinkBtn}
+                                onClick={() => setSearchQuery('')}
+                            >
+                                Сбросить поиск
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

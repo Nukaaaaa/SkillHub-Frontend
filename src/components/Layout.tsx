@@ -22,7 +22,7 @@ import { achievementService } from '../api/achievementService';
 import Avatar from './Avatar';
 
 const Layout: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, isLocalModerator } = useAuth();
     const navigate = useNavigate();
     const { directionSlug } = useParams<{ directionSlug?: string }>();
     const { t } = useTranslation();
@@ -110,7 +110,7 @@ const Layout: React.FC = () => {
                         </NavLink>
                     )}
 
-                    {(user?.role === 'MODERATOR' || user?.role === 'ADMIN') && (
+                    {(user?.role === 'ADMIN' || user?.role === 'MODERATOR' || isLocalModerator) && (
                         <NavLink
                             to="/moderator"
                             className={({ isActive }) =>

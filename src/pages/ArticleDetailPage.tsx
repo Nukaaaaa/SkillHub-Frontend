@@ -15,8 +15,14 @@ import {
     BookOpen,
     Flag,
     Sparkles,
-    Lightbulb
+    Lightbulb,
+    Trash2,
+    CornerDownRight,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
+import type { TargetType } from '../api/interactionService';
+
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -38,13 +44,11 @@ const ArticleDetailPage: React.FC = () => {
     const { articleId } = useParams<{ articleId: string }>();
     const context = useOutletContext<{ room: Room } | null>();
     const roomFromContext = context?.room;
-    
+
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, getUserRoomRole } = useAuth();
     const articleRef = useRef<HTMLDivElement>(null);
-
-    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
 
     const [article, setArticle] = useState<Article | null>(null);
     const [room, setRoom] = useState<Room | null>(roomFromContext || null);
@@ -67,8 +71,22 @@ const ArticleDetailPage: React.FC = () => {
     const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
+    const [replyText, setReplyText] = useState('');
+    const [commentLikes, setCommentLikes] = useState<Record<number, number>>({});
+    const [likedComments, setLikedComments] = useState<Record<number, boolean>>({});
+    const [commentAuthors, setCommentAuthors] = useState<Record<number, User>>({});
+    const [reportTargetType, setReportTargetType] = useState<TargetType>('article');
+    const [reportTargetId, setReportTargetId] = useState<number>(0);
+    const [reportTargetAuthorId, setReportTargetAuthorId] = useState<number>(0);
     const [aiAnalysis, setAiAnalysis] = useState<{ summary: string; keyTakeaways: string[] } | null>(null);
     const [analyzing, setAnalyzing] = useState(false);
+    const [isAiCollapsed, setIsAiCollapsed] = useState(false);
+
+    const localRole = room ? getUserRoomRole(room.id) : null;
+    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN' || localRole === 'ROOM_ADMIN' || localRole === 'EXPERT' || localRole === 'MODERATOR';
+    const associatedSection = article?.sectionId ? sections.find(s => s.id === article.sectionId) : null;
+    const sectionName = associatedSection ? associatedSection.name : '';
 
     const fetchData = async () => {
         if (!articleId) return;
@@ -76,10 +94,10 @@ const ArticleDetailPage: React.FC = () => {
         try {
             // First, fetch the article itself
             const found = await contentService.getArticle(Number(articleId));
-            
+
             if (found) {
                 setArticle(found);
-                
+
                 // Then fetch or set room info
                 let currentRoom: Room | null = roomFromContext || null;
                 if (!currentRoom) {
@@ -97,7 +115,7 @@ const ArticleDetailPage: React.FC = () => {
 
                 const userProfile = await userService.getUserById(found.userId).catch(() => null);
                 setAuthor(userProfile);
-                
+
                 // Extra data for wiki/sections
                 checkIfInWiki(found.title, effectiveRoomId);
                 try {
@@ -110,9 +128,12 @@ const ArticleDetailPage: React.FC = () => {
                 // Fetch comments
                 const comms = await contentService.getCommentsByPost(Number(articleId));
                 setComments(comms);
+                await fetchCommentAuthors(comms);
+                await loadCommentLikes(comms);
 
                 // Start AI analysis
                 handleAiAnalyze(found.title, found.content);
+
             } else {
                 toast.error('Статья не найдена');
                 navigate(-1);
@@ -161,9 +182,9 @@ const ArticleDetailPage: React.FC = () => {
                 if (!article) return; // Add null check for lint
                 // Pass authorId and directionId for gamification
                 await interactionService.addLike(
-                    'article', 
-                    Number(articleId), 
-                    article.userId, 
+                    'article',
+                    Number(articleId),
+                    article.userId,
                     room?.directionId
                 );
                 setLikes(prev => prev + 1);
@@ -192,9 +213,9 @@ const ArticleDetailPage: React.FC = () => {
                 setIsBookmarked(false);
             } else {
                 await interactionService.addBookmark(
-                    'article', 
-                    Number(articleId), 
-                    article?.userId, 
+                    'article',
+                    Number(articleId),
+                    article?.userId,
                     room?.directionId
                 );
                 toast.success('Добавлено в закладки');
@@ -270,28 +291,118 @@ const ArticleDetailPage: React.FC = () => {
         return () => observer.disconnect();
     }, [headings]);
 
-    const handleAddComment = async () => {
-        if (!commentText.trim() || !user || !articleId) return;
+    const fetchCommentAuthors = async (comms: any[]) => {
+        const commentUserIds = Array.from(new Set(comms.map((c: any) => c.userId)));
+        const profilePromises = commentUserIds.map((id: number) => userService.getUserById(id).catch(() => null));
+        const profiles = await Promise.all(profilePromises);
+
+        const profileMap: Record<number, User> = {};
+        profiles.forEach(p => {
+            if (p) profileMap[p.id] = p;
+        });
+        setCommentAuthors(profileMap);
+    };
+
+    const loadCommentLikes = async (comms: any[]) => {
+        const likesMap: Record<number, number> = {};
+        const likedMap: Record<number, boolean> = {};
+        await Promise.all(comms.map(async (c) => {
+            try {
+                const count = await interactionService.countLikes('comment', c.id);
+                likesMap[c.id] = count;
+                if (user?.id) {
+                    likedMap[c.id] = localStorage.getItem(`liked_comment_${user.id}_${c.id}`) === 'true';
+                }
+            } catch (e) {
+                console.error(`Failed to load likes for comment ${c.id}`, e);
+            }
+        }));
+        setCommentLikes(likesMap);
+        setLikedComments(likedMap);
+    };
+
+    const handleAddComment = async (parentId?: number) => {
+        const text = parentId ? replyText : commentText;
+        if (!text.trim() || !user || !articleId) return;
         setSubmittingComment(true);
         try {
-            const newComment = await contentService.createComment({ 
-                userId: user.id, // Добавляем userId
-                postId: Number(articleId), 
-                content: commentText 
+            await contentService.createComment({
+                userId: user.id,
+                postId: Number(articleId),
+                content: text,
+                parentId: parentId
             });
-            // In a real app we'd fetch the author info too, but for UI feedback:
-            setComments(prev => [...prev, { 
-                ...newComment, 
-                authorName: (user.firstname || '') + ' ' + (user.lastname || '') 
-            }]);
-            setCommentText('');
-            toast.success('Комментарий добавлен');
+            toast.success(parentId ? 'Ответ добавлен' : 'Комментарий добавлен');
+            if (parentId) {
+                setReplyText('');
+                setReplyingToCommentId(null);
+            } else {
+                setCommentText('');
+            }
+
+            // Refresh comments list
+            const comms = await contentService.getCommentsByPost(Number(articleId));
+            setComments(comms);
+            await fetchCommentAuthors(comms);
+            await loadCommentLikes(comms);
         } catch (e) {
             toast.error('Не удалось отправить комментарий');
         } finally {
             setSubmittingComment(false);
         }
     };
+
+    const handleLikeComment = async (commentId: number, commentAuthorId: number) => {
+        if (!user) {
+            toast.error('Пожалуйста, авторизуйтесь');
+            return;
+        }
+        const isLikedStatus = likedComments[commentId];
+        try {
+            if (isLikedStatus) {
+                await interactionService.removeLike('comment', commentId);
+                setCommentLikes(prev => ({ ...prev, [commentId]: Math.max(0, (prev[commentId] || 1) - 1) }));
+                localStorage.removeItem(`liked_comment_${user.id}_${commentId}`);
+                setLikedComments(prev => ({ ...prev, [commentId]: false }));
+            } else {
+                await interactionService.addLike(
+                    'comment',
+                    commentId,
+                    commentAuthorId,
+                    room?.directionId
+                );
+                setCommentLikes(prev => ({ ...prev, [commentId]: (prev[commentId] || 0) + 1 }));
+                localStorage.setItem(`liked_comment_${user.id}_${commentId}`, 'true');
+                setLikedComments(prev => ({ ...prev, [commentId]: true }));
+            }
+        } catch (e: any) {
+            console.error('Failed to like comment', e);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: number) => {
+        if (!window.confirm('Вы уверены, что хотите удалить этот комментарий? Все ответы также будут удалены.')) {
+            return;
+        }
+        try {
+            await contentService.deleteComment(commentId);
+            toast.success('Комментарий удален');
+            const comms = await contentService.getCommentsByPost(Number(articleId));
+            setComments(comms);
+            await fetchCommentAuthors(comms);
+            await loadCommentLikes(comms);
+        } catch (e) {
+            toast.error('Не удалось удалить комментарий');
+        }
+    };
+
+    const triggerReport = (type: TargetType, id: number, authorId: number) => {
+        setReportTargetType(type);
+        setReportTargetId(id);
+        setReportTargetAuthorId(authorId);
+        setIsReportModalOpen(true);
+    };
+
 
     const handleDownloadPDF = () => {
         if (!articleRef.current || !article) return;
@@ -314,7 +425,7 @@ const ArticleDetailPage: React.FC = () => {
             toast.error('Ошибка при генерации PDF');
         });
     };
-    
+
     const handleAiAnalyze = async (title: string, content: string) => {
         setAnalyzing(true);
         try {
@@ -341,6 +452,172 @@ const ArticleDetailPage: React.FC = () => {
             toast.error('Ошибка при добавлении в вики');
         }
     };
+
+    interface CommentNode {
+        id: number;
+        postId: number;
+        userId: number;
+        content: string;
+        isAccepted: boolean;
+        createdAt: string;
+        updatedAt?: string;
+        parentId?: number;
+        replies: CommentNode[];
+    }
+
+    const buildCommentTree = (list: any[]): CommentNode[] => {
+        const map: Record<number, CommentNode> = {};
+        const roots: CommentNode[] = [];
+
+        list.forEach(c => {
+            map[c.id] = { ...c, replies: [] };
+        });
+
+        list.forEach(c => {
+            const node = map[c.id];
+            if (c.parentId) {
+                const parent = map[c.parentId];
+                if (parent) {
+                    parent.replies.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        });
+
+        const sortNodes = (a: CommentNode, b: CommentNode) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        roots.sort(sortNodes);
+        Object.values(map).forEach(node => {
+            node.replies.sort(sortNodes);
+        });
+
+        return roots;
+    };
+
+    const commentTree = buildCommentTree(comments);
+
+    const renderCommentNode = (node: CommentNode, depth: number = 0): React.ReactNode => {
+        const cAuthor = commentAuthors[node.userId];
+        const authorName = cAuthor ? `${cAuthor.firstname} ${cAuthor.lastname}` : `User #${node.userId}`;
+        const authorAvatar = cAuthor?.avatar;
+        const authorRole = cAuthor?.role;
+        const isArticleAuthor = Number(node.userId) === Number(article?.userId || 0);
+
+        const isLiked = likedComments[node.id] || false;
+        const likesCount = commentLikes[node.id] || 0;
+
+        const isReplying = replyingToCommentId === node.id;
+        const canDelete = user && (Number(user.id) === Number(node.userId) || isModeratorOrAdmin);
+
+        return (
+            <div
+                key={node.id}
+                className={`${styles.commentWrapper} ${depth === 0 ? styles.rootComment : ''}`}
+            >
+                {depth > 0 && <div className={styles.replyConnector} />}
+                <div className={`${styles.commentCard} ${node.isAccepted ? styles.acceptedComment : ''}`}>
+                    <div className={styles.commentHeader}>
+                        <div className={styles.commentAuthorInfo}>
+                            <Avatar
+                                src={authorAvatar}
+                                name={authorName}
+                                size="sm"
+                            />
+                            <div className={styles.commentAuthorMeta}>
+                                <span className={styles.commentAuthorName}>{authorName}</span>
+                                {isArticleAuthor && (
+                                    <span className={styles.authorBadge} title="Автор статьи">Автор</span>
+                                )}
+                                {authorRole && <span className={styles.commentAuthorRole}>{authorRole}</span>}
+                            </div>
+                        </div>
+                        <span className={styles.commentDate}>
+                            {node.createdAt ? new Date(node.createdAt).toLocaleDateString() : 'Только что'}
+                        </span>
+                    </div>
+
+                    <div className={styles.commentBody}>
+                        {node.content}
+                    </div>
+
+                    <div className={styles.commentFooterActions}>
+                        <button
+                            className={`${styles.commentActionBtn} ${isLiked ? styles.commentLiked : ''}`}
+                            onClick={() => handleLikeComment(node.id, node.userId)}
+                        >
+                            <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
+                            <span>{likesCount}</span>
+                        </button>
+
+                        {user && (
+                            <button
+                                className={styles.commentActionBtn}
+                                onClick={() => {
+                                    setReplyingToCommentId(isReplying ? null : node.id);
+                                    setReplyText('');
+                                }}
+                            >
+                                <CornerDownRight size={14} />
+                                <span>Ответить</span>
+                            </button>
+                        )}
+
+                        {user && Number(user.id) !== Number(node.userId) && (
+                            <button
+                                className={styles.commentActionBtn}
+                                onClick={() => triggerReport('comment', node.id, node.userId)}
+                            >
+                                <Flag size={14} />
+                                <span>Пожаловаться</span>
+                            </button>
+                        )}
+
+                        {canDelete && (
+                            <button
+                                className={`${styles.commentActionBtn} ${styles.commentDeleteBtn}`}
+                                onClick={() => handleDeleteComment(node.id)}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {isReplying && (
+                    <div className={styles.replyInputWrapper}>
+                        <textarea
+                            placeholder="Написать ответ..."
+                            className={styles.replyArea}
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                        />
+                        <div className={styles.replyActions}>
+                            <button
+                                className={styles.cancelReplyBtn}
+                                onClick={() => {
+                                    setReplyingToCommentId(null);
+                                    setReplyText('');
+                                }}
+                            >
+                                Отмена
+                            </button>
+                            <Button
+                                onClick={() => handleAddComment(node.id)}
+                                disabled={submittingComment || !replyText.trim()}
+                            >
+                                {submittingComment ? 'Отправка...' : 'Ответить'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {node.replies && node.replies.map(reply => renderCommentNode(reply, depth + 1))}
+            </div>
+        );
+    };
+
 
     if (loading) {
         return (
@@ -371,11 +648,11 @@ const ArticleDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
-                        {user?.id !== article.userId && (
-                            <button 
-                                className={`${styles.actionBtn} ${isReported ? styles.reportedItem : ''}`} 
+                        {user && Number(user.id) !== Number(article.userId) && (
+                            <button
+                                className={`${styles.actionBtn} ${isReported ? styles.reportedItem : ''}`}
                                 onClick={() => {
-                                    if (!isReported) setIsReportModalOpen(true);
+                                    if (!isReported) triggerReport('article', Number(articleId), article.userId);
                                 }}
                                 title={isReported ? "Жалоба отправлена" : "Пожаловаться"}
                                 disabled={isReported}
@@ -395,13 +672,36 @@ const ArticleDetailPage: React.FC = () => {
                             {downloading ? <Loader size={18} className={styles.spinning} /> : <FileText size={18} />}
                         </button>
                         {isModeratorOrAdmin && (
-                            <button
-                                className={`${styles.actionBtn} ${isInWiki ? styles.activeActionBtn : ''}`}
-                                title="Добавить в Базу знаний"
-                                onClick={() => !isInWiki && setIsModalOpen(true)}
-                                disabled={isInWiki}
+                            article.sectionId ? (
+                                <button
+                                    className={`${styles.actionBtn} ${styles.likeBtn} ${styles.wikiApproveBtn} ${isInWiki ? styles.activeActionBtn : ''}`}
+                                    title={isInWiki ? 'В Базе знаний' : `Одобрить и добавить в Wiki (Раздел: ${sectionName || '...'})`}
+                                    onClick={() => !isInWiki && handleConfirmWiki(article.sectionId)}
+                                    disabled={isInWiki}
+                                >
+                                    <BookOpen size={18} fill={isInWiki ? "currentColor" : "none"} />
+                                    <span>
+                                        {isInWiki ? 'В Базе знаний' : `Одобрить и добавить в Wiki (Раздел: ${sectionName || '...'})`}
+                                    </span>
+                                </button>
+                            ) : (
+                                <button
+                                    className={`${styles.actionBtn} ${isInWiki ? styles.activeActionBtn : ''}`}
+                                    title="Добавить в Базу знаний"
+                                    onClick={() => !isInWiki && setIsModalOpen(true)}
+                                    disabled={isInWiki}
+                                >
+                                    <BookOpen size={18} fill={isInWiki ? "currentColor" : "none"} />
+                                </button>
+                            )
+                        )}
+                        {aiAnalysis && (
+                            <button 
+                                className={`${styles.actionBtn} ${styles.aiBtnHeader}`} 
+                                onClick={() => setIsAiCollapsed(!isAiCollapsed)}
+                                title="ИИ Саммари"
                             >
-                                <BookOpen size={18} fill={isInWiki ? "currentColor" : "none"} />
+                                <Bot size={18} className={!isAiCollapsed ? styles.aiActiveIcon : ''} />
                             </button>
                         )}
                         <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
@@ -443,9 +743,9 @@ const ArticleDetailPage: React.FC = () => {
                     <h1 className={styles.title}>{article.title}</h1>
 
                     <div className={styles.authorSection}>
-                        <Avatar 
-                            src={author?.avatar} 
-                            name={author?.firstname} 
+                        <Avatar
+                            src={author?.avatar}
+                            name={author?.firstname}
                             size="md"
                             className={styles.authorAvatar}
                         />
@@ -456,41 +756,54 @@ const ArticleDetailPage: React.FC = () => {
                         <Button variant="secondary" className={styles.followBtn}>Подписаться</Button>
                     </div>
 
+                    {/* AI Assistant Section - Collapsible Executive Summary */}
+                    {analyzing ? (
+                        <div className={styles.aiContentSummaryLoading}>
+                            <Sparkles size={16} className={`${styles.spinning} ${styles.aiSparkle}`} />
+                            <span>ИИ готовит краткое резюме...</span>
+                        </div>
+                    ) : aiAnalysis ? (
+                        <div className={`${styles.aiContentSummary} ${isAiCollapsed ? styles.collapsed : ''}`}>
+                            <button 
+                                className={styles.aiContentSummaryHeader}
+                                onClick={() => setIsAiCollapsed(!isAiCollapsed)}
+                                type="button"
+                            >
+                                <div className={styles.aiHeaderTitle}>
+                                    <Sparkles size={16} className={styles.aiSparkle} />
+                                    <span>Краткое резюме статьи от ИИ</span>
+                                </div>
+                                <span className={styles.collapseIcon}>
+                                    {isAiCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                                </span>
+                            </button>
+                            {!isAiCollapsed && (
+                                <div className={styles.aiContentSummaryBody}>
+                                    <p className={styles.aiSummaryText}>{aiAnalysis.summary}</p>
+                                    {aiAnalysis.keyTakeaways && aiAnalysis.keyTakeaways.length > 0 && (
+                                        <div className={styles.aiTakeawaysSection}>
+                                            <h4>Ключевые инсайты статьи:</h4>
+                                            <ul className={styles.aiTakeawaysList}>
+                                                {aiAnalysis.keyTakeaways.map((t, idx) => (
+                                                    <li key={idx}>
+                                                        <Lightbulb size={14} className={styles.insightIcon} />
+                                                        <span>{t}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
+
                     <div
                         className={styles.content}
                         dangerouslySetInnerHTML={{ __html: parsedContent || article.content }}
                     />
+
                     
-                    { (analyzing || aiAnalysis) && (
-                        <div className={styles.aiInsightSection}>
-                            <div className={styles.aiInsightHeader}>
-                                <Sparkles size={20} color="#8b5cf6" />
-                                <h3>AI Insight & Резюме</h3>
-                            </div>
-                            
-                            {analyzing ? (
-                                <div className={styles.aiAnalyzing}>
-                                    <Loader className={styles.spinning} size={20} />
-                                    <span>ИИ анализирует статью...</span>
-                                </div>
-                            ) : (
-                                <div className={styles.aiAnalysisBody}>
-                                    <p className={styles.aiSummary}>{aiAnalysis?.summary}</p>
-                                    <div className={styles.takeaways}>
-                                        <h4>Ключевые моменты:</h4>
-                                        <ul>
-                                            {aiAnalysis?.keyTakeaways.map((t, i) => (
-                                                <li key={i}>
-                                                    <Lightbulb size={14} color="#f59e0b" />
-                                                    {t}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     <footer className={styles.articleFooter}>
                         <div className={styles.tags}>
@@ -534,9 +847,9 @@ const ArticleDetailPage: React.FC = () => {
                     <div className={styles.sidebarWidget}>
                         <div className={styles.authorWidgetHeader}>
                             <Link to={`/profile/${author?.id}`}>
-                                <Avatar 
-                                    src={author?.avatar} 
-                                    name={author?.firstname} 
+                                <Avatar
+                                    src={author?.avatar}
+                                    name={author?.firstname}
                                     size="lg"
                                     className={styles.sidebarAvatar}
                                 />
@@ -545,7 +858,7 @@ const ArticleDetailPage: React.FC = () => {
                                 <Link to={`/profile/${author?.id}`} className={styles.authorNameLink}>
                                     <h3 className={styles.sidebarAuthorName}>{author?.firstname} {author?.lastname}</h3>
                                 </Link>
-                                <p className={styles.authorBadge}>{author?.role || 'Автор'}</p>
+                                <p className={styles.sidebarAuthorBadge}>{author?.role || 'Автор'}</p>
                             </div>
                         </div>
                         <p className={styles.sidebarBio}>{author?.bio || ''}</p>
@@ -565,21 +878,21 @@ const ArticleDetailPage: React.FC = () => {
             </div>
 
             <section className={styles.commentsSection}>
-                <div className={styles.container}>
+                <div className={styles.commentsContainer}>
                     <div className={styles.commentsHeader}>
                         <h2>Комментарии ({comments.length})</h2>
                     </div>
 
                     <div className={styles.commentInputWrapper}>
-                        <textarea 
-                            placeholder="Написать комментарий..." 
+                        <textarea
+                            placeholder="Написать комментарий..."
                             className={styles.commentArea}
                             value={commentText}
                             onChange={(e) => setCommentText(e.target.value)}
                         ></textarea>
                         <div className={styles.commentActions}>
-                            <Button 
-                                onClick={handleAddComment} 
+                            <Button
+                                onClick={() => handleAddComment()}
                                 disabled={submittingComment || !commentText.trim()}
                             >
                                 {submittingComment ? 'Отправка...' : 'Отправить'}
@@ -588,26 +901,8 @@ const ArticleDetailPage: React.FC = () => {
                     </div>
 
                     <div className={styles.commentsList}>
-                        {comments.length > 0 ? (
-                            comments.map((comment, index) => (
-                                <div key={comment.id || index} className={styles.commentCard}>
-                                    <div className={styles.commentHeader}>
-                                        <div className={styles.commentAuthorInfo}>
-                                            <Avatar 
-                                                name={comment.authorName || 'Пользователь'} 
-                                                size="sm" 
-                                            />
-                                            <span className={styles.commentAuthor}>{comment.authorName || `User #${comment.userId}`}</span>
-                                        </div>
-                                        <span className={styles.commentDate}>
-                                            {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : 'Только что'}
-                                        </span>
-                                    </div>
-                                    <div className={styles.commentBody}>
-                                        {comment.content}
-                                    </div>
-                                </div>
-                            ))
+                        {commentTree.length > 0 ? (
+                            commentTree.map(node => renderCommentNode(node))
                         ) : (
                             <p className={styles.noComments}>Комментариев пока нет. Будьте первым!</p>
                         )}
@@ -615,23 +910,31 @@ const ArticleDetailPage: React.FC = () => {
                 </div>
             </section>
 
-            <SectionSelectModal 
+            <SectionSelectModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleConfirmWiki}
                 sections={sections}
             />
 
-            <ReportModal 
+            <ReportModal
                 isOpen={isReportModalOpen}
                 onClose={() => setIsReportModalOpen(false)}
-                targetType="article"
-                targetId={Number(articleId)}
-                targetAuthorId={article.userId}
-                onSuccess={() => setIsReported(true)}
+                targetType={reportTargetType}
+                targetId={reportTargetId}
+                targetAuthorId={reportTargetAuthorId}
+                onSuccess={() => {
+                    if (reportTargetType === 'article') {
+                        setIsReported(true);
+                    } else {
+                        toast.success('Жалоба успешно отправлена');
+                    }
+                }}
             />
         </div>
     );
 };
 
 export default ArticleDetailPage;
+
+

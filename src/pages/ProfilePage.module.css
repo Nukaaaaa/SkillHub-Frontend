@@ -702,4 +702,498 @@
     font-size: 0.7rem;
     font-weight: 600;
     color: #94a3b8;
-}
+}
+
+/* Skills tab styling */
+.skillsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.skillCard {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.skillCard:hover {
+    border-color: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.skillCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+}
+
+.skillNameText {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.skillBadge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.badgeLearning {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.badgeCompleted {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.badgeConfirmed {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.skillDesc {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+
+.skillFooter {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.statSubText {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.specializationsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.roomSpecializationCard {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 2rem;
+    padding: 2rem;
+}
+
+.roomSpecHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.roomSpecTitle {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.roomSpecDesc {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.certBadgeBtn {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #78350f;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
+    transition: all 0.2s ease;
+}
+
+.certBadgeBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+}
+
+.specProgressContainer {
+    background: white;
+    border: 1px solid #f1f5f9;
+    padding: 1rem;
+    border-radius: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.specProgressText {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.5rem;
+}
+
+.specProgressTrack {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.specProgressFill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #10b981);
+    border-radius: 999px;
+    transition: width 0.8s ease;
+}
+
+.specSkillsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+/* Certificate Modal Overlay */
+.certModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.certModalContent {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    padding: 1rem;
+    animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.certModalClose {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.certModalClose:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    transform: rotate(90deg);
+}
+
+/* Diploma Graphic Design */
+.diplomaCard {
+    background: #fbfbfa;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    padding: 2.5rem;
+    position: relative;
+    border: 2px solid #e5e5e0;
+}
+
+.diplomaBorder {
+    border: 4px double #d4af37; /* Gold double border */
+    padding: 3rem 2rem;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fcfcfb;
+    text-align: center;
+}
+
+.diplomaTrophy {
+    color: #fbbf24;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 4px 6px rgba(251, 191, 36, 0.2));
+}
+
+.diplomaTitle {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.diplomaSubtitle {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    color: #d4af37;
+    margin-bottom: 3rem;
+}
+
+.diplomaConfirms {
+    font-size: 0.95rem;
+    color: #64748b;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.diplomaStudentName {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #0f172a;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+    min-width: 300px;
+}
+
+.diplomaText {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #475569;
+    max-width: 500px;
+    margin-bottom: 1rem;
+}
+
+.diplomaRoomName {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #1e1b4b;
+    margin-bottom: 2.5rem;
+}
+
+.diplomaSkillsList {
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    padding: 1.25rem 2rem;
+    max-width: 450px;
+    margin-bottom: 3rem;
+    text-align: left;
+}
+
+.diplomaSkillsTitle {
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.diplomaSkillsList ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.diplomaSkillsList li {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.diplomaFooter {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 2rem;
+    margin-top: auto;
+}
+
+.diplomaSign {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.diplomaLine {
+    width: 100%;
+    height: 1px;
+    background: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+.diplomaStamp {
+    width: 90px;
+    height: 90px;
+    border: 3px double #d4af37;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: white;
+}
+
+.stampInner {
+    width: 74px;
+    height: 74px;
+    border: 1px dashed #d4af37;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.5rem;
+    font-weight: 900;
+    color: #d4af37;
+    letter-spacing: 0.05em;
+}
+
+.diplomaDate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.certDownloadBtn {
+    position: absolute;
+    top: 1.5rem;
+    right: 4.5rem;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+    transition: all 0.2s;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.certDownloadBtn:hover {
+    background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+    transform: translateY(-1px);
+}
+
+@media print {
+    /* Hide everything on the page */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* Show only the modal content and its children */
+    .certModalOverlay,
+    .certModalOverlay * {
+        visibility: visible;
+    }
+    
+    .certModalOverlay {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: white !important;
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    /* Hide close button and print button */
+    .certModalClose,
+    .certDownloadBtn {
+        display: none !important;
+    }
+    
+    .certModalContent {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+        transform: none !important;
+    }
+    
+    .diplomaCard {
+        border: none !important;
+        box-shadow: none !important;
+        background: #fcfcfb !important;
+        width: 297mm !important; /* A4 landscape width */
+        height: 210mm !important; /* A4 landscape height */
+        padding: 1.5cm !important;
+        box-sizing: border-box;
+        margin: 0 auto;
+        page-break-inside: avoid;
+    }
+    
+    .diplomaBorder {
+        height: 100%;
+        padding: 2.5rem 2rem !important;
+        box-sizing: border-box;
+        background: #fcfcfb !important;
+    }
+    
+    @page {
+        size: A4 landscape;
+        margin: 0;
+    }
+}
+
+

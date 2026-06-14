@@ -121,7 +121,7 @@ const SavedArticlesPage: React.FC = () => {
 
     const handleNavigate = (article: SavedArticle) => {
         if (article.targetType === 'article') {
-            navigate(`/articles/${article.id}`);
+            navigate(`/articles/${article.id}`, { state: { from: '/saved' } });
         } else {
             navigate(`/posts/${article.id}`);
         }

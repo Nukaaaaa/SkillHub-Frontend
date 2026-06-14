@@ -12,7 +12,9 @@ import {
     Clock,
     HelpCircle,
     CheckCircle2,
-    Flag
+    Flag,
+    Trash2,
+    CornerDownRight
 } from 'lucide-react';
 import 'highlight.js/styles/atom-one-dark.css';
 
@@ -20,6 +22,7 @@ import { contentService } from '../api/contentService';
 import { userService } from '../api/userService';
 import { roomService } from '../api/roomService';
 import { interactionService } from '../api/interactionService';
+import type { TargetType } from '../api/interactionService';
 import type { Post, User, Comment } from '../types';
 import Loader from '../components/Loader';
 import Button from '../components/Button';
@@ -28,7 +31,7 @@ import Avatar from '../components/Avatar';
 import styles from './PostDetailPage.module.css';
 
 const PostDetailPage: React.FC = () => {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, getUserRoomRole } = useAuth();
     const { postId } = useParams<{ roomSlug: string; postId: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -40,6 +43,14 @@ const PostDetailPage: React.FC = () => {
     const [commentAuthors, setCommentAuthors] = useState<Record<number, User>>({});
     const [loading, setLoading] = useState(true);
     const [commentText, setCommentText] = useState('');
+    const [replyingToCommentId, setReplyingToCommentId] = useState<number | null>(null);
+    const [replyText, setReplyText] = useState('');
+    const [commentLikes, setCommentLikes] = useState<Record<number, number>>({});
+    const [likedComments, setLikedComments] = useState<Record<number, boolean>>({});
+    const [reportTargetType, setReportTargetType] = useState<TargetType>('post');
+    const [reportTargetId, setReportTargetId] = useState<number>(0);
+    const [reportTargetAuthorId, setReportTargetAuthorId] = useState<number>(0);
+
 
     const [likes, setLikes] = useState<number>(0);
     const [isLiked, setIsLiked] = useState<boolean>(false);
@@ -76,7 +87,7 @@ const PostDetailPage: React.FC = () => {
                 if (p) profileMap[p.id] = p;
             });
             setCommentAuthors(profileMap);
-
+            await loadCommentLikes(postComments);
         } catch (error) {
             console.error('Failed to fetch post details:', error);
             toast.error(t('common.error'));
@@ -163,23 +174,311 @@ const PostDetailPage: React.FC = () => {
         fetchData();
     }, [postId, currentUser?.id]);
 
-    const handleCommentSubmit = async () => {
-        if (!commentText.trim() || !post) return;
+    const loadCommentLikes = async (comms: any[]) => {
+        const likesMap: Record<number, number> = {};
+        const likedMap: Record<number, boolean> = {};
+        await Promise.all(comms.map(async (c) => {
+            try {
+                const count = await interactionService.countLikes('comment', c.id);
+                likesMap[c.id] = count;
+                if (currentUser?.id) {
+                    likedMap[c.id] = localStorage.getItem(`liked_comment_${currentUser.id}_${c.id}`) === 'true';
+                }
+            } catch (e) {
+                console.error(`Failed to load likes for comment ${c.id}`, e);
+            }
+        }));
+        setCommentLikes(likesMap);
+        setLikedComments(likedMap);
+    };
+
+    const handleCommentSubmit = async (parentId?: number) => {
+        const text = parentId ? replyText : commentText;
+        if (!text.trim() || !post) return;
         try {
             await contentService.createComment({
                 postId: post.id,
-                content: commentText,
-                userId: currentUser?.id || 0
+                content: text,
+                userId: currentUser?.id || 0,
+                parentId: parentId
             });
-            setCommentText('');
-            toast.success('Комментарий добавлен');
+            toast.success(parentId ? 'Ответ добавлен' : 'Комментарий добавлен');
+            if (parentId) {
+                setReplyText('');
+                setReplyingToCommentId(null);
+            } else {
+                setCommentText('');
+            }
+            
             // Refresh comments
             const newComments = await contentService.getCommentsByPost(post.id);
             setComments(newComments);
+            await loadCommentLikes(newComments);
+
+            // Refresh authors
+            const commentUserIds = Array.from(new Set(newComments.map((c: Comment) => c.userId)));
+            const profilePromises = commentUserIds.map((id: number) => userService.getUserById(id).catch(() => null));
+            const profiles = await Promise.all(profilePromises);
+
+            const profileMap: Record<number, User> = {};
+            profiles.forEach(p => {
+                if (p) profileMap[p.id] = p;
+            });
+            setCommentAuthors(profileMap);
+
         } catch (error) {
             toast.error('Не удалось отправить комментарий');
         }
     };
+
+    const handleLikeComment = async (commentId: number, commentAuthorId: number) => {
+        if (!currentUser) {
+            toast.error('Пожалуйста, авторизуйтесь');
+            return;
+        }
+        const isLikedStatus = likedComments[commentId];
+        try {
+            if (isLikedStatus) {
+                await interactionService.removeLike('comment', commentId);
+                setCommentLikes(prev => ({ ...prev, [commentId]: Math.max(0, (prev[commentId] || 1) - 1) }));
+                localStorage.removeItem(`liked_comment_${currentUser.id}_${commentId}`);
+                setLikedComments(prev => ({ ...prev, [commentId]: false }));
+            } else {
+                await interactionService.addLike(
+                    'comment',
+                    commentId,
+                    commentAuthorId,
+                    room?.directionId
+                );
+                setCommentLikes(prev => ({ ...prev, [commentId]: (prev[commentId] || 0) + 1 }));
+                localStorage.setItem(`liked_comment_${currentUser.id}_${commentId}`, 'true');
+                setLikedComments(prev => ({ ...prev, [commentId]: true }));
+            }
+        } catch (e: any) {
+            console.error('Failed to like comment', e);
+        }
+    };
+
+    const handleDeleteComment = async (commentId: number) => {
+        if (!post) return;
+        if (!window.confirm('Вы уверены, что хотите удалить этот комментарий? Все ответы также будут удалены.')) {
+            return;
+        }
+        try {
+            await contentService.deleteComment(commentId);
+            toast.success('Комментарий удален');
+            const newComments = await contentService.getCommentsByPost(post.id);
+            setComments(newComments);
+            await loadCommentLikes(newComments);
+        } catch (e) {
+            toast.error('Не удалось удалить комментарий');
+        }
+    };
+
+    const triggerReport = (type: TargetType, id: number, authorId: number) => {
+        setReportTargetType(type);
+        setReportTargetId(id);
+        setReportTargetAuthorId(authorId);
+        setIsReportModalOpen(true);
+    };
+
+    const handleAcceptAnswer = async (commentId: number) => {
+        if (!post) return;
+        try {
+            await contentService.acceptComment(commentId);
+            toast.success('Решение принято');
+            const newComments = await contentService.getCommentsByPost(post.id);
+            setComments(newComments);
+        } catch (e) {
+            toast.error('Не удалось отметить решение');
+        }
+    };
+
+    interface CommentNode {
+        id: number;
+        postId: number;
+        userId: number;
+        content: string;
+        isAccepted: boolean;
+        createdAt: string;
+        updatedAt?: string;
+        parentId?: number;
+        replies: CommentNode[];
+    }
+
+    const buildCommentTree = (list: any[]): CommentNode[] => {
+        const map: Record<number, CommentNode> = {};
+        const roots: CommentNode[] = [];
+        
+        list.forEach(c => {
+            map[c.id] = { ...c, replies: [] };
+        });
+        
+        list.forEach(c => {
+            const node = map[c.id];
+            if (c.parentId) {
+                const parent = map[c.parentId];
+                if (parent) {
+                    parent.replies.push(node);
+                } else {
+                    roots.push(node);
+                }
+            } else {
+                roots.push(node);
+            }
+        });
+
+        const sortNodes = (a: CommentNode, b: CommentNode) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        roots.sort(sortNodes);
+        Object.values(map).forEach(node => {
+            node.replies.sort(sortNodes);
+        });
+
+        return roots;
+    };
+
+    const commentTree = buildCommentTree(comments);
+
+    const renderCommentNode = (node: CommentNode, depth: number = 0): React.ReactNode => {
+        const cAuthor = commentAuthors[node.userId];
+        const authorName = cAuthor ? `${cAuthor.firstname} ${cAuthor.lastname}` : `Пользователь #${node.userId}`;
+        const authorAvatar = cAuthor?.avatar;
+        const authorRole = cAuthor?.role;
+        const isPostAuthor = post ? Number(node.userId) === Number(post.userId) : false;
+
+        const isLikedStatus = likedComments[node.id] || false;
+        const likesCount = commentLikes[node.id] || 0;
+
+        const isReplying = replyingToCommentId === node.id;
+        const localRole = room ? getUserRoomRole(room.id) : null;
+        const isModeratorOrAdmin = currentUser?.role === 'MODERATOR' || currentUser?.role === 'ADMIN' || localRole === 'ROOM_ADMIN' || localRole === 'EXPERT' || localRole === 'MODERATOR';
+        const canDelete = currentUser && (Number(currentUser.id) === Number(node.userId) || isModeratorOrAdmin);
+        const canAccept = currentUser && post && Number(currentUser.id) === Number(post.userId) && post.postType === 'QUESTION' && !node.parentId;
+
+        return (
+            <div 
+                key={node.id} 
+                className={`${styles.commentWrapper} ${depth === 0 ? styles.rootComment : ''}`}
+            >
+                {depth > 0 && <div className={styles.replyConnector} />}
+                <div className={`${styles.commentCard} ${node.isAccepted ? styles.acceptedComment : ''}`}>
+                    <div className={styles.commentHeader}>
+                        <div className={styles.commentAuthorInfo}>
+                            <Avatar 
+                                src={authorAvatar}
+                                name={authorName} 
+                                size="sm" 
+                            />
+                            <div className={styles.commentAuthorMeta}>
+                                <span className={styles.commentAuthorName}>{authorName}</span>
+                                {isPostAuthor && (
+                                    <span className={styles.authorBadge} title="Автор поста">Автор</span>
+                                )}
+                                {authorRole && <span className={styles.commentAuthorRole}>{authorRole}</span>}
+                            </div>
+                        </div>
+                        <div className={styles.commentHeaderRight}>
+                            {node.isAccepted && (
+                                <span className={styles.acceptedBadge}>
+                                    <CheckCircle2 size={14} /> Решение принято автором
+                                </span>
+                            )}
+                            <span className={styles.commentDate}>
+                                {node.createdAt ? new Date(node.createdAt).toLocaleDateString() : 'Только что'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className={styles.commentBody}>
+                        {node.content}
+                    </div>
+
+                    <div className={styles.commentFooterActions}>
+                        <button 
+                            className={`${styles.commentActionBtn} ${isLikedStatus ? styles.commentLiked : ''}`}
+                            onClick={() => handleLikeComment(node.id, node.userId)}
+                        >
+                            <Heart size={14} fill={isLikedStatus ? "currentColor" : "none"} />
+                            <span>{likesCount}</span>
+                        </button>
+
+                        {currentUser && (
+                            <button 
+                                className={styles.commentActionBtn}
+                                onClick={() => {
+                                    setReplyingToCommentId(isReplying ? null : node.id);
+                                    setReplyText('');
+                                }}
+                            >
+                                <CornerDownRight size={14} />
+                                <span>Ответить</span>
+                            </button>
+                        )}
+
+                        {currentUser && Number(currentUser.id) !== Number(node.userId) && (
+                            <button 
+                                className={styles.commentActionBtn}
+                                onClick={() => triggerReport('comment', node.id, node.userId)}
+                            >
+                                <Flag size={14} />
+                                <span>Пожаловаться</span>
+                            </button>
+                        )}
+
+                        {canAccept && (
+                            <button 
+                                className={`${styles.commentActionBtn} ${node.isAccepted ? styles.unacceptBtn : styles.acceptBtn}`}
+                                onClick={() => handleAcceptAnswer(node.id)}
+                            >
+                                <CheckCircle2 size={14} />
+                                <span>{node.isAccepted ? 'Снять пометку' : 'Решение'}</span>
+                            </button>
+                        )}
+
+                        {canDelete && (
+                            <button 
+                                className={`${styles.commentActionBtn} ${styles.commentDeleteBtn}`}
+                                onClick={() => handleDeleteComment(node.id)}
+                            >
+                                <Trash2 size={14} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {isReplying && (
+                    <div className={styles.replyInputWrapper}>
+                        <textarea 
+                            placeholder="Написать ответ..." 
+                            className={styles.replyArea}
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                        />
+                        <div className={styles.replyActions}>
+                            <button 
+                                className={styles.cancelReplyBtn}
+                                onClick={() => {
+                                    setReplyingToCommentId(null);
+                                    setReplyText('');
+                                }}
+                            >
+                                Отмена
+                            </button>
+                            <Button 
+                                onClick={() => handleCommentSubmit(node.id)} 
+                                disabled={!replyText.trim()}
+                            >
+                                Ответить
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {node.replies && node.replies.map(reply => renderCommentNode(reply, depth + 1))}
+            </div>
+        );
+    };
+
 
     if (loading) return <Loader />;
     if (!post) return null;
@@ -195,11 +494,11 @@ const PostDetailPage: React.FC = () => {
 
                     <div className={styles.headerActions}>
                         <button className={styles.actionBtn}><Share2 size={18} /></button>
-                        {currentUser?.id !== post.userId && (
+                        {currentUser && Number(currentUser.id) !== Number(post.userId) && (
                             <button 
                                 className={`${styles.actionBtn} ${isReported ? styles.reported : ''}`} 
                                 onClick={() => {
-                                    if (!isReported) setIsReportModalOpen(true);
+                                    if (!isReported) triggerReport('post', Number(postId), post.userId);
                                 }}
                                 title={isReported ? "Жалоба отправлена" : "Пожаловаться"}
                                 disabled={isReported}
@@ -267,38 +566,17 @@ const PostDetailPage: React.FC = () => {
                             onChange={(e) => setCommentText(e.target.value)}
                         ></textarea>
                         <div className={styles.commentActions}>
-                            <Button onClick={handleCommentSubmit} disabled={!commentText.trim()}>
+                            <Button onClick={() => handleCommentSubmit()} disabled={!commentText.trim()}>
                                 Отправить
                             </Button>
                         </div>
                     </div>
 
                     <div className={styles.commentsList}>
-                        {comments.length === 0 ? (
+                        {commentTree.length === 0 ? (
                             <p className={styles.noComments}>{post.postType === 'QUESTION' ? 'Будьте первым, кто ответит!' : 'Пока нет комментариев.'}</p>
                         ) : (
-                            comments.map(comment => (
-                                <div key={comment.id} className={`${styles.commentCard} ${comment.isAccepted ? styles.acceptedComment : ''}`}>
-                                    <div className={styles.commentHeader}>
-                                        <Link to={`/profile/${comment.userId}`} className={styles.commentAuthorLink}>
-                                            <div className={styles.commentAuthor}>
-                                                <span className={styles.commentAuthorName}>
-                                                    {commentAuthors[comment.userId]
-                                                        ? `${commentAuthors[comment.userId].firstname} ${commentAuthors[comment.userId].lastname}`
-                                                        : `Пользователь #${comment.userId}`}
-                                                </span>
-                                                <span className={styles.commentDate}>{new Date(comment.createdAt).toLocaleDateString()}</span>
-                                            </div>
-                                        </Link>
-                                        {comment.isAccepted && (
-                                            <span className={styles.acceptedBadge}>
-                                                <CheckCircle2 size={14} /> Решение
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className={styles.commentContent}>{comment.content}</div>
-                                </div>
-                            ))
+                            commentTree.map(node => renderCommentNode(node))
                         )}
                     </div>
                 </section>
@@ -307,10 +585,16 @@ const PostDetailPage: React.FC = () => {
             <ReportModal 
                 isOpen={isReportModalOpen}
                 onClose={() => setIsReportModalOpen(false)}
-                targetType="post"
-                targetId={Number(postId)}
-                targetAuthorId={post.userId}
-                onSuccess={() => setIsReported(true)}
+                targetType={reportTargetType}
+                targetId={reportTargetId}
+                targetAuthorId={reportTargetAuthorId}
+                onSuccess={() => {
+                    if (reportTargetType === 'post') {
+                        setIsReported(true);
+                    } else {
+                        toast.success('Жалоба успешно отправлена');
+                    }
+                }}
             />
         </div>
     );

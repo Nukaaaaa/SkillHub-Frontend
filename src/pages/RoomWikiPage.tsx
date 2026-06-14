@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useLocation } from 'react-router-dom';
 import {
     Search,
     History,
-    FolderOpen,
-    Folder,
     FileText,
-    ChevronRight,
     Download,
     BookOpen,
     Heart,
     Bookmark,
-    Share2
+    ArrowLeft,
+    Award,
+    Sparkles,
+    X,
+    Loader2,
+    Clock,
+    Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { contentService } from '../api/contentService';
 import { interactionService } from '../api/interactionService';
+import { aiService } from '../api/aiService';
 import { useAuth } from '../context/AuthContext';
 import type { WikiEntry, Room } from '../types';
 import Loader from '../components/Loader';
@@ -24,6 +28,7 @@ import styles from './RoomWikiPage.module.css';
 
 const RoomWikiPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
+    const location = useLocation();
 
     const [wikiEntries, setWikiEntries] = useState<WikiEntry[]>([]);
     const [sections, setSections] = useState<{ id: number; roomId: number; name: string }[]>([]);
@@ -31,16 +36,31 @@ const RoomWikiPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEntry, setSelectedEntry] = useState<WikiEntry | null>(null);
     const [activeSection, setActiveSection] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (location.state && typeof location.state.activeSection !== 'undefined') {
+            setActiveSection(location.state.activeSection);
+        }
+    }, [location.state]);
     const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
     const [activeId, setActiveId] = useState<string>('');
     const [parsedContent, setParsedContent] = useState<string>('');
     const [isLiked, setIsLiked] = useState(false);
     const [likes, setLikes] = useState(0);
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const { user } = useAuth();
+    const { user, getUserRoomRole } = useAuth();
     const [isAddingSection, setIsAddingSection] = useState(false);
     const [newSectionName, setNewSectionName] = useState('');
-    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
+    
+    // AI Assistant Drawer State
+    const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+    const [aiSummary, setAiSummary] = useState<string>('');
+    const [aiKeyTakeaways, setAiKeyTakeaways] = useState<string[]>([]);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
+
+    const localRole = room ? getUserRoomRole(room.id) : null;
+    const isModeratorOrAdmin = user?.role === 'MODERATOR' || user?.role === 'ADMIN' || localRole === 'ROOM_ADMIN' || localRole === 'EXPERT' || localRole === 'MODERATOR';
 
     const fetchWiki = async () => {
         if (!room) return;
@@ -52,7 +72,8 @@ const RoomWikiPage: React.FC = () => {
             ]);
             setWikiEntries(data);
             setSections(secs);
-            if (data.length > 0 && !selectedEntry) setSelectedEntry(data[0]);
+            // Default on landing view: no selected entry auto-selected
+            setSelectedEntry(null);
         } catch (error) {
             console.error('Failed to fetch wiki:', error);
         } finally {
@@ -118,6 +139,14 @@ const RoomWikiPage: React.FC = () => {
         setHeadings(newHeadings);
     }, [selectedEntry]);
 
+    // AI Drawer reset when article changes
+    useEffect(() => {
+        setAiSummary('');
+        setAiKeyTakeaways([]);
+        setIsAiDrawerOpen(false);
+        setAiError(null);
+    }, [selectedEntry?.id]);
+
     useEffect(() => {
         if (headings.length === 0) return;
 
@@ -156,13 +185,9 @@ const RoomWikiPage: React.FC = () => {
     const scrollToHeading = (id: string) => {
         const element = document.getElementById(id);
         if (element) {
-            const offset = 100;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
             });
         }
     };
@@ -176,8 +201,6 @@ const RoomWikiPage: React.FC = () => {
                 localStorage.removeItem(`liked_article_${selectedEntry.id}`);
                 setIsLiked(false);
             } else {
-                // Pass directionId for gamification (AuthorID is missing in WikiEntry for now)
-                // TODO: Extend WikiEntry to include AuthorID if needed for XP
                 await interactionService.addLike('article', selectedEntry.id, undefined, room?.directionId);
                 setLikes(prev => prev + 1);
                 localStorage.setItem(`liked_article_${selectedEntry.id}`, 'true');
@@ -212,14 +235,399 @@ const RoomWikiPage: React.FC = () => {
             setSections(prev => [...prev, section]);
             setNewSectionName('');
             setIsAddingSection(false);
-            toast.success('Раздел создан!');
+            toast.success('Раздел успешно создан!');
         } catch (error) {
             console.error('Failed to create section:', error);
             toast.error('Ошибка при создании раздела');
         }
     };
 
+    const handleAskAi = async () => {
+        if (!selectedEntry) return;
+        setIsAiDrawerOpen(true);
+        if (aiSummary) return; // Already analyzed
+
+        setAiLoading(true);
+        setAiError(null);
+        try {
+            // Strip HTML tags for clean text analysis
+            const cleanText = selectedEntry.content.replace(/<[^>]*>?/gm, '');
+            const result = await aiService.analyzeArticle({
+                title: selectedEntry.title,
+                content: cleanText.slice(0, 5000)
+            });
+            
+            if (result.error) {
+                setAiError(result.error);
+            } else {
+                setAiSummary(result.summary || 'Краткое содержание недоступно.');
+                setAiKeyTakeaways(result.keyTakeaways || []);
+            }
+        } catch (err) {
+            console.error('AI analysis failed:', err);
+            setAiError('Не удалось выполнить ИИ-анализ статьи. Попробуйте еще раз.');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     if (loading) return <Loader />;
+
+    // Helper: list of gradients for skill folders
+    const getFolderGradient = (id: number) => {
+        const gradients = [
+            'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+            'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+            'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+        ];
+        return gradients[id % gradients.length];
+    };
+
+    // Render logic for different views
+    const renderWikiContent = () => {
+        // Level 3: Article View (selectedEntry is active)
+        if (selectedEntry) {
+            return (
+                <div className={styles.articlePageLayout}>
+                    <div className={styles.container}>
+                        <header className={styles.header}>
+                            <button className={styles.backBtn} onClick={() => setSelectedEntry(null)} title="Назад">
+                                <ArrowLeft size={20} />
+                                Назад
+                            </button>
+
+                            <div className={styles.headerActions}>
+                                <button className={styles.actionBtn} onClick={handleBookmark} title="В закладки">
+                                    <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
+                                </button>
+                                <button className={styles.actionBtn} onClick={() => toast.success('PDF готов к скачиванию')} title="Скачать PDF">
+                                    <Download size={18} />
+                                </button>
+                                <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike} title="Лайкнуть">
+                                    <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+                                    <span>{likes}</span>
+                                </button>
+                            </div>
+                        </header>
+
+                        <main className={styles.mainContent}>
+                            <div className={styles.articleMeta}>
+                                <div className={`${styles.difficultyBadge} ${styles.badgeSenior}`}>
+                                    Advanced
+                                </div>
+                                <div className={styles.aiBadge}>
+                                    <Sparkles size={14} />
+                                    AI Score: 9.5
+                                </div>
+                                <div className={styles.metaInfo}>
+                                    <Clock size={14} />
+                                    {(() => {
+                                        const text = selectedEntry.content.replace(/<[^>]*>?/gm, '');
+                                        const words = text.trim().split(/\s+/).length;
+                                        const wpm = 225;
+                                        return Math.max(1, Math.ceil(words / wpm));
+                                    })()} мин чтения
+                                </div>
+                                <div className={styles.metaInfo}>
+                                    <Calendar size={14} />
+                                    {new Date(selectedEntry.updatedAt).toLocaleDateString()}
+                                </div>
+                            </div>
+
+                            <h1 className={styles.title}>{selectedEntry.title}</h1>
+
+                            <div className={styles.content} dangerouslySetInnerHTML={{ __html: parsedContent }} />
+                        </main>
+
+                        {/* Right Sidebar for scroll outline & AI */}
+                        <aside className={styles.sidebar}>
+                            {headings.length > 0 && (
+                                <div className={styles.sidebarWidget}>
+                                    <h3 className={styles.tocTitle}>Содержание</h3>
+                                    <nav className={styles.toc}>
+                                        {headings.map(h => (
+                                            <a
+                                                key={h.id}
+                                                href={`#${h.id}`}
+                                                className={`
+                                                    ${h.level === 3 ? styles.tocSubitem : ''} 
+                                                    ${activeId === h.id ? styles.activeTocItem : ''}
+                                                `}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setActiveId(h.id);
+                                                    scrollToHeading(h.id);
+                                                }}
+                                                style={{ marginLeft: h.level === 3 ? '1rem' : '0' }}
+                                            >
+                                                {h.text}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                </div>
+                            )}
+
+                            <div className={styles.aiWidget}>
+                                <div className={styles.aiWidgetTitleRow}>
+                                    <Sparkles size={16} color="#8b5cf6" />
+                                    <div className={styles.aiWidgetTitle}>AI Ассистент</div>
+                                </div>
+                                <div className={styles.aiWidgetDesc}>Я помогу вам разобраться в сложных темах этой статьи, составлю краткие выводы и резюме.</div>
+                                <button className={styles.aiWidgetBtn} onClick={handleAskAi}>
+                                    Спросить AI
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            );
+        }
+
+        // Level 2: Articles List in Selected Section/Skill (activeSection is selected)
+        if (activeSection !== null) {
+            const activeSectionObj = sections.find(s => s.id === activeSection);
+            const sectionEntries = wikiEntries.filter(e => activeSection === 0 ? !e.sectionId : e.sectionId === activeSection);
+
+            return (
+                <div className={styles.sectionPageLayout}>
+                    <div className={styles.sectionHeader}>
+                        <button className={styles.backBtn} onClick={() => setActiveSection(null)}>
+                            <ArrowLeft size={16} />
+                            <span>Назад к навыкам</span>
+                        </button>
+                        <h2 className={styles.sectionTitleText}>
+                            <Award size={22} color="#4f46e5" />
+                            {activeSectionObj?.name || 'Общие материалы'}
+                        </h2>
+                    </div>
+
+                    {sectionEntries.length === 0 ? (
+                        <div className={styles.emptyContent}>
+                            <div className={styles.emptyIconWrapper}>
+                                <FileText size={40} />
+                            </div>
+                            <h3>По этому навыку еще нет статей</h3>
+                            <p>Вы можете перенести полезные статьи сообщества в Вики из детального просмотра статей.</p>
+                            <button className={styles.backBtn} style={{ marginTop: '1rem' }} onClick={() => setActiveSection(null)}>Вернуться к навыкам</button>
+                        </div>
+                    ) : (
+                        <div className={styles.articlesListGrid}>
+                            {sectionEntries.map(entry => (
+                                <div
+                                    key={entry.id}
+                                    className={styles.articleCardCompact}
+                                    onClick={() => setSelectedEntry(entry)}
+                                >
+                                    <div className={styles.cardHeaderCompact}>
+                                        <div className={styles.fileIconWrapper}>
+                                            <FileText size={20} color="#4f46e5" />
+                                        </div>
+                                        <span className={styles.cardReadTime}>5 мин чтения</span>
+                                    </div>
+                                    <h4 className={styles.cardTitleCompact}>{entry.title}</h4>
+                                    <div className={styles.cardFooterCompact}>
+                                        <div className={styles.aiBadgeCompact}>
+                                            <Sparkles size={12} color="#8b5cf6" />
+                                            <span>AI: 9.5</span>
+                                        </div>
+                                        <span className={styles.cardLevelCompact}>Advanced</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Level 1: Landing grid of sections (skills) and Search results
+        const isSearching = searchTerm.trim().length > 0;
+        const searchResults = wikiEntries.filter(entry => 
+            entry.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            entry.content.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const searchSections = sections.filter(sec =>
+            sec.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        return (
+            <div className={styles.landingLayout}>
+                {isSearching ? (
+                    <div className={styles.searchResultsSection}>
+                        <div className={styles.sectionHeader}>
+                            <h3>Результаты поиска по запросу «{searchTerm}»</h3>
+                            <button className={styles.clearSearchBtn} onClick={() => setSearchTerm('')}>Очистить</button>
+                        </div>
+
+                        {searchResults.length === 0 && searchSections.length === 0 ? (
+                            <div className={styles.emptyContent}>
+                                <Search size={40} />
+                                <h3>Ничего не найдено</h3>
+                                <p>Попробуйте ввести другое ключевое слово или проверьте орфографию.</p>
+                            </div>
+                        ) : (
+                            <>
+                                {searchSections.length > 0 && (
+                                    <div style={{ marginBottom: '2.5rem' }}>
+                                        <h4 style={{ fontSize: '1.1rem', fontWeight: 750, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <Award size={18} color="#4f46e5" />
+                                            Найденные разделы ({searchSections.length})
+                                        </h4>
+                                        <div className={styles.sectionsGrid}>
+                                            {searchSections.map(sec => {
+                                                const sectionEntries = wikiEntries.filter(e => e.sectionId === sec.id);
+                                                return (
+                                                    <div
+                                                        key={sec.id}
+                                                        className={styles.sectionCard}
+                                                        onClick={() => {
+                                                            setActiveSection(sec.id);
+                                                            setSearchTerm('');
+                                                        }}
+                                                    >
+                                                        <div className={styles.sectionCardTop}>
+                                                            <div className={styles.folderIconContainer} style={{ background: getFolderGradient(sec.id) }}>
+                                                                <Award size={24} color="white" />
+                                                            </div>
+                                                            <span className={styles.articlesCountBadge}>
+                                                                {sectionEntries.length} статей
+                                                            </span>
+                                                        </div>
+                                                        <h4 className={styles.sectionCardTitle}>{sec.name}</h4>
+                                                        <p className={styles.sectionCardDesc}>Практический навык и обучающие материалы.</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {searchResults.length > 0 && (
+                                    <div>
+                                        <h4 style={{ fontSize: '1.1rem', fontWeight: 750, color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <FileText size={18} color="#4f46e5" />
+                                            Найденные статьи ({searchResults.length})
+                                        </h4>
+                                        <div className={styles.articlesListGrid}>
+                                            {searchResults.map(entry => {
+                                                const secObj = sections.find(s => s.id === entry.sectionId);
+                                                return (
+                                                    <div
+                                                        key={entry.id}
+                                                        className={styles.articleCardCompact}
+                                                        onClick={() => {
+                                                            setSelectedEntry(entry);
+                                                            setActiveSection(entry.sectionId || null);
+                                                        }}
+                                                    >
+                                                        <div className={styles.cardHeaderCompact}>
+                                                            <div className={styles.fileIconWrapper}>
+                                                                <FileText size={20} color="#4f46e5" />
+                                                            </div>
+                                                            <span className={styles.cardReadTime}>{secObj?.name || 'Общее'}</span>
+                                                        </div>
+                                                        <h4 className={styles.cardTitleCompact}>{entry.title}</h4>
+                                                        <div className={styles.cardFooterCompact}>
+                                                            <div className={styles.aiBadgeCompact}>
+                                                                <Sparkles size={12} color="#8b5cf6" />
+                                                                <span>AI: 9.5</span>
+                                                            </div>
+                                                            <span className={styles.cardLevelCompact}>Advanced</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                ) : (
+                    <div className={styles.skillsGridSection}>
+                        <div className={styles.gridHeader}>
+                            <h3>Изучаемые навыки и темы</h3>
+                            <p>Выберите навык, чтобы ознакомиться с учебными материалами базы знаний.</p>
+                        </div>
+
+                        <div className={styles.sectionsGrid}>
+                            {/* General/Common section card */}
+                            <div
+                                className={styles.sectionCard}
+                                onClick={() => setActiveSection(0)} // 0 represents General section
+                            >
+                                <div className={styles.sectionCardTop}>
+                                    <div className={styles.folderIconContainer} style={{ background: 'linear-gradient(135deg, #94a3b8 0%, #475569 100%)' }}>
+                                        <BookOpen size={24} color="white" />
+                                    </div>
+                                    <span className={styles.articlesCountBadge}>
+                                        {wikiEntries.filter(e => !e.sectionId).length} статей
+                                    </span>
+                                </div>
+                                <h4 className={styles.sectionCardTitle}>Общие материалы</h4>
+                                <p className={styles.sectionCardDesc}>Общая база знаний, вспомогательные статьи и материалы.</p>
+                            </div>
+
+                            {/* Skills list cards */}
+                            {sections.map(sec => {
+                                const sectionEntries = wikiEntries.filter(e => e.sectionId === sec.id);
+                                return (
+                                    <div
+                                        key={sec.id}
+                                        className={styles.sectionCard}
+                                        onClick={() => setActiveSection(sec.id)}
+                                    >
+                                        <div className={styles.sectionCardTop}>
+                                            <div className={styles.folderIconContainer} style={{ background: getFolderGradient(sec.id) }}>
+                                                <Award size={24} color="white" />
+                                            </div>
+                                            <span className={styles.articlesCountBadge}>
+                                                {sectionEntries.length} статей
+                                            </span>
+                                        </div>
+                                        <h4 className={styles.sectionCardTitle}>{sec.name}</h4>
+                                        <p className={styles.sectionCardDesc}>Практический навык и обучающие материалы.</p>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Moderator Create Section inline card */}
+                            {isModeratorOrAdmin && (
+                                <div className={`${styles.sectionCard} ${styles.addSectionCard}`}>
+                                    {isAddingSection ? (
+                                        <div className={styles.addSectionForm}>
+                                            <h4>Новый навык (раздел)</h4>
+                                            <input
+                                                type="text"
+                                                placeholder="Введите название..."
+                                                className={styles.addSectionInput}
+                                                value={newSectionName}
+                                                onChange={(e) => setNewSectionName(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleCreateSection()}
+                                                autoFocus
+                                            />
+                                            <div className={styles.addSectionActions}>
+                                                <button className={styles.confirmBtn} onClick={handleCreateSection}>ОК</button>
+                                                <button className={styles.cancelBtn} onClick={() => setIsAddingSection(false)}>Отмена</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className={styles.addSectionTrigger} onClick={() => setIsAddingSection(true)}>
+                                            <PlusCircle size={28} color="#4f46e5" />
+                                            <span>Добавить навык</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className={styles.wikiContainer}>
@@ -228,196 +636,85 @@ const RoomWikiPage: React.FC = () => {
                     <Search className={styles.searchIcon} size={18} />
                     <input
                         type="text"
-                        placeholder="Поиск по базе знаний..."
+                        placeholder="Поиск по базе знаний (название, ключевые слова)..."
                         className={styles.searchInput}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                    {searchTerm && (
+                        <button className={styles.clearSearchBtnX} onClick={() => setSearchTerm('')}>
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
                 <div className={styles.headerMeta}>
                     <span className={styles.versionTag}>Версия: 2.4.0</span>
-                    <button className={styles.historyBtn}><History size={18} /></button>
+                    <button className={styles.historyBtn} title="История изменений"><History size={18} /></button>
                 </div>
             </header>
 
             <div className={styles.mainLayout}>
-                {/* Left Sidebar */}
-                <aside className={styles.leftSidebar}>
-                    <div className={styles.sidebarTitle}>РАЗДЕЛЫ</div>
-                    <div className={styles.navGroup}>
-                        <div
-                            className={`${styles.navItem} ${activeSection === null ? styles.navItemActive : ''}`}
-                            onClick={() => { setActiveSection(null); setSelectedEntry(null); }}
-                        >
-                            <FolderOpen size={16} />
-                            <span>Все записи</span>
-                        </div>
-
-                        {sections.map(sec => (
-                            <div
-                                key={sec.id}
-                                className={`${styles.navItem} ${activeSection === sec.id ? styles.navItemActive : ''}`}
-                                onClick={() => { setActiveSection(sec.id); setSelectedEntry(null); }}
-                            >
-                                <Folder size={16} />
-                                <span>{sec.name}</span>
-                            </div>
-                        ))}
-
-                        {isModeratorOrAdmin && (
-                            <div className={styles.adminActions}>
-                                {isAddingSection ? (
-                                    <div className={styles.addSectionForm}>
-                                        <input
-                                            type="text"
-                                            placeholder="Название..."
-                                            className={styles.sectionInput}
-                                            value={newSectionName}
-                                            onChange={(e) => setNewSectionName(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleCreateSection()}
-                                            autoFocus
-                                        />
-                                        <div className={styles.sectionActions}>
-                                            <button 
-                                                className={styles.confirmBtn}
-                                                onClick={handleCreateSection}
-                                            >
-                                                ОК
-                                            </button>
-                                            <button 
-                                                className={styles.cancelBtn}
-                                                onClick={() => setIsAddingSection(false)}
-                                            >
-                                                Отмена
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div style={{ padding: '0 0.75rem' }}>
-                                        <button
-                                            onClick={() => setIsAddingSection(true)}
-                                            className={styles.addSectionBtn}
-                                        >
-                                            + Добавить раздел
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    <div style={{ marginTop: '2rem' }}>
-                        <div className={styles.sidebarTitle}>СТАТЬИ</div>
-                        <div className={styles.subMenu}>
-                            {wikiEntries
-                                .filter(e => (!activeSection || e.sectionId === activeSection) && e.title.toLowerCase().includes(searchTerm.toLowerCase()))
-                                .map(entry => (
-                                    <div
-                                        key={entry.id}
-                                        className={`${styles.subNavItem} ${selectedEntry?.id === entry.id ? styles.subItemActive : ''}`}
-                                        onClick={() => setSelectedEntry(entry)}
-                                    >
-                                        <FileText size={14} style={{ opacity: 0.5 }} />
-                                        <span>{entry.title}</span>
-                                    </div>
-                                ))}
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Main Content */}
-                <main className={styles.contentArea}>
-                    <div className={styles.articleWrapper}>
-                        {selectedEntry ? (
-                            <>
-                                <header className={styles.header}>
-                                    <nav className={styles.breadcrumbs}>
-                                        <span>База</span>
-                                        <ChevronRight size={10} />
-                                        <span>{sections.find(s => s.id === selectedEntry?.sectionId)?.name || 'Общее'}</span>
-                                        <ChevronRight size={10} />
-                                        <span className={styles.breadcrumbActive}>
-                                            {selectedEntry.title}
-                                        </span>
-                                    </nav>
-
-                                    <div className={styles.headerActions}>
-                                        <button className={styles.actionBtn}><Share2 size={18} /></button>
-                                        <button className={styles.actionBtn} onClick={handleBookmark}>
-                                            <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
-                                        </button>
-                                        <button className={styles.actionBtn} onClick={() => toast.success('PDF готов')}>
-                                            <Download size={18} />
-                                        </button>
-                                        <button className={`${styles.actionBtn} ${styles.likeBtn} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
-                                            <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
-                                            <span>{likes}</span>
-                                        </button>
-                                    </div>
-                                </header>
-
-                                <div className={styles.metadataBar}>
-                                    <div className={styles.metaChip}>
-                                        <div className={styles.aiPill}>AI</div>
-                                        <div>
-                                            <div className={styles.metaLabel}>AI SCORE</div>
-                                            <div className={`${styles.metaValue} ${styles.scoreValue}`}>9.5</div>
-                                        </div>
-                                    </div>
-                                    <div className={styles.metaChip}>
-                                        <div>
-                                            <div className={styles.metaLabel}>СЛОЖНОСТЬ</div>
-                                            <div className={styles.metaValue}>Advanced</div>
-                                        </div>
-                                    </div>
-                                    <div className={styles.metaChip}>
-                                        <div>
-                                            <div className={styles.metaLabel}>ЧТЕНИЕ</div>
-                                            <div className={styles.metaValue}>5 мин</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h1 className={styles.articleTitle}>{selectedEntry.title}</h1>
-                                <article className={styles.richContent} dangerouslySetInnerHTML={{ __html: parsedContent }} />
-                            </>
-                        ) : (
-                            <div className={styles.emptyContent}>
-                                <div className={styles.emptyIconWrapper}>
-                                    <BookOpen size={48} />
-                                </div>
-                                <h2>База знаний комнаты</h2>
-                                <p>Выберите запись из списка слева, чтобы приступить к изучению материалов</p>
-                            </div>
-                        )}
-                    </div>
-                </main>
-
-                {/* Right Sidebar */}
-                <aside className={styles.rightSidebar}>
-                    <div className={styles.tocTitle}>Содержание</div>
-                    <ul className={styles.tocList}>
-                        {headings.map((h) => (
-                            <li
-                                key={h.id}
-                                className={`${styles.tocItem} ${activeId === h.id ? styles.tocItemActive : ''}`}
-                                onClick={() => scrollToHeading(h.id)}
-                                style={{ paddingLeft: `${(h.level - 1) * 1}rem` }}
-                            >
-                                {h.text}
-                            </li>
-                        ))}
-                    </ul>
-
-                    <div className={styles.aiWidget}>
-                        <div className={styles.aiWidgetTitle}>AI Ассистент</div>
-                        <div className={styles.aiWidgetDesc}>Я помогу вам разобраться в сложных темах этой статьи.</div>
-                        <button className={styles.aiWidgetBtn}>Спросить AI</button>
-                    </div>
-                </aside>
+                {renderWikiContent()}
             </div>
+
+            {/* AI Assistant Drawer */}
+            {isAiDrawerOpen && selectedEntry && (
+                <div className={styles.drawerOverlay} onClick={() => setIsAiDrawerOpen(false)}>
+                    <div className={styles.drawer} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.drawerHeader}>
+                            <div className={styles.drawerTitleRow}>
+                                <Sparkles size={20} color="#8b5cf6" />
+                                <h3>ИИ Ассистент</h3>
+                            </div>
+                            <button className={styles.drawerCloseBtn} onClick={() => setIsAiDrawerOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className={styles.drawerBody}>
+                            <h4 className={styles.drawerArticleTitle}>{selectedEntry.title}</h4>
+                            {aiLoading ? (
+                                <div className={styles.aiDrawerLoading}>
+                                    <Loader2 className={`${styles.spin} spin`} size={36} color="#8b5cf6" />
+                                    <p>ИИ изучает статью и готовит выводы...</p>
+                                </div>
+                            ) : aiError ? (
+                                <div className={styles.aiDrawerError}>
+                                    <p>{aiError}</p>
+                                    <button onClick={handleAskAi} className={styles.retryBtn}>Повторить</button>
+                                </div>
+                            ) : (
+                                <div className={styles.aiAnalysisContent}>
+                                    <div className={styles.analysisSection}>
+                                        <h5>Краткое резюме</h5>
+                                        <p>{aiSummary}</p>
+                                    </div>
+                                    {aiKeyTakeaways.length > 0 && (
+                                        <div className={styles.analysisSection}>
+                                            <h5>Ключевые выводы</h5>
+                                            <ul className={styles.takeawaysList}>
+                                                {aiKeyTakeaways.map((takeaway, idx) => (
+                                                    <li key={idx}>{takeaway}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+// Auxiliary PlusCircle inline SVG wrapper to avoid extra imports
+const PlusCircle = ({ size, color }: { size: number; color: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+);
 
 export default RoomWikiPage;

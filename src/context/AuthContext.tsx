@@ -34,6 +34,9 @@ interface AuthContextType {
     joinRoom: (roomSlug: string) => Promise<void>;
     leaveRoom: (roomSlug: string) => Promise<void>;
     refreshUserRooms: () => Promise<void>;
+    isLocalModerator: boolean;
+    getUserRoomRole: (roomId: number) => string | null;
+    getUserRoomRoleBySlug: (roomSlug: string) => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,6 +46,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
     const [joinedRoomIds, setJoinedRoomIds] = useState<number[]>([]);
+    const [isLocalModerator, setIsLocalModerator] = useState(false);
+    const [roomRoles, setRoomRoles] = useState<Record<number, string>>({});
+    const [roomRolesBySlug, setRoomRolesBySlug] = useState<Record<string, string>>({});
 
     useEffect(() => {
         const initAuth = async () => {
@@ -115,10 +121,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const rooms = await roomService.getUserRooms(id);
             setJoinedRoomIds(rooms.map(r => r.id));
+            
+            const rolesMap: Record<number, string> = {};
+            const slugRolesMap: Record<string, string> = {};
+            rooms.forEach((r: any) => {
+                if (r.userRoomRole) {
+                    rolesMap[r.id] = r.userRoomRole;
+                    if (r.slug) {
+                        slugRolesMap[r.slug] = r.userRoomRole;
+                    }
+                }
+            });
+            setRoomRoles(rolesMap);
+            setRoomRolesBySlug(slugRolesMap);
+            
+            // Check if user has room-level moderation privileges in any room
+            const hasModPrivilege = rooms.some(
+                (r: any) => r.userRoomRole === 'MODERATOR' || r.userRoomRole === 'ROOM_ADMIN' || r.userRoomRole === 'EXPERT'
+            );
+            setIsLocalModerator(hasModPrivilege);
         } catch (error) {
             console.error('Failed to refresh user rooms:', error);
             // Fallback to empty if not found
             setJoinedRoomIds([]);
+            setRoomRoles({});
+            setRoomRolesBySlug({});
+            setIsLocalModerator(false);
         }
     }, [user?.id]);
 
@@ -286,6 +314,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setToken(null);
         setUser(null);
         setJoinedRoomIds([]);
+        setRoomRoles({});
+        setRoomRolesBySlug({});
+        setIsLocalModerator(false);
     };
 
     const updateUser = async (userData: Partial<User> & { avatarFile?: File }) => {
@@ -346,12 +377,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const getUserRoomRole = useCallback((roomId: number) => {
+        return roomRoles[roomId] || null;
+    }, [roomRoles]);
+
+    const getUserRoomRoleBySlug = useCallback((roomSlug: string) => {
+        return roomRolesBySlug[roomSlug] || null;
+    }, [roomRolesBySlug]);
+
     return (
         <AuthContext.Provider value={{
             user, token, login, register, registerSendCode, logout,
             updateUser, resetToDefaults, selectDirection,
             isAuthenticated: !!token, loading,
-            joinedRoomIds, isMember, joinRoom, leaveRoom, refreshUserRooms
+            joinedRoomIds, isMember, joinRoom, leaveRoom, refreshUserRooms,
+            isLocalModerator,
+            getUserRoomRole,
+            getUserRoomRoleBySlug
         }}>
             {children}
         </AuthContext.Provider>

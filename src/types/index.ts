@@ -20,13 +20,14 @@ export interface Room {
     tags?: string[];
 }
 
-export type RoomRole = 'OWNER' | 'ADMIN' | 'MODERATOR' | 'MEMBER';
+export type RoomRole = 'STUDENT' | 'MODERATOR' | 'EXPERT' | 'ROOM_ADMIN' | 'OWNER' | 'ADMIN' | 'MEMBER';
 
 export interface UserRoom {
     userId: number;
     roomId: number;
     name?: string;
-    role: RoomRole;
+    role?: RoomRole;
+    roomRole?: RoomRole;
 }
 
 export interface RoomDto {
@@ -37,6 +38,7 @@ export interface RoomDto {
     description: string;
     slug?: string;
     isPrivate?: boolean;
+    tags?: string[];
 }
 
 export interface DirectionDto {
@@ -99,6 +101,7 @@ export interface Article {
     aiModerationNote?: string | null;
     articleStatus?: ArticleStatus;
     tags?: string[];
+    sectionId?: number;
 }
 
 export interface Post {
@@ -123,7 +126,9 @@ export interface Comment {
     isAccepted: boolean;
     createdAt: string;
     updatedAt?: string;
+    parentId?: number;
 }
+
 
 export interface WikiEntry {
     id: number;
@@ -154,3 +159,8 @@ export interface WikiLandingResponse {
     popular: ArticlePreview[];
     recommended: ArticlePreview | null;
 }
+
+export type UserSkillStatus = 'LEARNING' | 'COMPLETED' | 'CONFIRMED';
+export type SubmissionStatus = 'PENDING' | 'UNDER_REVIEW' | 'NEEDS_REVISION' | 'COMPLETED';
+export type ReviewStatus = 'DRAFT' | 'SUBMITTED' | 'DISPUTED';
+

@@ -1,33 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import type { Article, Post, Comment } from '../types';
 import { 
     AlertTriangle, 
     CheckCircle, 
     XCircle, 
-    Database, 
     ShieldAlert, 
     MessageSquare, 
     Loader2, 
     ExternalLink, 
-    Sparkles, 
     Brain, 
     ClipboardCheck, 
-    Users 
+    Scale
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import AiReviewModal from '../components/AiReviewModal';
 import styles from './ModeratorPanelPage.module.css';
 import adminStyles from './AdminPanelPage.module.css';
 import { toast } from 'react-hot-toast';
-import { MOCK_REPORTS, MOCK_ARTICLES } from '../api/mockData';
-import type { MockReport } from '../api/mockData';
+import { MOCK_ARTICLES } from '../api/mockData';
+import { educationService } from '../api/educationService';
+import type { DisputeDto } from '../api/educationService';
+import { interactionService } from '../api/interactionService';
+import type { Report } from '../api/interactionService';
 
 const ModeratorPanelPage: React.FC = () => {
-    const { user } = useAuth();
-    const [reports, setReports] = useState<MockReport[]>([]);
+    const { user, isLocalModerator } = useAuth();
+    const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'reports' | 'applications'>('reports');
+    const showDisputesTab = user?.role === 'ADMIN' || (isLocalModerator && user?.role !== 'MODERATOR');
+    const [activeTab, setActiveTab] = useState<'reports' | 'disputes'>('reports');
+    
+    // Dispute States
+    const [disputes, setDisputes] = useState<DisputeDto[]>([]);
+    const [resolvingDisputeId, setResolvingDisputeId] = useState<number | null>(null);
+    const [moderatorComment, setModeratorComment] = useState('');
+    const [loadingDisputes, setLoadingDisputes] = useState(false);
     
     // AI Audit State
     const [auditItem, setAuditItem] = useState<{title: string, content: string, type: 'article' | 'post'} | null>(null);
@@ -35,38 +42,87 @@ const ModeratorPanelPage: React.FC = () => {
     const fetchReports = async () => {
         try {
             setLoading(true);
-            // Temporarily using Mock Data for demonstration
-            setTimeout(() => {
-                setReports(MOCK_REPORTS as any);
-                setLoading(false);
-            }, 800);
+            const data = await interactionService.getReports('OPEN');
+            setReports(data);
         } catch (error) {
             toast.error('Ошибка при загрузке данных');
+        } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (user && (user.role === 'MODERATOR' || user.role === 'ADMIN')) {
-            fetchReports();
+    const fetchDisputes = async () => {
+        try {
+            setLoadingDisputes(true);
+            const data = await educationService.getPendingDisputes();
+            setDisputes(data);
+        } catch (error) {
+            console.error('Failed to fetch disputes', error);
+            toast.error('Не удалось загрузить споры');
+        } finally {
+            setLoadingDisputes(false);
         }
-    }, [user]);
+    };
 
-    if (!user || (user.role !== 'MODERATOR' && user.role !== 'ADMIN')) {
+    const handleResolveDispute = async (disputeId: number, approved: boolean) => {
+        setResolvingDisputeId(disputeId);
+        try {
+            await educationService.resolveDispute(disputeId, approved, moderatorComment);
+            toast.success(approved ? 'Апелляция удовлетворена!' : 'Апелляция отклонена');
+            setModeratorComment('');
+            fetchDisputes();
+        } catch (error) {
+            console.error('Failed to resolve dispute', error);
+            toast.error('Не удалось отправить вердикт');
+        } finally {
+            setResolvingDisputeId(null);
+        }
+    };
+
+    const isGlobalMod = user && (user.role === 'MODERATOR' || user.role === 'ADMIN');
+
+    useEffect(() => {
+        if (user) {
+            if (showDisputesTab) {
+                fetchDisputes();
+            }
+            if (isGlobalMod) {
+                fetchReports();
+                if (!showDisputesTab) {
+                    setActiveTab('reports');
+                }
+            } else {
+                setActiveTab('disputes');
+                setLoading(false);
+            }
+        }
+    }, [user, isGlobalMod, showDisputesTab]);
+
+    if (!user || (user.role !== 'MODERATOR' && user.role !== 'ADMIN' && !isLocalModerator)) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const handleRejectReport = (reportId: number) => {
-        setReports(prev => prev.filter(r => r.id !== reportId));
-        toast.success('Жалоба отклонена (Mock)');
+    const handleRejectReport = async (reportId: number) => {
+        try {
+            await interactionService.updateReportStatus(reportId, 'REJECTED');
+            setReports(prev => prev.filter(r => r.id !== reportId));
+            toast.success('Жалоба отклонена');
+        } catch (error) {
+            toast.error('Не удалось отклонить жалобу');
+        }
     };
 
-    const handleEscalateReport = (reportId: number) => {
-        setReports(prev => prev.filter(r => r.id !== reportId));
-        toast.success('Жалоба передана администратору (Mock)');
+    const handleEscalateReport = async (reportId: number) => {
+        try {
+            await interactionService.updateReportStatus(reportId, 'ESCALATED');
+            setReports(prev => prev.filter(r => r.id !== reportId));
+            toast.success('Жалоба передана администратору');
+        } catch (error) {
+            toast.error('Не удалось передать жалобу');
+        }
     };
 
-    const handleAiAudit = (report: MockReport) => {
+    const handleAiAudit = (report: Report) => {
         toast.loading('AI изучает контент...', { id: 'audit' });
         
         let title = '';
@@ -88,7 +144,6 @@ const ModeratorPanelPage: React.FC = () => {
     };
 
     const regularReports = reports.filter(r => r.target_type !== 'moderator_application');
-    const applications = reports.filter(r => r.target_type === 'moderator_application');
 
     if (loading) {
         return (
@@ -108,26 +163,51 @@ const ModeratorPanelPage: React.FC = () => {
                 <p className={styles.subtitle}>Проверка контента, жалобы пользователей и актуализация Базы Знаний.</p>
             </header>
 
-            <div className={adminStyles.tabs} style={{ marginBottom: '2rem' }}>
-                <button 
-                    className={`${adminStyles.tabBtn} ${activeTab === 'reports' ? adminStyles.activeTab : ''}`}
-                    onClick={() => setActiveTab('reports')}
-                >
-                    <AlertTriangle size={18} />
-                    Активные жалобы ({regularReports.length})
-                </button>
-                <button 
-                    className={`${adminStyles.tabBtn} ${activeTab === 'applications' ? adminStyles.activeTab : ''}`}
-                    onClick={() => setActiveTab('applications')}
-                >
-                    <ClipboardCheck size={18} />
-                    Заявки в модераторы ({applications.length})
-                </button>
+            <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
+                    <div className={styles.statIcon} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                        <AlertTriangle size={24} />
+                    </div>
+                    <div>
+                        <span className={styles.statLabel}>Активные жалобы</span>
+                        <h3 className={styles.statValue}>{regularReports.length}</h3>
+                    </div>
+                </div>
+                {showDisputesTab && (
+                    <div className={styles.statCard}>
+                        <div className={styles.statIcon} style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>
+                            <Scale size={24} />
+                        </div>
+                        <div>
+                            <span className={styles.statLabel}>Споры в очереди</span>
+                            <h3 className={styles.statValue}>{disputes.length}</h3>
+                        </div>
+                    </div>
+                )}
             </div>
 
+            {isGlobalMod && showDisputesTab && (
+                <div className={adminStyles.tabs} style={{ marginBottom: '2rem' }}>
+                    <button 
+                        className={`${adminStyles.tabBtn} ${activeTab === 'reports' ? adminStyles.activeTab : ''}`}
+                        onClick={() => setActiveTab('reports')}
+                    >
+                        <AlertTriangle size={18} />
+                        Активные жалобы ({regularReports.length})
+                    </button>
+                    <button 
+                        className={`${adminStyles.tabBtn} ${activeTab === 'disputes' ? adminStyles.activeTab : ''}`}
+                        onClick={() => setActiveTab('disputes')}
+                    >
+                        <Scale size={18} />
+                        Споры Peer Review ({disputes.length})
+                    </button>
+                </div>
+            )}
+
             <div className={styles.grid}>
-                {activeTab === 'reports' ? (
-                    <section className={styles.panel} style={{ gridColumn: '1 / -1' }}>
+                {activeTab === 'reports' && (
+                    <section className={styles.panel}>
                         <h2 className={styles.panelTitle}>
                             <AlertTriangle size={20} color="#f59e0b" />
                             Жалобы на контент
@@ -206,82 +286,120 @@ const ModeratorPanelPage: React.FC = () => {
                             )}
                         </div>
                     </section>
-                ) : (
-                    <section className={styles.panel} style={{ gridColumn: '1 / -1' }}>
+                )}
+
+
+
+                {activeTab === 'disputes' && (
+                    <section className={styles.panel}>
                         <h2 className={styles.panelTitle}>
-                            <ClipboardCheck size={20} color="#8b5cf6" />
-                            Кандидаты в модераторы
+                            <Scale size={20} color="#6366f1" />
+                            Споры по оцениванию Peer Review
                         </h2>
-                        
                         <div className={adminStyles.reportsContainer} style={{ background: 'transparent', padding: 0, boxShadow: 'none' }}>
-                            {applications.length === 0 ? (
+                            {loadingDisputes ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '2rem' }}>
+                                    <Loader2 className={adminStyles.spin} size={24} />
+                                    <p>Загрузка споров...</p>
+                                </div>
+                            ) : disputes.length === 0 ? (
                                 <div className={adminStyles.emptyState}>
-                                    <Users size={48} />
-                                    <p>Пока никто не подал заявку в ваши комнаты.</p>
+                                    <CheckCircle size={48} />
+                                    <p>Активных споров нет. Всё проверено!</p>
                                 </div>
                             ) : (
-                                <table className={adminStyles.usersTable}>
-                                    <thead>
-                                        <tr>
-                                            <th>Кандидат</th>
-                                            <th>Комната</th>
-                                            <th>Вердикт ИИ</th>
-                                            <th>Балл ИИ</th>
-                                            <th>Статус</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {applications.map(app => {
-                                            const details = JSON.parse(app.reason);
-                                            return (
-                                                <tr key={app.id}>
-                                                    <td>User #{app.target_id}</td>
-                                                    <td>{details.roomName}</td>
-                                                    <td>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6366f1', fontSize: '0.8125rem' }}>
-                                                            <Sparkles size={14} />
-                                                            {details.evaluation.reason}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <span className={adminStyles.scoreBadge}>
-                                                            {details.testSummary.score}%
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ fontSize: '0.75rem', color: '#94a3b8' }}>На рассмотрении у админа</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                    {disputes.map(dispute => (
+                                        <div key={dispute.id} className={styles.disputeCard}>
+                                            <div className={styles.disputeHeader}>
+                                                <div>
+                                                    <span className={styles.disputeTag}>Спор #{dispute.id}</span>
+                                                    <h4>{dispute.assignmentTitle}</h4>
+                                                    <span className={styles.studentId}>Студент #{dispute.studentId}</span>
+                                                </div>
+                                                <span className={styles.dateTag}>
+                                                    {new Date(dispute.createdAt).toLocaleString('ru-RU')}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className={styles.disputeBody}>
+                                                <div className={styles.disputeSection}>
+                                                    <h5>Описание задания</h5>
+                                                    <p>{dispute.assignmentDescription}</p>
+                                                </div>
+                                                
+                                                <div className={styles.disputeSection}>
+                                                    <h5>Решение студента</h5>
+                                                    <pre className={styles.disputeSolutionPre}>{dispute.solutionText}</pre>
+                                                    {dispute.fileUrl && (
+                                                        <a href={dispute.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.disputeFileLink}>
+                                                            Открыть прикрепленный файл решения
+                                                        </a>
+                                                    )}
+                                                </div>
+
+                                                <div className={styles.disputeSection}>
+                                                    <h5>Обоснование апелляции студентом</h5>
+                                                    <p className={styles.disputeReasonText}>{dispute.reason}</p>
+                                                </div>
+
+                                                <div className={styles.disputeSection}>
+                                                    <h5>Вердикт модератора</h5>
+                                                    <textarea
+                                                        className={styles.disputeTextarea}
+                                                        placeholder="Опишите ваше решение по апелляции..."
+                                                        rows={3}
+                                                        value={moderatorComment}
+                                                        onChange={(e) => setModeratorComment(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className={styles.disputeFooter}>
+                                                <button
+                                                    className={styles.btnDisputeReject}
+                                                    disabled={resolvingDisputeId === dispute.id}
+                                                    onClick={() => handleResolveDispute(dispute.id, false)}
+                                                >
+                                                    Отклонить апелляцию
+                                                </button>
+                                                <button
+                                                    className={styles.btnDisputeApprove}
+                                                    disabled={resolvingDisputeId === dispute.id}
+                                                    onClick={() => handleResolveDispute(dispute.id, true)}
+                                                >
+                                                    Удовлетворить (Зачесть работу)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </section>
                 )}
 
-                <section className={styles.panel} style={{ gridColumn: '1 / -1' }}>
-                    <h2 className={styles.panelTitle}>
-                        <Database size={20} color="#3b82f6" />
-                        Управление Wiki
-                    </h2>
-                    
-                    <div className={styles.list}>
-                        <div className={styles.wikiManageItem}>
-                            <div>
-                                <p className={styles.wikiRoomName}>Backend Комната</p>
-                                <p className={styles.wikiStats}>12 записей, 4 раздела</p>
+                <aside className={styles.sidebar}>
+                    {/* Guide Card */}
+                    <div className={styles.sidebarCard}>
+                        <h3 className={styles.sidebarCardTitle}>
+                            <ClipboardCheck size={18} color="#10b981" />
+                            Руководство по модерации
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                                <span><strong>Жалобы на контент:</strong> Рассматривайте жалобы пользователей. Вы можете отклонить жалобу как ложную или эскалировать её администратору.</span>
                             </div>
-                            <button className={`${styles.btn} ${styles.btnReject}`}>Открыть</button>
-                        </div>
-                        <div className={styles.wikiManageItem}>
-                            <div>
-                                <p className={styles.wikiRoomName}>DevOps Практика</p>
-                                <p className={styles.wikiStats}>3 записи, 1 раздел</p>
-                            </div>
-                            <button className={`${styles.btn} ${styles.btnReject}`}>Открыть</button>
+                            {showDisputesTab && (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓</span>
+                                    <span><strong>Споры Peer Review:</strong> Рассматривайте апелляции, изучайте решения студентов и выносите вердикты (удовлетворить или отклонить).</span>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </section>
+                </aside>
             </div>
 
             {auditItem && (
