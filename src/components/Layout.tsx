@@ -14,7 +14,6 @@ import {
     Search,
     Shield,
     Activity,
-    Bell,
     MessageSquare
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector';
@@ -27,12 +26,9 @@ const Layout: React.FC = () => {
     const { directionSlug } = useParams<{ directionSlug?: string }>();
     const { t } = useTranslation();
 
-    const [notifOpen, setNotifOpen] = React.useState(false);
     const [searchQuery, setSearchQuery] = React.useState('');
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
     const [totalXp, setTotalXp] = React.useState<number>(0);
-
-    const mockNotifs: any[] = [];
 
     React.useEffect(() => {
         if (user) {

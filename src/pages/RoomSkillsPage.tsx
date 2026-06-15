@@ -14,7 +14,6 @@ import {
     Loader2,
     Search,
     X,
-    HelpCircle,
     Sparkles
 } from 'lucide-react';
 import { educationService } from '../api/educationService';

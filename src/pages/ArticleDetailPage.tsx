@@ -354,7 +354,7 @@ const ArticleDetailPage: React.FC = () => {
 
     const handleLikeComment = async (commentId: number, commentAuthorId: number) => {
         if (!user) {
-            toast.error('Пожалуйста, авторизуйтесь');
+            toast.error(t('auth.pleaseLogin', 'Пожалуйста, авторизуйтесь'));
             return;
         }
         const isLikedStatus = likedComments[commentId];
@@ -528,7 +528,7 @@ const ArticleDetailPage: React.FC = () => {
                             <div className={styles.commentAuthorMeta}>
                                 <span className={styles.commentAuthorName}>{authorName}</span>
                                 {isArticleAuthor && (
-                                    <span className={styles.authorBadge} title="Автор статьи">Автор</span>
+                                    <span className={styles.authorBadge} title={t('article.author', 'Автор')}>{t('article.author', 'Автор')}</span>
                                 )}
                                 {authorRole && <span className={styles.commentAuthorRole}>{authorRole}</span>}
                             </div>
@@ -855,10 +855,12 @@ const ArticleDetailPage: React.FC = () => {
                                 />
                             </Link>
                             <div>
-                                <Link to={`/profile/${author?.id}`} className={styles.authorNameLink}>
-                                    <h3 className={styles.sidebarAuthorName}>{author?.firstname} {author?.lastname}</h3>
+                                <Link to={author?.id ? `/profile/${author.id}` : '#'} className={styles.authorNameLink}>
+                                    <h3 className={styles.sidebarAuthorName}>
+                                        {author ? [author.firstname, author.lastname].filter(Boolean).join(' ') || author.name : `Пользователь #${article?.userId || ''}`}
+                                    </h3>
                                 </Link>
-                                <p className={styles.sidebarAuthorBadge}>{author?.role || 'Автор'}</p>
+                                <p className={styles.sidebarAuthorBadge}>{author?.role || t('article.author', 'Автор')}</p>
                             </div>
                         </div>
                         <p className={styles.sidebarBio}>{author?.bio || ''}</p>
@@ -870,7 +872,7 @@ const ArticleDetailPage: React.FC = () => {
                             </div>
                             <div className={styles.statItem}>
                                 <span className={styles.statValue}>{author?.stats?.roomsJoined || 0}</span>
-                                <span className={styles.statLabel}>Комнаты</span>
+                                <span className={styles.statLabel}>{t('nav.rooms', 'Комнаты')}</span>
                             </div>
                         </div>
                     </div>
