@@ -85,6 +85,8 @@
         "uploadAvatar": "Upload Avatar",
         "tabs": {
             "publications": "Publications",
+            "skills": "Skills Portfolio",
+            "noSkills": "No confirmed or learning skills yet",
             "achievements": "Achievements",
             "bookmarks": "Bookmarks"
         }
@@ -207,6 +209,7 @@
         "reputationLeaders": "Reputation Leaders",
         "reputation": "Reputation",
         "articles": "Articles",
+        "skills": "Skills",
         "allMembers": "All Members",
         "memberCol": "Member",
         "roleCol": "Role",
@@ -250,7 +253,22 @@
         "registerSidebarTitle": "Your professional growth starts here",
         "registerSidebarText": "Join thousands of experts from various fields: from IT and medicine to arts and management.",
         "registerSidebarStats": "Already 10,000+ professionals with us",
-        "registerFormSubtitle": "Fill in the details so we can customize your feed"
+        "registerFormSubtitle": "Fill in the details so we can customize your feed",
+        "passwordMin": "Password must be at least 6 characters",
+        "passwordMismatch": "Passwords do not match!",
+        "sendingCode": "Sending code to email...",
+        "codeSent": "Code sent! Check your email.",
+        "codeSendError": "Error sending code",
+        "enterCode": "Enter the 6-digit code from email",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "minChars": "Minimum 6 characters",
+        "confirmPassword": "Confirm Password",
+        "universitePlaceholder": "Name of educational institution",
+        "enterCodeLabel": "Enter 6-digit code from email",
+        "codeSentTo": "We sent a confirmation code to ",
+        "nextSendCode": "Next (Send Code)",
+        "universite": "University"
     },
     "article": {
         "created": "Article created!",
@@ -259,6 +277,12 @@
         "title": "Article Title",
         "content": "Article Content",
         "difficulty": "Difficulty Level"
+    },
+    "skillStatus": {
+        "notStarted": "Not started",
+        "learning": "Learning",
+        "completed": "Completed",
+        "confirmed": "Confirmed"
     },
     "post": {
         "created": "Post created!",
@@ -280,5 +304,87 @@
         "beginner": "Beginner",
         "intermediate": "Intermediate",
         "advanced": "Advanced"
+    },
+    "data": {
+        "directions": {
+            "1": {
+                "name": "Frontend Development",
+                "description": "Creating user interfaces and web applications."
+            },
+            "2": {
+                "name": "Backend Development",
+                "description": "Server logic, databases, and APIs."
+            },
+            "3": {
+                "name": "Data Science",
+                "description": "Data analysis, machine learning, and AI."
+            },
+            "4": {
+                "name": "DevOps & Cloud",
+                "description": "Deployment automation, CI/CD, and cloud platforms."
+            },
+            "5": {
+                "name": "Cybersecurity",
+                "description": "Information security, ethical hacking, and cryptography."
+            },
+            "6": {
+                "name": "Mobile Development",
+                "description": "Apps for iOS and Android."
+            },
+            "7": {
+                "name": "GameDev",
+                "description": "Game development, graphics, and engines."
+            },
+            "8": {
+                "name": "UX/UI Design",
+                "description": "Designing user experiences and interfaces."
+            }
+        },
+        "rooms": {
+            "101": {
+                "name": "React Ecosystem",
+                "description": "Modern frontend with React and related technologies."
+            },
+            "102": {
+                "name": "Angular Masters",
+                "description": "Advanced Angular development techniques."
+            },
+            "103": {
+                "name": "Vue.js Ninjas",
+                "description": "Lightweight and fast applications with Vue."
+            },
+            "201": {
+                "name": "Python Backend",
+                "description": "Building reliable server applications with Django and FastAPI."
+            },
+            "202": {
+                "name": "Java Spring",
+                "description": "Enterprise development with Spring Boot."
+            },
+            "301": {
+                "name": "Machine Learning",
+                "description": "Training models and working with neural networks."
+            },
+            "401": {
+                "name": "Docker & K8s",
+                "description": "Containerization and microservices orchestration."
+            },
+            "501": {
+                "name": "Ethical Hacking",
+                "description": "Penetration testing and security auditing."
+            },
+            "601": {
+                "name": "iOS Development",
+                "description": "Building native apps with Swift."
+            },
+            "701": {
+                "name": "Unity Game Dev",
+                "description": "Developing 2D and 3D games with Unity."
+            },
+            "801": {
+                "name": "UI/UX Research",
+                "description": "User research and interface design."
+            }
+        }
     }
 }

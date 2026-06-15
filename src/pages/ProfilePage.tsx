@@ -271,46 +271,16 @@ const ProfilePage: React.FC = () => {
                 ]);
 
                 // 1. Detect Level Up
-                if (stats && xpStats && stats.level > xpStats.level) {
-                    toast.success(`🎉 Поздравляем! Вы достигли ${stats.level}-го уровня!`, {
-                        duration: 5000,
-                        icon: '🔥'
-                    });
-                }
+                // Toasts removed to avoid spam
 
                 // 2. Detect Reputation Change
-                if (stats && xpStats && stats.reputation > xpStats.reputation) {
-                    const diff = stats.reputation - xpStats.reputation;
-                    toast.success(`✨ Ваша репутация выросла на +${diff}!`, {
-                        icon: '⭐️'
-                    });
-                }
+                // Toasts removed to avoid spam
 
                 // 3. Detect New Achievements Unlocked
-                if (achievements.length > 0 && userAchievements.length > 0) {
-                    achievements.forEach(newAch => {
-                        const oldAch = userAchievements.find(a => a.achievementId === newAch.achievementId);
-                        if (newAch.isUnlocked && (!oldAch || !oldAch.isUnlocked)) {
-                            toast.success(`🏆 Разблокировано достижение: "${newAch.name}"!\n${newAch.description}`, {
-                                duration: 6000,
-                                icon: '👑'
-                            });
-                        }
-                    });
-                }
+                // Toasts removed to avoid spam
 
                 // 4. Detect Skill Confirmations
-                if (skills.length > 0 && userSkillsList.length > 0) {
-                    skills.forEach(newSkill => {
-                        const oldSkill = userSkillsList.find(s => s.id === newSkill.id);
-                        if (newSkill.userStatus === 'CONFIRMED' && (!oldSkill || oldSkill.userStatus !== 'CONFIRMED')) {
-                            toast.success(`🎯 Навык "${newSkill.name}" успешно подтвержден!`, {
-                                duration: 5000,
-                                icon: '✓'
-                            });
-                        }
-                    });
-                }
+                // Toasts removed to avoid spam
 
                 // Update state if anything changed
                 if (stats) setXpStats(stats);
@@ -399,7 +369,7 @@ const ProfilePage: React.FC = () => {
                     <div className={styles.profileCard}>
                         <div className={styles.cardBanner}>
                             {isOwnProfile && (
-                                <button className={styles.cameraBtn} onClick={handleAvatarClick} title={t('profile.changeAvatar') || 'Change Avatar'}>
+                                <button className={styles.cameraBtn} onClick={handleAvatarClick} title={t('profile.changeAvatar', 'Change Avatar')}>
                                     <Camera size={18} />
                                 </button>
                             )}
@@ -561,7 +531,7 @@ const ProfilePage: React.FC = () => {
                                 className={`${styles.tabBtn} ${activeTab === 'skills' ? styles.tabBtnActive : ''}`}
                                 onClick={() => setActiveTab('skills')}
                             >
-                                {t('profile.tabs.skills') || 'Портфолио навыков'}
+                                {t('profile.tabs.skills', 'Портфолио навыков')}
                             </button>
                             <button
                                 className={`${styles.tabBtn} ${activeTab === 'achievements' ? styles.tabBtnActive : ''}`}
@@ -637,7 +607,7 @@ const ProfilePage: React.FC = () => {
                                 )
                             ) : activeTab === 'skills' ? (
                                 userRoomsList.filter(room => userSkillsList.some(s => s.roomId === room.id)).length === 0 ? (
-                                    <p className={styles.emptyTabMsg}>{t('profile.tabs.noSkills') || 'Нет подтвержденных или изучаемых навыков'}</p>
+                                    <p className={styles.emptyTabMsg}>{t('profile.tabs.noSkills', 'Нет подтвержденных или изучаемых навыков')}</p>
                                 ) : (
                                     <div className={styles.specializationsContainer}>
                                         {userRoomsList.map((room) => {

@@ -76,6 +76,7 @@ export interface User {
     stats?: {
         roomsJoined: number;
         sessionsAttended: number;
+        skillsMastered?: number;
         points: number;
     };
 }

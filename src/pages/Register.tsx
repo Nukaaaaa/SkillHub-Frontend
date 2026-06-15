@@ -30,21 +30,21 @@ const Register: React.FC = () => {
     const handleSendCode = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password.length < 6) {
-            toast.error('Пароль должен быть не менее 6 символов');
+            toast.error(t('login.passwordMin', 'Пароль должен быть не менее 6 символов'));
             return;
         }
         if (password !== confirmPassword) {
-            toast.error('Пароли не совпадают!');
+            toast.error(t('login.passwordMismatch', 'Пароли не совпадают!'));
             return;
         }
         setLoading(true);
-        const loadingToast = toast.loading('Отправка кода на почту...');
+        const loadingToast = toast.loading(t('login.sendingCode', 'Отправка кода на почту...'));
         try {
             await registerSendCode(email);
-            toast.success('Код отправлен! Проверьте вашу почту.', { id: loadingToast });
+            toast.success(t('login.codeSent', 'Код отправлен! Проверьте вашу почту.'), { id: loadingToast });
             setStep(2);
         } catch (error: any) {
-            toast.error(error.response?.data?.error || 'Ошибка отправки кода', { id: loadingToast });
+            toast.error(error.response?.data?.error || t('login.codeSendError', 'Ошибка отправки кода'), { id: loadingToast });
         } finally {
             setLoading(false);
         }
@@ -53,15 +53,15 @@ const Register: React.FC = () => {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         if (code.length !== 6) {
-            toast.error('Введите 6-значный код из письма');
+            toast.error(t('login.enterCode', 'Введите 6-значный код из письма'));
             return;
         }
         if (password.length < 6) {
-            toast.error('Пароль должен быть не менее 6 символов');
+            toast.error(t('login.passwordMin', 'Пароль должен быть не менее 6 символов'));
             return;
         }
         if (password !== confirmPassword) {
-            toast.error('Пароли не совпадают!');
+            toast.error(t('login.passwordMismatch', 'Пароли не совпадают!'));
             return;
         }
         setLoading(true);
@@ -178,8 +178,8 @@ const Register: React.FC = () => {
                                 </label>
                             </div>
                             <div className={styles.avatarInfo}>
-                                <span className={styles.avatarLabel}>{t('profile.uploadAvatar') || 'Загрузить аватар'}</span>
-                                <p className={styles.avatarHint}>JPG, PNG или GIF (макс. 5MB)</p>
+                                <span className={styles.avatarLabel}>{t('profile.uploadAvatar', 'Загрузить аватар')}</span>
+                                <p className={styles.avatarHint}>JPG, PNG, GIF (max 5MB)</p>
                             </div>
                             <input 
                                 id="avatar-input"
@@ -195,7 +195,7 @@ const Register: React.FC = () => {
                                 <label className={styles.label}>{t('profile.name')}</label>
                                 <input
                                     type="text"
-                                    placeholder="Имя"
+                                    placeholder={t('login.firstName', 'Имя')}
                                     className={styles.input}
                                     value={firstname}
                                     onChange={(e) => setFirstname(e.target.value)}
@@ -206,7 +206,7 @@ const Register: React.FC = () => {
                                 <label className={styles.label}>{t('profile.lastname')}</label>
                                 <input
                                     type="text"
-                                    placeholder="Фамилия"
+                                    placeholder={t('login.lastName', 'Фамилия')}
                                     className={styles.input}
                                     value={lastname}
                                     onChange={(e) => setLastname(e.target.value)}
@@ -230,7 +230,7 @@ const Register: React.FC = () => {
                         <div className={styles.formRow}>
                             <div className={styles.formGroup} style={{ position: 'relative' }}>
                                 <label className={styles.label}>{t('login.password')}</label>
-                                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 6px' }}>Минимум 6 символов</p>
+                                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 6px' }}>{t('login.minChars', 'Минимум 6 символов')}</p>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
@@ -250,7 +250,7 @@ const Register: React.FC = () => {
                                 </button>
                             </div>
                             <div className={styles.formGroup} style={{ position: 'relative' }}>
-                                <label className={styles.label}>Подтвердите</label>
+                                <label className={styles.label}>{t('login.confirmPassword', 'Подтвердите')}</label>
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     placeholder="••••••••"
@@ -272,10 +272,10 @@ const Register: React.FC = () => {
                         </div>
 
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>{t('profile.universite') || 'Университет'}</label>
+                            <label className={styles.label}>{t('login.universite', 'Университет')}</label>
                             <input
                                 type="text"
-                                placeholder="Название учебного заведения"
+                                placeholder={t('login.universitePlaceholder', 'Название учебного заведения')}
                                 className={styles.input}
                                 value={universite}
                                 onChange={(e) => setUniversite(e.target.value)}
@@ -286,7 +286,7 @@ const Register: React.FC = () => {
                         <div className={styles.formGroup}>
                             <label className={styles.label}>{t('profile.bio')}</label>
                             <textarea
-                                placeholder="Краткая информация о себе..."
+                                placeholder={t('profile.bioPlaceholder', 'Краткая информация о себе...')}
                                 className={`${styles.input} ${styles.textarea}`}
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
@@ -300,7 +300,7 @@ const Register: React.FC = () => {
                         {step === 2 && (
                             <>
                                 <div className={styles.formGroup}>
-                                    <label className={styles.label}>Введите 6-значный код из почты</label>
+                                    <label className={styles.label}>{t('login.enterCodeLabel', 'Введите 6-значный код из почты')}</label>
                                     <input
                                         type="text"
                                         placeholder="______"
@@ -312,7 +312,7 @@ const Register: React.FC = () => {
                                         maxLength={6}
                                     />
                                     <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '10px', textAlign: 'center' }}>
-                                        Мы отправили код подтверждения на {email}
+                                        {t('login.codeSentTo', 'Мы отправили код подтверждения на ')}{email}
                                     </p>
                                 </div>
                             </>
@@ -323,7 +323,7 @@ const Register: React.FC = () => {
                             className={styles.submitButton}
                             disabled={loading}
                         >
-                            {loading ? '...' : (step === 1 ? 'Далее (Отправить код)' : t('login.registerSubmit'))}
+                            {loading ? '...' : (step === 1 ? t('login.nextSendCode', 'Далее (Отправить код)') : t('login.registerSubmit', 'Создать аккаунт'))}
                         </button>
                     </form>
 

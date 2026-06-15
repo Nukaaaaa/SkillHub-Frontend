@@ -481,7 +481,22 @@ const PostDetailPage: React.FC = () => {
 
 
     if (loading) return <Loader />;
-    if (!post) return null;
+    if (!post) return (
+        <div className={styles.pageWrapper}>
+            <div className={styles.container}>
+                <header className={styles.header}>
+                    <button className={styles.backBtn} onClick={() => navigate(-1)}>
+                        <ChevronLeft size={20} />
+                        Назад
+                    </button>
+                </header>
+                <main className={styles.mainContent} style={{ textAlign: 'center', padding: '4rem 0' }}>
+                    <h2>Пост не найден</h2>
+                    <p style={{ color: '#6b7280', marginTop: '1rem' }}>Возможно, он был удален или вы перешли по неверной ссылке.</p>
+                </main>
+            </div>
+        </div>
+    );
 
     return (
         <div className={styles.pageWrapper}>

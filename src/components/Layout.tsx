@@ -32,11 +32,7 @@ const Layout: React.FC = () => {
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
     const [totalXp, setTotalXp] = React.useState<number>(0);
 
-    const mockNotifs = [
-        { id: 1, text: t('notifications.liked') || 'Пользователь оценил вашу статью', time: '2 мин. назад' },
-        { id: 2, text: t('notifications.commented') || 'Новый ответ в обсуждении', time: '15 мин. назад' },
-        { id: 3, text: t('notifications.approved') || 'Ваш пост прошел модерацию', time: '1 час назад' }
-    ];
+    const mockNotifs: any[] = [];
 
     React.useEffect(() => {
         if (user) {
@@ -149,61 +145,21 @@ const Layout: React.FC = () => {
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setSearchQuery(val);
-                                if(val.length > 1) {
-                                    setSearchResults([
-                                        { id: 1, title: 'Основы Golang для профи', type: 'Статья' },
-                                        { id: 2, title: 'React Performance Tips', type: 'Статья' },
-                                        { id: 3, title: 'Александр Иванов', type: 'Профиль' }
-                                    ]);
-                                } else {
-                                    setSearchResults([]);
-                                }
+                                setSearchResults([]); // No API for search yet
                             }}
                         />
-                        {searchResults.length > 0 && (
+                        {searchQuery.length > 1 && searchResults.length === 0 && (
                             <div className={styles.searchResults}>
-                                {searchResults.map(res => (
-                                    <div key={res.id} className={styles.searchResultItem}>
-                                        <div className={styles.resIcon}>
-                                            <Search size={14} />
-                                        </div>
-                                        <div className={styles.resContent}>
-                                            <p>{res.title}</p>
-                                            <span>{res.type}</span>
-                                        </div>
+                                <div className={styles.searchResultItem}>
+                                    <div className={styles.resContent}>
+                                        <p style={{ color: '#6b7280' }}>{t('common.searchUnavailable') || 'Поиск временно недоступен'}</p>
                                     </div>
-                                ))}
+                                </div>
                             </div>
                         )}
                     </div>
                     <div className={styles.headerActions}>
                         <LanguageSelector variant="header" />
-                        <div className={styles.notificationWrapper}>
-                            <button 
-                                className={styles.iconBtn} 
-                                onClick={() => setNotifOpen(!notifOpen)}
-                            >
-                                <Bell size={20} />
-                                <span className={styles.notifBadge}>3</span>
-                            </button>
-
-                            {notifOpen && (
-                                <div className={styles.notifDropdown}>
-                                    <div className={styles.notifHeader}>
-                                        <h4>Уведомления</h4>
-                                    </div>
-                                    <div className={styles.notifList}>
-                                        {mockNotifs.map(n => (
-                                            <div key={n.id} className={styles.notifItem}>
-                                                <p>{n.text}</p>
-                                                <span>{n.time}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
                         <Avatar 
                             src={user?.avatar} 
                             name={user?.firstname || user?.name} 

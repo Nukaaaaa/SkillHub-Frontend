@@ -115,6 +115,14 @@ export const educationService = {
         const response = await apiClient.get<ReviewDto[]>(`/submissions/${submissionId}/reviews`);
         return response.data;
     },
+    getMyCredits: async (): Promise<number> => {
+        const response = await apiClient.get<number>('/credits/my');
+        return response.data;
+    },
+    requestReviewAssignment: async (assignmentId: number): Promise<ReviewDto> => {
+        const response = await apiClient.post<ReviewDto>(`/reviews/request?assignmentId=${assignmentId}`);
+        return response.data;
+    },
     submitReview: async (reviewId: number, dto: ReviewDto): Promise<ReviewDto> => {
         const response = await apiClient.post<ReviewDto>(`/reviews/${reviewId}/submit`, dto);
         return response.data;

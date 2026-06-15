@@ -66,25 +66,7 @@ const AiRecommendations: React.FC<AiRecommendationsProps> = ({ rooms }) => {
     }, [user?.id, rooms.length]);
 
     if (!user || (!user.bio && (!user.skills || user.skills.length === 0))) {
-        return (
-            <div className={styles.wrapper}>
-                <div className={styles.header}>
-                    <div className={styles.titleInfo}>
-                        <div className={styles.iconBox}>
-                            <Sparkles size={20} color="#f59e0b" />
-                        </div>
-                        <div>
-                            <h3>Познакомьтесь с ИИ-помощником</h3>
-                            <p>Заполните профиль, чтобы получить персональные рекомендации</p>
-                        </div>
-                    </div>
-                </div>
-                <div className={styles.emptyPrompt} onClick={() => navigate('/profile')}>
-                    <p>Добавьте информацию "О себе" и свои навыки в профиле, и я подберу для вас идеальные учебные комнаты!</p>
-                    <ArrowRight size={16} />
-                </div>
-            </div>
-        );
+        return null;
     }
 
     if (loading) {

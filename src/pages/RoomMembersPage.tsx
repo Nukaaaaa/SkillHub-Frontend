@@ -12,6 +12,8 @@ import {
 import { roomService } from '../api/roomService';
 import { userService } from '../api/userService';
 import { achievementService } from '../api/achievementService';
+import { contentService } from '../api/contentService';
+import { educationService } from '../api/educationService';
 import type { UserRoom, User, Room, RoomRole } from '../types';
 import Loader from '../components/Loader';
 import styles from './RoomMembersPage.module.css';
@@ -64,15 +66,32 @@ const RoomMembersPage: React.FC = () => {
             );
             const allStats = await Promise.all(statsPromises);
 
+            // Fetch actual articles count
+            const articlesPromises = profiles.map(p => 
+                p ? contentService.getArticlesByUser(p.id).catch(() => []) : []
+            );
+            const allArticles = await Promise.all(articlesPromises);
+
+            // Fetch actual mastered skills count
+            const skillsPromises = profiles.map(p => 
+                p ? educationService.getUserSkills(p.id).catch(() => []) : []
+            );
+            const allSkills = await Promise.all(skillsPromises);
+
             const profileMap: Record<number, User> = {};
             profiles.forEach((p, idx) => {
                 if (p) {
                     const stats = allStats[idx];
+                    const articles = allArticles[idx] || [];
+                    const skills = allSkills[idx] || [];
+                    const masteredSkills = skills.filter(s => s.userStatus === 'CONFIRMED').length;
+
                     profileMap[p.id] = {
                         ...p,
                         stats: stats ? {
                             roomsJoined: stats.directionStats?.length || 0,
-                            sessionsAttended: Math.floor(stats.totalXp / 100), // Demo proxy for articles/sessions
+                            sessionsAttended: articles.length,
+                            skillsMastered: masteredSkills,
                             points: stats.totalXp
                         } : p.stats
                     };
@@ -127,16 +146,16 @@ const RoomMembersPage: React.FC = () => {
             <header className={styles.pageHeader}>
                 <div className={styles.headerContent}>
                     <div>
-                        <h1>{t('members.communityTitle') || 'Комьюнити'}</h1>
+                        <h1>{t('members.communityTitle', 'Комьюнити')}</h1>
                         <p className={styles.pageSubtitle}>
-                            {filteredMembers.length} {t('members.countLabel') || 'участников'}
+                            {filteredMembers.length} {t('members.countLabel', 'участников')}
                         </p>
                     </div>
                     <div className={styles.searchArea}>
                         <Search className={styles.searchIcon} size={18} />
                         <input
                             type="text"
-                            placeholder={t('members.searchPlaceholder') || 'Найти эксперта...'}
+                            placeholder={t('members.searchPlaceholder', 'Найти эксперта...')}
                             className={styles.searchInput}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -150,7 +169,7 @@ const RoomMembersPage: React.FC = () => {
                 <section className={styles.leadersSection}>
                     <h2 className={styles.sectionLabel}>
                         <Crown size={16} className="text-amber-500 mr-2" />
-                        {t('members.reputationLeaders') || 'Лидеры по репутации'}
+                        {t('members.reputationLeaders', 'Лидеры по репутации')}
                     </h2>
                     <div className={styles.leadersGrid}>
                         {leaders.map((leader, index) => (
@@ -182,11 +201,15 @@ const RoomMembersPage: React.FC = () => {
                                 <div className={styles.cardStats}>
                                     <div className={styles.statItem}>
                                         <p className={styles.statNum}>{memberProfiles[leader.userId]?.stats?.points || 0}</p>
-                                        <p className={styles.statLabel}>{t('members.reputation') || 'Репутация'}</p>
+                                        <p className={styles.statLabel}>{t('members.reputation', 'Репутация')}</p>
                                     </div>
                                     <div className={styles.statItem}>
                                         <p className={styles.statNum}>{memberProfiles[leader.userId]?.stats?.sessionsAttended || 0}</p>
-                                        <p className={styles.statLabel}>{t('members.articles') || 'Сессии'}</p>
+                                        <p className={styles.statLabel}>{t('members.articles', 'Статьи')}</p>
+                                    </div>
+                                    <div className={styles.statItem}>
+                                        <p className={styles.statNum}>{memberProfiles[leader.userId]?.stats?.skillsMastered || 0}</p>
+                                        <p className={styles.statLabel}>{t('members.skills', 'Навыки')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -198,7 +221,7 @@ const RoomMembersPage: React.FC = () => {
                 <section className={styles.allMembersSection}>
                     <div className={styles.sectionHeader}>
                         <h2 className={styles.sectionLabel}>
-                            {t('members.allMembers') || 'Все участники'}
+                            {t('members.allMembers', 'Все участники')}
                         </h2>
                         <div className={styles.sortGroup}>
                             <button
@@ -220,10 +243,10 @@ const RoomMembersPage: React.FC = () => {
                         <table className={styles.membersTable}>
                             <thead className={styles.tableHead}>
                                 <tr>
-                                    <th>{t('members.memberCol') || 'Участник'}</th>
-                                    <th>{t('members.roleCol') || 'Роль'}</th>
-                                    <th>{t('members.activityCol') || 'Активность'}</th>
-                                    <th style={{ textAlign: 'right' }}>{t('members.profileCol') || 'Профиль'}</th>
+                                    <th>{t('members.memberCol', 'Участник')}</th>
+                                    <th>{t('members.roleCol', 'Роль')}</th>
+                                    <th>{t('members.activityCol', 'Активность')}</th>
+                                    <th style={{ textAlign: 'right' }}>{t('members.profileCol', 'Профиль')}</th>
                                 </tr>
                             </thead>
                             <tbody>

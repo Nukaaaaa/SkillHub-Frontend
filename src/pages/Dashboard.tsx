@@ -9,16 +9,18 @@ import { useTranslation, Trans } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import LanguageSelector from '../components/LanguageSelector';
 
+import { LayoutTemplate, Server, Database, Cloud, ShieldCheck, Smartphone, Gamepad2, PenTool } from 'lucide-react';
+
 // Mockup styling mapping
 const DIRECTION_STYLES = [
-    { icon: 'fas fa-laptop-code', bg: '#eff6ff', color: '#3b82f6' }, // Blue
-    { icon: 'fas fa-stethoscope', bg: '#fef2f2', color: '#ef4444' }, // Red
-    { icon: 'fas fa-chart-line', bg: '#fffbeb', color: '#f59e0b' }, // Amber
-    { icon: 'fas fa-graduation-cap', bg: '#ecfdf5', color: '#10b981' }, // Emerald
-    { icon: 'fas fa-gavel', bg: '#eef2ff', color: '#6366f1' }, // Indigo
-    { icon: 'fas fa-microchip', bg: '#fff7ed', color: '#f97316' }, // Orange
-    { icon: 'fas fa-paint-brush', bg: '#fdf2f8', color: '#ec4899' }, // Pink
-    { icon: 'fas fa-brain', bg: '#faf5ff', color: '#a855f7' }, // Purple
+    { icon: <LayoutTemplate size={28} />, bg: '#eff6ff', color: '#3b82f6' }, // Blue
+    { icon: <Server size={28} />, bg: '#fef2f2', color: '#ef4444' }, // Red
+    { icon: <Database size={28} />, bg: '#fffbeb', color: '#f59e0b' }, // Amber
+    { icon: <Cloud size={28} />, bg: '#ecfdf5', color: '#10b981' }, // Emerald
+    { icon: <ShieldCheck size={28} />, bg: '#eef2ff', color: '#6366f1' }, // Indigo
+    { icon: <Smartphone size={28} />, bg: '#fff7ed', color: '#f97316' }, // Orange
+    { icon: <Gamepad2 size={28} />, bg: '#fdf2f8', color: '#ec4899' }, // Pink
+    { icon: <PenTool size={28} />, bg: '#faf5ff', color: '#a855f7' }, // Purple
 ];
 
 const Dashboard: React.FC = () => {
@@ -100,7 +102,7 @@ const Dashboard: React.FC = () => {
                                 className={styles.cardIconWrapper}
                                 style={{ backgroundColor: style.bg, color: style.color }}
                             >
-                                <i className={style.icon}></i>
+                                {style.icon}
                             </div>
 
                             <h3 className={styles.cardTitle}>{t(dir.name)}</h3>

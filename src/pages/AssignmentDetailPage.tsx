@@ -12,7 +12,8 @@ import {
     MessageSquare,
     Star,
     Clock,
-    RefreshCw
+    RefreshCw,
+    Award
 } from 'lucide-react';
 import { educationService } from '../api/educationService';
 import type { AssignmentDto, SubmissionDto, RubricDto, ReviewDto, DisputeDto } from '../api/educationService';
@@ -38,6 +39,8 @@ const AssignmentDetailPage: React.FC = () => {
     const [disputes, setDisputes] = useState<DisputeDto[]>([]);
     const [loading, setLoading] = useState(true);
     const [matchingSection, setMatchingSection] = useState<any | null>(null);
+    const [credits, setCredits] = useState<number | null>(null);
+    const [requestingReview, setRequestingReview] = useState(false);
 
     const lastFetchedRef = useRef<number>(Date.now());
 
@@ -78,14 +81,14 @@ const AssignmentDetailPage: React.FC = () => {
     }, [submission?.id]);
     
     // Score & Threshold Calculation
-    const maxRubricPoints = assignment ? assignment.rubrics.reduce((sum, r) => sum + (r.maxPoints || 0), 0) : 0;
+    const maxRubricPoints = assignment && assignment.rubrics ? assignment.rubrics.reduce((sum, r) => sum + (r.maxPoints || 0), 0) : 0;
     const reviewsCount = reviews.length;
     let avgObtainedPoints = 0;
     let avgScorePercent = 0;
     
     if (reviewsCount > 0 && maxRubricPoints > 0) {
         const totalPointsAcrossReviews = reviews.reduce((sum, review) => {
-            const reviewPoints = review.grades.reduce((s, g) => s + g.score, 0);
+            const reviewPoints = (review.grades || []).reduce((s, g) => s + g.score, 0);
             return sum + reviewPoints;
         }, 0);
         avgObtainedPoints = Number((totalPointsAcrossReviews / reviewsCount).toFixed(1));
@@ -114,6 +117,13 @@ const AssignmentDetailPage: React.FC = () => {
         if (!skillId) return null;
         setLoading(true);
         try {
+            try {
+                const creds = await educationService.getMyCredits();
+                setCredits(creds);
+            } catch (e) {
+                console.error("Failed to fetch review credits", e);
+            }
+
             // 1. Fetch Assignment
             const assignData = await educationService.getAssignmentBySkill(Number(skillId))
                 .catch(() => null);
@@ -246,6 +256,23 @@ const AssignmentDetailPage: React.FC = () => {
             toast.error('Не удалось отправить решение');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleRequestReview = async () => {
+        if (!assignment?.id) return;
+        setRequestingReview(true);
+        try {
+            await educationService.requestReviewAssignment(assignment.id);
+            toast.success("Вам успешно назначена работа сокурсника для проверки!");
+            await fetchData();
+            toast("Перейдите на страницу навыков, чтобы оценить работу.", { icon: '📝' });
+        } catch (error: any) {
+            console.error("Failed to request review", error);
+            const errMsg = error.response?.data?.message || "Нет доступных решений для проверки в данный момент.";
+            toast.error(errMsg);
+        } finally {
+            setRequestingReview(false);
         }
     };
 
@@ -463,12 +490,26 @@ const AssignmentDetailPage: React.FC = () => {
                                         <RefreshCw size={16} className={isRefreshing ? styles.spin : ''} />
                                     </button>
                                 </h2>
+
+                                <div className={styles.requestReviewBox}>
+                                    <p className={styles.requestReviewIntro}>
+                                        Вы можете помочь сокурсникам и проверить их решения, чтобы заработать баллы активности (+1 балл за рецензию).
+                                    </p>
+                                    <button
+                                        className={styles.requestReviewBtn}
+                                        onClick={handleRequestReview}
+                                        disabled={requestingReview}
+                                    >
+                                        {requestingReview ? 'Поиск работы...' : '🔍 Взять работу на проверку'}
+                                    </button>
+                                </div>
+
                                 {reviews.length > 0 ? (
                                     <div className={styles.reviewsList}>
                                         {reviews.map((review) => {
                                             // Calculate total score for this review
-                                            const obtained = review.grades.reduce((sum, g) => sum + g.score, 0);
-                                            const max = assignment.rubrics.reduce((sum, r) => sum + (r.maxPoints || 0), 0);
+                                            const obtained = (review.grades || []).reduce((sum, g) => sum + g.score, 0);
+                                            const max = assignment && assignment.rubrics ? assignment.rubrics.reduce((sum, r) => sum + (r.maxPoints || 0), 0) : 0;
 
                                             return (
                                                 <div 
@@ -488,10 +529,10 @@ const AssignmentDetailPage: React.FC = () => {
                                                     
                                                     <p className={styles.reviewComment}>{review.comment}</p>
                                                     
-                                                    {review.grades.length > 0 && (
+                                                    {review.grades && review.grades.length > 0 && (
                                                         <div className={styles.gradesList}>
                                                             {review.grades.map((grade) => {
-                                                                const rubric = assignment.rubrics.find(r => r.id === grade.rubricId);
+                                                                const rubric = assignment && assignment.rubrics ? assignment.rubrics.find(r => r.id === grade.rubricId) : null;
                                                                 return (
                                                                     <div key={grade.rubricId} className={styles.gradeItem}>
                                                                         <span className={styles.gradeCrit}>{rubric?.criterionName}:</span>
@@ -519,6 +560,23 @@ const AssignmentDetailPage: React.FC = () => {
                     <div className={styles.sidebar}>
                         <div className={styles.card}>
                             <h2>Ваше решение</h2>
+
+                            {credits !== null && (
+                                <div className={styles.creditsInfoBox}>
+                                    <div className={styles.creditsTitle}>
+                                        <Award size={16} color="#6366f1" />
+                                        <span>Токены взаимопроверки: <strong>{credits}</strong></span>
+                                    </div>
+                                    <p className={styles.creditsDesc}>
+                                        Сдача решения списывает 2 токена (нужно 2 отзыва). Проверка чужой работы дает +1 токен.
+                                        {credits < 0 && (
+                                            <span className={styles.creditsWarning}>
+                                                Баланс отрицательный! Проверьте работы сокурсников, чтобы получить возможность отправлять свои решения.
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Solution Status Header */}
                             {submission && (

@@ -17,7 +17,7 @@ import AiReviewModal from '../components/AiReviewModal';
 import styles from './ModeratorPanelPage.module.css';
 import adminStyles from './AdminPanelPage.module.css';
 import { toast } from 'react-hot-toast';
-import { MOCK_ARTICLES } from '../api/mockData';
+import { contentService } from '../api/contentService';
 import { educationService } from '../api/educationService';
 import type { DisputeDto } from '../api/educationService';
 import { interactionService } from '../api/interactionService';
@@ -122,25 +122,33 @@ const ModeratorPanelPage: React.FC = () => {
         }
     };
 
-    const handleAiAudit = (report: Report) => {
-        toast.loading('AI изучает контент...', { id: 'audit' });
+    const handleAiAudit = async (report: Report) => {
+        toast.loading('Загрузка контента для AI аудита...', { id: 'audit' });
         
-        let title = '';
-        let content = '';
-        
-        const mockArticle = MOCK_ARTICLES.find(a => a.id === report.target_id);
-        if (mockArticle) {
-            title = mockArticle.title || '';
-            content = mockArticle.content || '';
-        } else {
-            title = report.target_type === 'article' ? 'Безопасность Node.js' : `Пост #${report.target_id}`;
-            content = 'В данной статье рассматриваются основные принципы обеспечения безопасности Node.js приложений, такие как предотвращение SQL-инъекций и XSS атак. Рекомендуется использовать проверенные библиотеки для валидации входа.';
-        }
+        try {
+            let title = '';
+            let content = '';
+            
+            if (report.target_type === 'article') {
+                const article = await contentService.getArticle(report.target_id);
+                title = article.title;
+                content = article.content;
+            } else if (report.target_type === 'post') {
+                const post = await contentService.getPost(report.target_id);
+                title = `Пост #${post.id}`;
+                content = post.content;
+            } else {
+                toast.dismiss('audit');
+                toast.error('Тип контента не поддерживается AI');
+                return;
+            }
 
-        setTimeout(() => {
             toast.dismiss('audit');
             setAuditItem({ title, content, type: report.target_type === 'article' ? 'article' : 'post' });
-        }, 1200);
+        } catch (error) {
+            toast.dismiss('audit');
+            toast.error('Не удалось загрузить контент');
+        }
     };
 
     const regularReports = reports.filter(r => r.target_type !== 'moderator_application');

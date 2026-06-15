@@ -26,12 +26,14 @@ import { contentService } from '../api/contentService';
 import SubmitReviewModal from '../components/SubmitReviewModal';
 import SkillsChart from '../components/SkillsChart';
 import styles from './RoomSkillsPage.module.css';
+import { useTranslation } from 'react-i18next';
 
 const RoomSkillsPage: React.FC = () => {
     const { roomSlug } = useParams<{ roomSlug: string }>();
     const { room } = useOutletContext<{ room: Room }>();
     const navigate = useNavigate();
     const { user, getUserRoomRole } = useAuth();
+    const { t } = useTranslation();
 
     const [skills, setSkills] = useState<SkillDto[]>([]);
     const [assignedReviews, setAssignedReviews] = useState<ReviewDto[]>([]);
@@ -327,20 +329,20 @@ const RoomSkillsPage: React.FC = () => {
                         <div className={styles.skillsList}>
                             {filteredSkills.map((skill) => {
                                 // Determine status color & text
-                                let statusText = 'Не начат';
+                                let statusText = t('skillStatus.notStarted');
                                 let statusClass = styles.statusNotStarted;
                                 let statusIcon = <Clock size={14} />;
 
                                 if (skill.userStatus === 'LEARNING') {
-                                    statusText = 'Изучается';
+                                    statusText = t('skillStatus.learning');
                                     statusClass = styles.statusLearning;
                                     statusIcon = <AlertCircle size={14} />;
                                 } else if (skill.userStatus === 'COMPLETED') {
-                                    statusText = 'Выполнен';
+                                    statusText = t('skillStatus.completed');
                                     statusClass = styles.statusCompleted;
                                     statusIcon = <UserCheck size={14} />;
                                 } else if (skill.userStatus === 'CONFIRMED') {
-                                    statusText = 'Растолған (Подтвержден)';
+                                    statusText = t('skillStatus.confirmed');
                                     statusClass = styles.statusConfirmed;
                                     statusIcon = <CheckCircle size={14} />;
                                 }
