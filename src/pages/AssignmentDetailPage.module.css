@@ -951,3 +951,54 @@
     display: block;
     margin-top: 0.25rem;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .assignmentHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .headerLeft {
+        flex-wrap: wrap;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .metaInfo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .actionBtns {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .primaryBtn, .secondaryBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .mainCard {
+        padding: 1.5rem;
+    }
+
+    .requestReviewCard {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .requestReviewBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}

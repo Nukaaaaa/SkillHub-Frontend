@@ -62,6 +62,10 @@ export const contentService = {
     },
 
     // Comments
+    getComment: async (id: number): Promise<Comment> => {
+        const response = await apiClient.get<Comment>(`/comments/${id}`);
+        return response.data;
+    },
     getCommentsByPost: async (postId: number): Promise<Comment[]> => {
         const response = await apiClient.get<Comment[]>(`/comments/post/${postId}`);
         return response.data;

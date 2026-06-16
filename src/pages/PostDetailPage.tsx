@@ -603,6 +603,7 @@ const PostDetailPage: React.FC = () => {
                 targetType={reportTargetType}
                 targetId={reportTargetId}
                 targetAuthorId={reportTargetAuthorId}
+                roomId={post?.roomId || room?.id}
                 onSuccess={() => {
                     if (reportTargetType === 'post') {
                         setIsReported(true);

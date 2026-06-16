@@ -85,3 +85,28 @@
 .userNameLink:hover {
     color: #6366f1;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .searchWrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .searchButton {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}

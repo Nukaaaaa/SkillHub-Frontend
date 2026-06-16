@@ -121,6 +121,7 @@ export interface Post {
 export interface Comment {
     id: number;
     postId: number;
+    articleId?: number;
     userId: number;
     authorName?: string; // Optional if joined from frontend
     content: string;

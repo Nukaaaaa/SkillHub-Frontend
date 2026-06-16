@@ -386,3 +386,27 @@
     opacity: 0.1;
     font-size: 6rem;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .nav {
+        padding: 0.75rem 1rem;
+    }
+
+    .main {
+        padding: 1.5rem 1rem;
+        gap: 1.5rem;
+    }
+
+    .titleInput {
+        font-size: 1.5rem;
+    }
+
+    .contentArea {
+        min-height: 300px;
+    }
+
+    .typeSelector {
+        flex-direction: column;
+    }
+}

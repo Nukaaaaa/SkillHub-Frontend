@@ -536,4 +536,65 @@
 .cancelReplyBtn:hover {
     color: #0f172a;
     background: #e2e8f0;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem 0.5rem;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .mainContent {
+        padding: 1.5rem 1rem;
+        border-radius: 1.5rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .authorSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .content {
+        font-size: 1rem;
+    }
+
+    .content h1 { font-size: 1.5rem; }
+    .content h2 { font-size: 1.25rem; }
+
+    .commentsSection {
+        padding: 1.5rem 1rem;
+        border-radius: 1.5rem;
+    }
+
+    .commentCard {
+        padding: 1rem;
+    }
+
+    .commentHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    /* Reduce nesting margin to prevent squishing */
+    .commentWrapper {
+        margin-left: 0.5rem;
+    }
+
+    .replyConnector {
+        left: -0.4rem;
+    }
 }

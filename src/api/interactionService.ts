@@ -10,6 +10,7 @@ export interface Report {
     target_type: TargetType;
     reason: string;
     status: 'OPEN' | 'REJECTED' | 'RESOLVED' | 'ESCALATED';
+    room_id?: number;
     created_at: string;
 }
 

@@ -874,6 +874,80 @@ spinning {
     padding: 1rem 1.5rem;
 }
 
+.loaderContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem 1rem;
+        gap: 1.5rem;
+    }
+
+    .mainContent {
+        padding: 1.25rem 1rem;
+        border-radius: 1rem;
+    }
+
+    .title {
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .articleMeta {
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .authorSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .sidebarCard {
+        padding: 1.25rem 1rem;
+        border-radius: 1rem;
+    }
+
+    .commentsSection {
+        padding: 1.25rem 1rem;
+        border-radius: 1rem;
+    }
+
+    .commentInputWrapper {
+        flex-direction: column;
+    }
+
+    .commentInput {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .commentSubmitBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.5rem 1rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .mainContent {
+        padding: 1rem;
+    }
+}
+
 .aiContentSummaryHeader {
     display: flex;
     justify-content: space-between;

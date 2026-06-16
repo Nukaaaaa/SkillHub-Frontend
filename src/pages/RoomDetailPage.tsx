@@ -35,7 +35,7 @@ const RoomDetailPage: React.FC = () => {
     const [likesData, setLikesData] = useState<Record<number, number>>({});
     const [answersData, setAnswersData] = useState<Record<number, number>>({});
     const [loading, setLoading] = useState(true);
-    const [activeSubTab, setActiveSubTab] = useState<'all' | 'trends'>('all');
+
     const [activeCategory, setActiveCategory] = useState<'all' | 'posts' | 'questions'>('all');
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [isExamModalOpen, setIsExamModalOpen] = useState(false);
@@ -176,20 +176,6 @@ const RoomDetailPage: React.FC = () => {
                 )}
 
                 <div className={styles.filtersRow}>
-                    <div className={styles.tabs}>
-                        <button
-                            className={`${styles.filterTab} ${activeSubTab === 'all' ? styles.active : ''}`}
-                            onClick={() => setActiveSubTab('all')}
-                        >
-                            Все обсуждения
-                        </button>
-                        <button
-                            className={`${styles.filterTab} ${activeSubTab === 'trends' ? styles.active : ''}`}
-                            onClick={() => setActiveSubTab('trends')}
-                        >
-                            Тренды
-                        </button>
-                    </div>
                     <div className={styles.chipGroup}>
                         <button
                             className={`${styles.filterChip} ${activeCategory === 'all' ? styles.active : ''}`}
@@ -234,7 +220,7 @@ const RoomDetailPage: React.FC = () => {
                                     </Link>
                                     <span className={styles.authorRole}>{authorProfiles[item.userId]?.role || 'Участник'}</span>
                                 </div>
-                                <span className={`${styles.postTypeBadge} ${(item as any).postType === 'QUESTION' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
+                                <span className={`${styles.postTypeBadge} ${(item as any).postType === 'QUESTION' ? styles.badgeQuestion : styles.badgePost}`}>
                                     {(item as any).postType === 'QUESTION' ? 'Вопрос' : 'Пост'}
                                 </span>
                             </div>

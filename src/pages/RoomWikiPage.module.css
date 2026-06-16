@@ -37,8 +37,15 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Glassmorphism Header */
@@ -535,6 +542,13 @@
     }
 }
 
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem 5rem; /* Space for bottom nav */
+    }
+}
+
 .header {
     grid-column: 1 / -1;
     display: flex;
@@ -945,8 +959,13 @@
 }
 
 @keyframes slideInLeft {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
 }
 
 .drawerHeader {
@@ -1023,8 +1042,13 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .aiDrawerError {
@@ -1085,10 +1109,129 @@
     color: #334155;
 }
 
-.articleWrapper > * {
+.articleWrapper>* {
     animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.articleWrapper > *:nth-child(2) { animation-delay: 0.1s; }
-.articleWrapper > *:nth-child(3) { animation-delay: 0.2s; }
-.articleWrapper > *:nth-child(4) { animation-delay: 0.3s; }
+.articleWrapper>*:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.articleWrapper>*:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.articleWrapper>*:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .wikiLayout {
+        flex-direction: column;
+        padding-bottom: 60px; /* Space for bottom bar */
+    }
+
+    .wikiSidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 60px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: stretch;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: none;
+        padding: 0;
+        z-index: 100;
+        background: white;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+        max-height: none;
+        overflow: visible;
+    }
+
+    .sidebarNav {
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        gap: 0;
+    }
+
+    .navLink {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: auto;
+        padding: 0.25rem 0.25rem 0.35rem;
+        border-radius: 0;
+        gap: 0.18rem;
+        color: #94a3b8;
+        font-size: 0.6rem;
+        font-weight: 600;
+        border: none;
+        background: transparent;
+        transition: color 0.15s;
+    }
+
+    .navLink.active {
+        background: transparent;
+        color: #4f46e5;
+    }
+
+    .navLink span {
+        display: block !important;
+        font-size: 0.57rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .sidebar {
+        display: none; /* Hide right AI/TOC sidebar on mobile for better space */
+    }
+
+    .container {
+        padding: 0.75rem;
+        padding-bottom: 80px;
+        gap: 1rem;
+    }
+
+    .landingLayout,
+    .sectionPageLayout,
+    .articlePageLayout {
+        padding: 0.75rem;
+        padding-bottom: 80px;
+    }
+
+    .sectionsGrid,
+    .articlesListGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .mainContent {
+        padding: 1.25rem 1rem;
+        border-radius: 1rem;
+    }
+
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .drawer {
+        width: 100%;
+    }
+
+    .heroSection {
+        padding: 1.5rem 1rem;
+    }
+
+    .wikiSidebarHeader {
+        padding: 0.75rem 1rem;
+    }
+}

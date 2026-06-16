@@ -925,6 +925,7 @@ const ArticleDetailPage: React.FC = () => {
                 targetType={reportTargetType}
                 targetId={reportTargetId}
                 targetAuthorId={reportTargetAuthorId}
+                roomId={article?.roomId || room?.id}
                 onSuccess={() => {
                     if (reportTargetType === 'article') {
                         setIsReported(true);

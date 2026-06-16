@@ -522,3 +522,146 @@
     background: #3b82f6;
     color: white;
 }
+
+.reasonWithInspect {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.inspectBtn {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.inspectBtn:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modalContent {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.closeModalBtn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.closeModalBtn:hover {
+    color: white;
+}
+
+.modalBody {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.modalSection {
+    margin-bottom: 16px;
+}
+
+.modalSection h4 {
+    margin: 0 0 8px 0;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.modalSection p {
+    margin: 0;
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .dashboardGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .managementSection {
+        padding: 1rem;
+    }
+
+    .searchWrapper {
+        max-width: 100%;
+    }
+
+    .tableToolbar {
+        overflow-x: auto;
+    }
+
+    .usersTable {
+        min-width: 600px; /* Force scroll */
+    }
+
+    .tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        width: 100%;
+    }
+}

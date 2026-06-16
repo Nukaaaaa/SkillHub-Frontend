@@ -289,9 +289,16 @@
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 1.5rem 1rem;
+    }
     .header {
         flex-direction: column;
         align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+    .headerTitle h1 {
+        font-size: 2rem;
     }
     .searchBox {
         width: 100%;

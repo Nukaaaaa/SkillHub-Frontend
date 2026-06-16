@@ -385,6 +385,24 @@
     color: #94a3b8;
 }
 
+.mobileBrand {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mobileBrand h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #4f46e5;
+    margin: 0;
+}
+
+.bottomNav {
+    display: none;
+}
+
+/* Tablet / Small Desktop */
 @media (max-width: 1024px) {
     .sidebar {
         width: 80px;
@@ -392,7 +410,8 @@
 
     .logo h1,
     .navLink span:not(.navIcon),
-    .reputationCard {
+    .reputationCard,
+    .systemActions span {
         display: none;
     }
 
@@ -402,5 +421,76 @@
 
     .searchBar {
         width: 16rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none; /* Hide sidebar completely on mobile */
+    }
+
+    .main {
+        padding-bottom: 60px; /* Space for bottom nav */
+    }
+
+    .header {
+        padding: 0 0.75rem;
+        height: 3.5rem;
+    }
+
+    .mobileBrand {
+        display: flex;
+    }
+
+    .mobileBrand h1 {
+        font-size: 1.1rem;
+    }
+
+    .searchBar {
+        display: none; /* Hide search bar on mobile header to save space */
+    }
+
+    .headerActions {
+        gap: 0.35rem;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottomNav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background-color: white;
+        border-top: 1px solid #e5e7eb;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+        padding-bottom: env(safe-area-inset-bottom, 0); /* iPhone notch */
+    }
+
+    .bottomNavLink {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        text-decoration: none;
+        gap: 0.2rem;
+        width: 100%;
+        height: 100%;
+        transition: color 0.15s;
+    }
+
+    .bottomNavLink span {
+        font-size: 0.6rem;
+        font-weight: 500;
+    }
+
+    .bottomNavLink.active {
+        color: #4f46e5;
     }
 }

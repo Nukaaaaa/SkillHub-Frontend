@@ -225,3 +225,129 @@
     color: #ef4444;
     border-color: #fee2e2;
 }
+
+/* Mobile Responsiveness — Bottom Tab Bar for 412px */
+@media (max-width: 768px) {
+    .roomLayout {
+        flex-direction: column;
+        padding-bottom: 60px; /* space for bottom nav bar */
+    }
+
+    /* Transform the sidebar INTO the bottom navigation bar */
+    .roomSidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 60px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: stretch;
+        border-right: none;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: none;
+        padding: 0;
+        z-index: 100;
+        background: white;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+        /* Override sticky positioning */
+        top: auto;
+    }
+
+    /* Hide branding, divider, footer — only nav links remain */
+    .sidebarBrand,
+    .sidebarDivider,
+    .sidebarFooter {
+        display: none !important;
+    }
+
+    /* Nav becomes a horizontal row filling the bar */
+    .sidebarNav {
+        flex-direction: row;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        gap: 0;
+        flex: 1;
+    }
+
+    /* Each link is a tab button */
+    .navLink {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: auto;
+        padding: 0.25rem 0.25rem 0.35rem;
+        border-radius: 0;
+        gap: 0.18rem;
+        color: #94a3b8;
+        font-size: 0.6rem;
+        font-weight: 600;
+        border: none;
+        background: transparent;
+        transition: color 0.15s;
+    }
+
+    /* Show text labels on mobile */
+    .navLink span:last-child {
+        display: block !important;
+        font-size: 0.57rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .navLink:hover {
+        background-color: #f9fafb;
+        color: #4b5563;
+    }
+
+    .navLink.active {
+        color: #4f46e5;
+        background: transparent;
+    }
+
+    /* Main area uses full width */
+    .mainArea {
+        height: auto;
+        min-height: calc(100vh - 60px);
+        overflow: visible;
+    }
+
+    .header {
+        padding: 0.75rem 1rem;
+    }
+
+    .headerContent {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .roomIcon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .roomText h1 {
+        font-size: 1rem;
+    }
+
+    .headerActions {
+        width: 100%;
+    }
+
+    .joinBtn, .leaveBtn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.625rem 1rem;
+    }
+
+    .content {
+        padding: 0 0.75rem 1rem;
+    }
+}

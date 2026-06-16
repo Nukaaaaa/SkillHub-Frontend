@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { 
     AlertTriangle, 
     CheckCircle, 
     XCircle, 
-    ShieldAlert, 
     MessageSquare, 
     Loader2, 
     ExternalLink, 
@@ -24,7 +23,7 @@ import { interactionService } from '../api/interactionService';
 import type { Report } from '../api/interactionService';
 
 const ModeratorPanelPage: React.FC = () => {
-    const { user, isLocalModerator } = useAuth();
+    const { user, isLocalModerator, roomRoles } = useAuth();
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const showDisputesTab = user?.role === 'ADMIN' || (isLocalModerator && user?.role !== 'MODERATOR');
@@ -151,7 +150,40 @@ const ModeratorPanelPage: React.FC = () => {
         }
     };
 
-    const regularReports = reports.filter(r => r.target_type !== 'moderator_application');
+    const handleInspectComplaint = async (complaint: Report) => {
+        try {
+            if (complaint.target_type === 'article') {
+                window.open(`/articles/${complaint.target_id}`, '_blank');
+            } else if (complaint.target_type === 'post') {
+                window.open(`/posts/${complaint.target_id}`, '_blank');
+            } else if (complaint.target_type === 'comment') {
+                const comment = await contentService.getComment(complaint.target_id);
+                if (comment.postId) {
+                    window.open(`/posts/${comment.postId}`, '_blank');
+                } else if (comment.articleId) {
+                    window.open(`/articles/${comment.articleId}`, '_blank');
+                } else {
+                    toast.error('Не удалось определить местоположение комментария');
+                }
+            } else {
+                toast.error('Контент недоступен для данного типа');
+            }
+        } catch (e) {
+            toast.error('Ошибка при открытии или контент был удален');
+        }
+    };
+
+    const moderatedRoomIds = Object.keys(roomRoles || {})
+        .map(Number)
+        .filter(id => ['MODERATOR', 'ROOM_ADMIN', 'EXPERT'].includes(roomRoles[id]));
+
+    const regularReports = reports.filter(r => {
+        if (r.target_type === 'moderator_application') return false;
+        if (r.room_id) {
+            return moderatedRoomIds.includes(r.room_id);
+        }
+        return isGlobalMod;
+    });
 
     if (loading) {
         return (
@@ -250,14 +282,14 @@ const ModeratorPanelPage: React.FC = () => {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <Link 
-                                                            to="#" 
+                                                        <button 
+                                                            onClick={() => handleInspectComplaint(report)}
                                                             className={adminStyles.contentLink}
-                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6' }}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#3b82f6', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
                                                         >
                                                             <ExternalLink size={12} />
                                                             Открыть
-                                                        </Link>
+                                                        </button>
                                                     </td>
                                                     <td className={adminStyles.reasonCol}>{report.reason}</td>
                                                     <td>User #{report.target_author_id}</td>
@@ -281,9 +313,9 @@ const ModeratorPanelPage: React.FC = () => {
                                                         <button 
                                                             className={adminStyles.resolveBtn}
                                                             onClick={() => handleEscalateReport(report.id)}
-                                                            style={{ background: '#f59e0b', color: 'white' }}
+                                                            style={{ background: '#10b981', color: 'white' }}
                                                         >
-                                                            <ShieldAlert size={14} /> Админу
+                                                            <CheckCircle size={14} /> Передать Админу
                                                         </button>
                                                     </td>
                                                 </tr>

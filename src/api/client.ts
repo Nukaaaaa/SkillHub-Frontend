@@ -24,6 +24,7 @@ export const getServiceClient = (service: 'USER' | 'ROOM' | 'CONTENT' | 'INTERAC
   if (service === 'ACHIEVEMENT') baseURL = `${API_URL}/achievements`;
   if (service === 'AI') baseURL = `${API_URL}/ai`;
   if (service === 'EDUCATION') baseURL = `${API_URL}/education`;
+  if (service === 'ADMIN') baseURL = `${API_URL}/admin`;
 
   const instance = axios.create({
     baseURL,

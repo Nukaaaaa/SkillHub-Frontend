@@ -298,6 +298,18 @@
     text-transform: uppercase;
 }
 
+.badgeQuestion {
+    background-color: #fffbeb;
+    color: #f59e0b;
+    border: 1px solid #fde68a;
+}
+
+.badgePost {
+    background-color: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #c7d2fe;
+}
+
 .postTitle {
     font-size: 1.375rem;
     font-weight: 800;
@@ -652,4 +664,142 @@
 
 .noSidebar {
     grid-template-columns: 1fr !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .contentContainer {
+        padding: 0.75rem 0;
+    }
+
+    .leftColumn {
+        gap: 1rem;
+    }
+
+    .creationBox {
+        padding: 1rem;
+        border-radius: 1rem;
+        gap: 1rem;
+    }
+
+    .creationHeader {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .userAvatarMain {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+    }
+
+    .creationGreeting h3 {
+        font-size: 0.95rem;
+    }
+
+    .creationGreeting p {
+        font-size: 0.8rem;
+    }
+
+    .creationGrid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .creationCard {
+        padding: 1rem 0.75rem;
+        border-radius: 1rem;
+        gap: 0.5rem;
+    }
+
+    .cardIcon {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .cardTitle {
+        font-size: 0.875rem;
+    }
+
+    .cardDesc {
+        font-size: 0.7rem;
+    }
+
+    .filtersRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .tabs {
+        gap: 1.25rem;
+    }
+
+    .filterTab {
+        font-size: 0.9rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .chipGroup {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        scrollbar-width: none;
+    }
+
+    .chipGroup::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filterChip {
+        white-space: nowrap;
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .articleCard {
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+
+    .cardTop {
+        gap: 0.625rem;
+        margin-bottom: 0.875rem;
+    }
+
+    .postTitle {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .postPreview {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+
+    .cardFooter {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-top: 1rem;
+    }
+
+    .statsLeft {
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .statItem {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.72rem;
+    }
+
+    .replyBtn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+    }
 }

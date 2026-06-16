@@ -398,3 +398,42 @@
     border-color: #4f46e5;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .headerActions {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .searchWrapper {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .roleFilter {
+        width: 100%;
+    }
+
+    .membersGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .tableWrapper {
+        border-radius: 1rem;
+    }
+
+    .memberCell {
+        padding: 1rem;
+    }
+
+    .activityGroup {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

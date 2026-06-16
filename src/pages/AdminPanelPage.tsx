@@ -9,44 +9,43 @@ import {
     CheckCircle,
     XCircle,
     ClipboardCheck,
-    Sparkles
+    Sparkles,
+    ShieldAlert
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { adminService } from '../api/adminService';
 import { interactionService } from '../api/interactionService';
 import { roomService } from '../api/roomService';
-import type { User } from '../types';
+import { contentService } from '../api/contentService';
+import type { User, Room } from '../types';
 import styles from './AdminPanelPage.module.css';
 import { toast } from 'react-hot-toast';
 import Avatar from '../components/Avatar';
 
 const AdminPanelPage: React.FC = () => {
     const { user: currentUser } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'applications'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'applications' | 'complaints'>('users');
     const [users, setUsers] = useState<User[]>([]);
     const [applications, setApplications] = useState<any[]>([]);
+    const [complaints, setComplaints] = useState<any[]>([]);
+    const [rooms, setRooms] = useState<Room[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchUsers = async () => {
+    const fetchData = async () => {
         try {
             setLoading(true);
-            const data = await adminService.getAllUsers();
-            setUsers(data);
+            const [usersData, reportsData, roomsData] = await Promise.all([
+                adminService.getAllUsers(),
+                interactionService.getReports(''),
+                roomService.getAllRooms()
+            ]);
+            setUsers(usersData);
+            setApplications(reportsData.filter((r: any) => r.target_type === 'moderator_application' && r.status === 'OPEN'));
+            setComplaints(reportsData.filter((r: any) => r.target_type !== 'moderator_application' && r.status === 'ESCALATED'));
+            setRooms(roomsData);
         } catch (error) {
-            toast.error('Ошибка при загрузке пользователей');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchApplications = async () => {
-        try {
-            setLoading(true);
-            const data = await interactionService.getReports('');
-            setApplications(data.filter((r: any) => r.target_type === 'moderator_application'));
-        } catch (error) {
-            toast.error('Ошибка при загрузке данных модерации');
+            toast.error('Ошибка при загрузке данных');
         } finally {
             setLoading(false);
         }
@@ -54,13 +53,9 @@ const AdminPanelPage: React.FC = () => {
 
     useEffect(() => {
         if (currentUser?.role === 'ADMIN') {
-            if (activeTab === 'users') {
-                fetchUsers();
-            } else {
-                fetchApplications();
-            }
+            fetchData();
         }
-    }, [currentUser, activeTab]);
+    }, [currentUser]);
 
     if (!currentUser || currentUser.role !== 'ADMIN') {
         return <Navigate to="/dashboard" replace />;
@@ -77,7 +72,7 @@ const AdminPanelPage: React.FC = () => {
             await interactionService.updateReportStatus(app.id, 'RESOLVED');
             
             toast.success(`Заявка одобрена! Модератор назначен в ${details.roomName}`);
-            fetchApplications();
+            fetchData();
         } catch (e) {
             toast.error('Ошибка при одобрении заявки');
         }
@@ -87,9 +82,53 @@ const AdminPanelPage: React.FC = () => {
         try {
             await interactionService.updateReportStatus(app.id, 'REJECTED');
             toast.success('Заявка отклонена');
-            fetchApplications();
+            fetchData();
         } catch (e) {
             toast.error('Ошибка при отклонении');
+        }
+    };
+
+    const handleRejectComplaint = async (reportId: number) => {
+        try {
+            await interactionService.updateReportStatus(reportId, 'REJECTED');
+            toast.success('Жалоба отклонена');
+            fetchData();
+        } catch (e) {
+            toast.error('Ошибка при отклонении жалобы');
+        }
+    };
+
+    const handleResolveComplaint = async (complaint: any) => {
+        try {
+            await adminService.blockUser(complaint.target_author_id, 15);
+            await interactionService.updateReportStatus(complaint.id, 'RESOLVED');
+            toast.success('Пользователь заблокирован на 15 мин, жалоба принята');
+            fetchData();
+        } catch (e) {
+            toast.error('Ошибка при обработке жалобы');
+        }
+    };
+
+    const handleInspectComplaint = async (complaint: any) => {
+        try {
+            if (complaint.target_type === 'article') {
+                window.open(`/articles/${complaint.target_id}`, '_blank');
+            } else if (complaint.target_type === 'post') {
+                window.open(`/posts/${complaint.target_id}`, '_blank');
+            } else if (complaint.target_type === 'comment') {
+                const comment = await contentService.getComment(complaint.target_id);
+                if (comment.postId) {
+                    window.open(`/posts/${comment.postId}`, '_blank');
+                } else if (comment.articleId) {
+                    window.open(`/articles/${comment.articleId}`, '_blank');
+                } else {
+                    toast.error('Не удалось определить местоположение комментария');
+                }
+            } else {
+                toast.error('Контент недоступен для данного типа');
+            }
+        } catch (e) {
+            toast.error('Ошибка при открытии или контент был удален');
         }
     };
 
@@ -124,7 +163,16 @@ const AdminPanelPage: React.FC = () => {
         }
     };
 
-
+    const handleAssignRoom = async (userId: number, roomSlug: string) => {
+        try {
+            await roomService.joinRoom(roomSlug, userId, 'MODERATOR').catch(() =>
+                roomService.updateMemberRole(roomSlug, userId, 'MODERATOR')
+            );
+            toast.success('Пользователь назначен модератором в комнату');
+        } catch (error) {
+            toast.error('Ошибка при назначении в комнату');
+        }
+    };
 
     const isBlocked = (user: User) => {
         if (!user.blocked_until) return false;
@@ -176,6 +224,15 @@ const AdminPanelPage: React.FC = () => {
                         <p className={styles.statLabel}>Новые заявки</p>
                     </div>
                 </div>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIcon} ${styles.iconRed}`}>
+                        <ShieldAlert size={24} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <p className={styles.statValue}>{complaints.length}</p>
+                        <p className={styles.statLabel}>Жалобы</p>
+                    </div>
+                </div>
             </div>
 
             <div className={styles.tabs}>
@@ -193,6 +250,14 @@ const AdminPanelPage: React.FC = () => {
                     <ClipboardCheck size={18} />
                     Заявки в модераторы
                     {applications.length > 0 && <span className={styles.indicator}>{applications.length}</span>}
+                </button>
+                <button 
+                    className={`${styles.tabBtn} ${activeTab === 'complaints' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('complaints')}
+                >
+                    <ShieldAlert size={18} />
+                    Жалобы
+                    {complaints.length > 0 && <span className={styles.indicator}>{complaints.length}</span>}
                 </button>
             </div>
 
@@ -216,6 +281,7 @@ const AdminPanelPage: React.FC = () => {
                                 <tr>
                                     <th>Пользователь</th>
                                     <th>Роль</th>
+                                    <th>Назначить в комнату</th>
                                     <th className={styles.actionsCell}>Действия</th>
                                 </tr>
                             </thead>
@@ -246,6 +312,24 @@ const AdminPanelPage: React.FC = () => {
                                                 <option value="MODERATOR">MODERATOR</option>
                                                 <option value="ADMIN">ADMIN</option>
                                             </select>
+                                        </td>
+                                        <td>
+                                            {user.role !== 'ADMIN' && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <select
+                                                        className={styles.roleSelect}
+                                                        onChange={(e) => handleAssignRoom(user.id, e.target.value)}
+                                                        defaultValue=""
+                                                        style={{ minWidth: '160px' }}
+                                                    >
+                                                        <option value="" disabled>Выберите комнату...</option>
+                                                        {rooms.map(r => (
+                                                            <option key={r.id} value={r.slug}>{r.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <CheckCircle size={16} color="#6b7280" />
+                                                </div>
+                                            )}
                                         </td>
                                         <td className={styles.actionsCell}>
                                             {isBlocked(user) ? (
@@ -291,9 +375,22 @@ const AdminPanelPage: React.FC = () => {
                                 <tbody>
                                     {applications.map(app => {
                                         const details = JSON.parse(app.reason);
+                                        const targetUser = users.find(u => u.id === app.target_id);
                                         return (
                                             <tr key={app.id}>
-                                                <td>User #{app.target_id}</td>
+                                                <td>
+                                                    {targetUser ? (
+                                                        <div className={styles.userCell}>
+                                                            <Avatar src={targetUser.avatar_url || targetUser.avatar} name={targetUser.firstname || targetUser.name} size="sm" className={styles.avatar} />
+                                                            <div>
+                                                                <span className={styles.userName}>{targetUser.firstname} {targetUser.lastname}</span>
+                                                                <span className={styles.userEmail}>{targetUser.email}</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        `User #${app.target_id}`
+                                                    )}
+                                                </td>
                                                 <td><strong>{details.roomName}</strong></td>
                                                 <td>
                                                     <div className={styles.aiVerdict}>
@@ -312,6 +409,76 @@ const AdminPanelPage: React.FC = () => {
                                                     </button>
                                                     <button className={styles.rejectBtn} onClick={() => handleRejectApplication(app)}>
                                                         <XCircle size={14} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'complaints' && (
+                    <div className={styles.reportsContainer}>
+                        {complaints.length === 0 ? (
+                            <div className={styles.emptyState}>
+                                <CheckCircle size={48} />
+                                <p>Нет активных жалоб.</p>
+                            </div>
+                        ) : (
+                            <table className={styles.usersTable}>
+                                <thead>
+                                    <tr>
+                                        <th>Тип</th>
+                                        <th>Причина</th>
+                                        <th>Автор</th>
+                                        <th className={styles.actionsCell}>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {complaints.map(complaint => {
+                                        const authorUser = users.find(u => u.id === complaint.target_author_id);
+                                        return (
+                                            <tr key={complaint.id}>
+                                                <td>{complaint.target_type}</td>
+                                                <td>
+                                                    <div className={styles.reasonWithInspect}>
+                                                        <span>{complaint.reason}</span>
+                                                        <button 
+                                                            className={styles.inspectBtn} 
+                                                            onClick={() => handleInspectComplaint(complaint)}
+                                                        >
+                                                            <Search size={14} /> Проверить
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {authorUser ? (
+                                                        <div className={styles.userCell}>
+                                                            <Avatar src={authorUser.avatar_url || authorUser.avatar} name={authorUser.firstname || authorUser.name} size="sm" className={styles.avatar} />
+                                                            <div>
+                                                                <span className={styles.userName}>{authorUser.firstname} {authorUser.lastname}</span>
+                                                                <span className={styles.userEmail}>{authorUser.email}</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        `User #${complaint.target_author_id}`
+                                                    )}
+                                                </td>
+                                                <td className={styles.actionsCell}>
+                                                    <button 
+                                                        className={styles.rejectBtn}
+                                                        onClick={() => handleRejectComplaint(complaint.id)}
+                                                    >
+                                                        <XCircle size={14} /> Отказать
+                                                    </button>
+                                                    <button 
+                                                        className={styles.resolveBtn}
+                                                        onClick={() => handleResolveComplaint(complaint)}
+                                                    >
+                                                        <ShieldAlert size={14} /> Принять
                                                     </button>
                                                 </td>
                                             </tr>

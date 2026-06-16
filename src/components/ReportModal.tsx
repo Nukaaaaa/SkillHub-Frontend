@@ -11,6 +11,7 @@ interface ReportModalProps {
     targetType: TargetType;
     targetId: number;
     targetAuthorId: number;
+    roomId?: number;
     onSuccess?: () => void;
 }
 
@@ -29,6 +30,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
     targetType, 
     targetId, 
     targetAuthorId,
+    roomId,
     onSuccess 
 }) => {
     const [selectedReason, setSelectedReason] = useState<string>(REPORT_REASONS[0]);
@@ -51,7 +53,8 @@ const ReportModal: React.FC<ReportModalProps> = ({
                 targetType,
                 targetId,
                 targetAuthorId,
-                finalReason
+                finalReason,
+                roomId
             );
             toast.success('Жалоба успешно отправлена');
             if (onSuccess) onSuccess();

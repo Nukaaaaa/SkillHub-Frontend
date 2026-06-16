@@ -37,6 +37,7 @@ interface AuthContextType {
     isLocalModerator: boolean;
     getUserRoomRole: (roomId: number) => string | null;
     getUserRoomRoleBySlug: (roomSlug: string) => string | null;
+    roomRoles: Record<number, string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -393,7 +394,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             joinedRoomIds, isMember, joinRoom, leaveRoom, refreshUserRooms,
             isLocalModerator,
             getUserRoomRole,
-            getUserRoomRoleBySlug
+            getUserRoomRoleBySlug,
+            roomRoles
         }}>
             {children}
         </AuthContext.Provider>

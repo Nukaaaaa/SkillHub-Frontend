@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     Search,
@@ -23,6 +23,7 @@ import { toast } from 'react-hot-toast';
 
 const RoomMembersPage: React.FC = () => {
     const { room } = useOutletContext<{ room: Room }>();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const { user, getUserRoomRole } = useAuth();
 
@@ -173,7 +174,12 @@ const RoomMembersPage: React.FC = () => {
                     </h2>
                     <div className={styles.leadersGrid}>
                         {leaders.map((leader, index) => (
-                            <div key={leader.userId} className={styles.leaderCard}>
+                            <div 
+                                key={leader.userId} 
+                                className={styles.leaderCard}
+                                onClick={() => navigate(`/profile/${leader.userId}`)}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className={styles.medalIcon}>
                                     <Medal />
                                 </div>
@@ -253,7 +259,11 @@ const RoomMembersPage: React.FC = () => {
                                 {filteredMembers.map(member => (
                                     <tr key={member.userId} className={styles.memberRow}>
                                         <td className={styles.memberCell}>
-                                            <div className={styles.userCellInfo}>
+                                            <div 
+                                                className={styles.userCellInfo}
+                                                onClick={() => navigate(`/profile/${member.userId}`)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
                                                 <Avatar 
                                                     src={memberProfiles[member.userId]?.avatar} 
                                                     name={getMemberName(member)} 
@@ -295,7 +305,10 @@ const RoomMembersPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className={styles.memberCell} style={{ textAlign: 'right' }}>
-                                            <button className={styles.profileBtn}>
+                                            <button 
+                                                className={styles.profileBtn}
+                                                onClick={() => navigate(`/profile/${member.userId}`)}
+                                            >
                                                 <ChevronRight size={18} />
                                             </button>
                                         </td>

@@ -1132,6 +1132,73 @@
     transform: translateY(-1px);
 }
 
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .profileContainer {
+        padding: 1rem 0.75rem;
+    }
+
+    .profileCard {
+        border-radius: 1.5rem;
+    }
+
+    .cardBody {
+        padding: 0 0.75rem 1.5rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .tabsHeader {
+        gap: 0.75rem;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .articleMiniCard {
+        padding: 1rem;
+    }
+
+    .diplomaCard {
+        padding: 1.5rem;
+    }
+
+    .diplomaBorder {
+        padding: 1.5rem 1rem;
+    }
+
+    .diplomaStudentName {
+        font-size: 1.5rem;
+        min-width: 200px;
+    }
+
+    .diplomaTitle {
+        font-size: 1.5rem;
+    }
+
+    .diplomaRoomName {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .profileContainer {
+        padding: 0.75rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tabsHeader {
+        gap: 0.5rem;
+    }
+}
+
 @media print {
     /* Hide everything on the page */
     body * {

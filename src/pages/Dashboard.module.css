@@ -258,3 +258,45 @@
     flex-direction: column;
     gap: 1.25rem;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem 1rem;
+    }
+
+    .pageTitle {
+        font-size: 1.75rem;
+    }
+
+    .pageSubtitle {
+        font-size: 1rem;
+    }
+
+    .pageHeader {
+        margin-bottom: 2rem;
+    }
+
+    .topActions {
+        justify-content: stretch;
+        margin-bottom: 1.5rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+    }
+
+    .empty {
+        padding: 2rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 1rem 0.75rem;
+    }
+
+    .pageTitle {
+        font-size: 1.5rem;
+    }
+}

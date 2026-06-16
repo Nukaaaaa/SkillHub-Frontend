@@ -450,3 +450,59 @@
     background: #e0e7ff;
     transform: translateY(-1px);
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .pageHeader {
+        padding: 1rem 0.75rem;
+    }
+
+    .headerContent {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .primaryBtn {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .filtersRow {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .filterGroup {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .searchAndFiltersGroup {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .searchWrapper {
+        width: 100%;
+    }
+
+    .difficultyGroup {
+        justify-content: space-between;
+    }
+
+    .articlesList {
+        gap: 0.75rem;
+    }
+
+    .articleCard {
+        padding: 1rem;
+        border-radius: 1rem;
+    }
+}

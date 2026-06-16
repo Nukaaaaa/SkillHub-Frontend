@@ -209,3 +209,23 @@
 .registerLink:hover {
     text-decoration: underline;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .bodyWrapper {
+        padding: 0.5rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+    }
+
+    .socialGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 1.25rem;
+    }
+}
