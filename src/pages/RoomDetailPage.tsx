@@ -108,6 +108,9 @@ const RoomDetailPage: React.FC = () => {
     const feedItems = [
         ...posts.map(p => ({ ...p, feedType: 'post' as const }))
     ].filter(item => {
+        if (user?.id && localStorage.getItem(`reported_post_${user.id}_${item.id}`) === 'true') {
+            return false;
+        }
         if (activeCategory === 'posts') return item.postType !== 'QUESTION';
         if (activeCategory === 'questions') return item.postType === 'QUESTION';
         return true;

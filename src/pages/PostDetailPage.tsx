@@ -60,6 +60,11 @@ const PostDetailPage: React.FC = () => {
 
     const fetchData = async () => {
         if (!postId) return;
+        if (currentUser?.id && localStorage.getItem(`reported_post_${currentUser.id}_${postId}`) === 'true') {
+            toast.error('Этот пост скрыт из-за вашей жалобы');
+            navigate(-1);
+            return;
+        }
         setLoading(true);
         try {
             const postData = await contentService.getPost(Number(postId));
@@ -607,6 +612,11 @@ const PostDetailPage: React.FC = () => {
                 onSuccess={() => {
                     if (reportTargetType === 'post') {
                         setIsReported(true);
+                        if (currentUser?.id) {
+                            localStorage.setItem(`reported_post_${currentUser.id}_${postId}`, 'true');
+                        }
+                        toast.success('Жалоба отправлена, пост скрыт');
+                        navigate(-1);
                     } else {
                         toast.success('Жалоба успешно отправлена');
                     }

@@ -102,7 +102,7 @@ const Layout: React.FC = () => {
                         </NavLink>
                     )}
 
-                    {(user?.role === 'ADMIN' || user?.role === 'MODERATOR' || isLocalModerator) && (
+                    {(user?.role === 'MODERATOR' || isLocalModerator) && (
                         <NavLink
                             to="/moderator"
                             className={({ isActive }) =>
